@@ -2,16 +2,20 @@
 *.log
 
 # sbt specific
-.cache/
-.history/
-.lib/
 dist/*
 target/
 lib_managed/
 src_managed/
 project/boot/
 project/plugins/project/
+sbt/*.jar
+mini-complete-example/sbt/*.jar
 
 # Scala-IDE specific
 .scala_dependencies
-.worksheet
+
+#Emacs
+*~
+
+#ignore the metastore
+metastore_db/*
