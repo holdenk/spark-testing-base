@@ -58,7 +58,7 @@ class TestOutputStream[T: ClassTag](parent: DStream[T],
   * This is the base trait for Spark Streaming testsuites. This provides basic functionality
   * to run user-defined set of input on user-defined stream operations, and verify the output.
   */
-trait TestSuiteBase extends FunSuite with BeforeAndAfter with Logging {
+trait TestSuiteBase extends FunSuite with BeforeAndAfter with Logging with LocalSparkContext {
 
   // Name of the framework for Spark context
   def framework = this.getClass.getSimpleName
@@ -159,7 +159,7 @@ trait TestSuiteBase extends FunSuite with BeforeAndAfter with Logging {
     numPartitions: Int = numInputPartitions
   ): (TestOutputStream[V], TestStreamingContext) = {
     // Create TestStreamingContext
-    val sc = new SparkContext(conf)
+    sc = new SparkContext(conf)
     val ssc = new TestStreamingContext(sc, batchDuration)
     if (checkpointDir != null) {
       ssc.checkpoint(checkpointDir)
