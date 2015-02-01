@@ -7,7 +7,7 @@ import java.io._
 import java.util.UUID
 
 object Utils {
-    private val shutdownDeletePaths = new scala.collection.mutable.HashSet[String]()
+  private val shutdownDeletePaths = new scala.collection.mutable.HashSet[String]()
 
   // Add a shutdown hook to delete the temp dirs when the JVM exits
   Runtime.getRuntime.addShutdownHook(new Thread("delete Spark temp dirs") {
@@ -22,9 +22,9 @@ object Utils {
     }
   })
 
-    /**
-   * Check to see if file is a symbolic link.
-   */
+  /**
+    * Check to see if file is a symbolic link.
+    */
   def isSymlink(file: File): Boolean = {
     if (file == null) throw new NullPointerException("File must not be null")
     val fileInCanonicalDir = if (file.getParent() == null) {
@@ -36,7 +36,7 @@ object Utils {
     !fileInCanonicalDir.getCanonicalFile().equals(fileInCanonicalDir.getAbsoluteFile())
   }
 
-    private def listFilesSafely(file: File): Seq[File] = {
+  private def listFilesSafely(file: File): Seq[File] = {
     if (file.exists()) {
       val files = file.listFiles()
       if (files == null) {
@@ -49,11 +49,11 @@ object Utils {
   }
 
 
-    /**
-   * Delete a file or directory and its contents recursively.
-   * Don't follow directories if they are symlinks.
-   * Throws an exception if deletion is unsuccessful.
-   */
+  /**
+    * Delete a file or directory and its contents recursively.
+    * Don't follow directories if they are symlinks.
+    * Throws an exception if deletion is unsuccessful.
+    */
   def deleteRecursively(file: File) {
     if (file != null) {
       try {
@@ -95,10 +95,10 @@ object Utils {
   }
 
 
-    /**
-   * Create a directory inside the given parent directory. The directory is guaranteed to be
-   * newly created, and is not marked for automatic deletion.
-   */
+  /**
+    * Create a directory inside the given parent directory. The directory is guaranteed to be
+    * newly created, and is not marked for automatic deletion.
+    */
   def createDirectory(root: String): File = {
     var attempts = 0
     val maxAttempts = 10
@@ -121,9 +121,9 @@ object Utils {
   }
 
   /**
-   * Create a temporary directory inside the given parent directory. The directory will be
-   * automatically deleted when the VM shuts down.
-   */
+    * Create a temporary directory inside the given parent directory. The directory will be
+    * automatically deleted when the VM shuts down.
+    */
   def createTempDir(root: String = System.getProperty("java.io.tmpdir")): File = {
     val dir = createDirectory(root)
     registerShutdownDeleteDir(dir)
