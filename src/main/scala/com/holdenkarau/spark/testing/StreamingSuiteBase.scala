@@ -35,7 +35,7 @@ import org.scalatest.concurrent.PatienceConfiguration
 
 import org.apache.spark.streaming.dstream.{DStream, InputDStream}
 import org.apache.spark.streaming.scheduler.{StreamingListenerBatchStarted, StreamingListenerBatchCompleted, StreamingListener}
-import org.apache.spark.streaming.util.ManualClock
+import org.apache.spark.streaming.util.TestManualClock
 import org.apache.spark.{SparkConf, Logging}
 import org.apache.spark.rdd.RDD
 
@@ -133,9 +133,11 @@ trait TestSuiteBase extends FunSuite with BeforeAndAfter with Logging {
    * Run a block of code with the given StreamingContext and automatically
    * stop the context when the block completes or when an exception is thrown.
    */
-  def withStreamingContext[R](ssc: TestStreamingContext)(block: TestStreamingContext => R): R = {
+  def withOutputAndStreamingContext[R](outputStreamSSC: (TestOutputStream[R], TestStreamingContext))(block: (TestOutputStream[R], TestStreamingContext) => Unit): Unit = {
+    val outputStream = outputStreamSSC._1
+    val ssc = outputStreamSSC._2
     try {
-      block(ssc)
+      block(outputStream, ssc)
     } finally {
       try {
         ssc.stop(stopSparkContext = true)
@@ -155,7 +157,7 @@ trait TestSuiteBase extends FunSuite with BeforeAndAfter with Logging {
       input: Seq[Seq[U]],
       operation: DStream[U] => DStream[V],
       numPartitions: Int = numInputPartitions
-    ): (TestOutputStream[V], StreamingContext) = {
+    ): (TestOutputStream[V], TestStreamingContext) = {
     // Create TestStreamingContext
     val sc = new SparkContext(conf)
     val ssc = new TestStreamingContext(sc, batchDuration)
@@ -204,29 +206,11 @@ trait TestSuiteBase extends FunSuite with BeforeAndAfter with Logging {
    * Returns a sequence of items for each RDD.
    */
   def runStreams[V: ClassTag](
-    outputStream: TestOutputStream,
+    outputStream: TestOutputStream[V],
     ssc: TestStreamingContext,
     numBatches: Int,
     numExpectedOutput: Int
     ): Seq[Seq[V]] = {
-    // Flatten each RDD into a single Seq
-    runStreamsWithPartitions(outputStream, ssc, numBatches, numExpectedOutput).map(_.flatten.toSeq)
-  }
-
-  /**
-   * Runs the streams set up in `ssc` on manual clock for `numBatches` batches and
-   * returns the collected output. It will wait until `numExpectedOutput` number of
-   * output data has been collected or timeout (set by `maxWaitTimeMillis`) is reached.
-   *
-   * Returns a sequence of RDD's. Each RDD is represented as several sequences of items, each
-   * representing one partition.
-   */
-  def runStreamsWithPartitions[V: ClassTag](
-    outputStream: TestOutputStream,
-    ssc: TestStreamingContext,
-    numBatches: Int,
-    numExpectedOutput: Int
-    ): Seq[Seq[Seq[V]]] = {
     assert(numBatches > 0, "Number of batches to run stream computation is zero")
     assert(numExpectedOutput > 0, "Number of expected outputs after " + numBatches + " is zero")
     logInfo("numBatches = " + numBatches + ", numExpectedOutput = " + numExpectedOutput)
@@ -331,8 +315,9 @@ trait TestSuiteBase extends FunSuite with BeforeAndAfter with Logging {
       useSet: Boolean
     ) {
     val numBatches_ = if (numBatches > 0) numBatches else expectedOutput.size
-    withOutputAndStreamingContext(setupStreams[U, V](input, operation)) { (output, ssc) =>
-      val output = runStreams[V](output, ssc, numBatches_, expectedOutput.size)
+    val output =
+    withOutputAndStreamingContext(setupStreams[U, V](input, operation)) { (outputStream, ssc) =>
+      val output: Seq[Seq[V]] = runStreams[V](outputStream, ssc, numBatches_, expectedOutput.size)
       verifyOutput[V](output, expectedOutput, useSet)
     }
   }
@@ -370,8 +355,8 @@ trait TestSuiteBase extends FunSuite with BeforeAndAfter with Logging {
       useSet: Boolean
     ) {
     val numBatches_ = if (numBatches > 0) numBatches else expectedOutput.size
-    withOutputAndStreamingContext(setupStreams[U, V, W](input1, input2, operation)) { (output, ssc) =>
-      val output = runStreams[W](output, ssc, numBatches_, expectedOutput.size)
+    withOutputAndStreamingContext(setupStreams[U, V, W](input1, input2, operation)) { (outputStream, ssc) =>
+      val output = runStreams[W](outputStream, ssc, numBatches_, expectedOutput.size)
       verifyOutput[W](output, expectedOutput, useSet)
     }
   }
