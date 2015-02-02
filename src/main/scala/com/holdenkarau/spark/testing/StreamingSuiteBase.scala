@@ -46,7 +46,7 @@ import org.apache.spark.rdd.RDD
   * The buffer contains a sequence of RDD's, each containing a sequence of items
   */
 class TestOutputStream[T: ClassTag](parent: DStream[T],
-  val output: ArrayBuffer[Seq[T]] = ArrayBuffer[Seq[T]]()) {
+  val output: ArrayBuffer[Seq[T]] = ArrayBuffer[Seq[T]]()) extends Serializable {
   parent.foreachRDD{(rdd: RDD[T], time) =>
     val collected = rdd.collect()
     output += collected
@@ -58,7 +58,7 @@ class TestOutputStream[T: ClassTag](parent: DStream[T],
   * This is the base trait for Spark Streaming testsuites. This provides basic functionality
   * to run user-defined set of input on user-defined stream operations, and verify the output.
   */
-trait TestSuiteBase extends FunSuite with BeforeAndAfter with Logging with LocalSparkContext {
+trait StreamingSuiteBase extends FunSuite with BeforeAndAfter with Logging with LocalSparkContext {
 
   // Name of the framework for Spark context
   def framework = this.getClass.getSimpleName
@@ -222,7 +222,7 @@ trait TestSuiteBase extends FunSuite with BeforeAndAfter with Logging with Local
       ssc.start()
 
       // Advance manual clock
-      val clock = ssc.getScheduler().clock.asInstanceOf[TestManualClock]
+      val clock = new TestManualClock(ssc.getScheduler().clock)
       logInfo("Manual clock before advancing = " + clock.currentTime())
       if (actuallyWait) {
         for (i <- 1 to numBatches) {
