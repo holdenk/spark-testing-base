@@ -1,5 +1,7 @@
 name := "spark-testing-base"
 
+publishMavenStyle := true
+
 version := "0.0.1"
 
 scalaVersion := "2.10.4"
@@ -26,4 +28,38 @@ resolvers ++= Seq(
   "Second Typesafe repo" at "http://repo.typesafe.com/typesafe/maven-releases/",
   "Mesosphere Public Repository" at "http://downloads.mesosphere.io/maven",
   Resolver.sonatypeRepo("public")
+)
+
+// publish settings
+publishTo := {
+  val nexus = "https://oss.sonatype.org/"
+  if (isSnapshot.value)
+    Some("snapshots" at nexus + "content/repositories/snapshots")
+  else
+    Some("releases"  at nexus + "service/local/staging/deploy/maven2")
+}
+licenses := Seq("Apache 2.0 License" -> "http://www.apache.org/licenses/LICENSE-2.0.html")
+homepage := Some(url("https://github.com/holdenk/spark-testing-base"))
+
+pomExtra := (
+  <url>https://github.com/holdenk/spark-testing-base</url>
+  <licenses>
+    <license>
+      <name>Apache 2.0 License</name>
+      <url>http://www.apache.org/licenses/LICENSE-2.0.html</url>
+      <distribution>repo</distribution>
+    </license>
+  </licenses>
+  <scm>
+    <url>git@github.com:holdenk/spark-testing-base.git</url>
+    <connection>scm:git@github.com:holdenk/spark-testing-base.git</connection>
+  </scm>
+  <developers>
+    <developer>
+      <id>holdenk</id>
+      <name>Holden Karau</name>
+      <url>http://www.holdenkarau.com</url>
+      <email>holden@pigscanfly.ca</email>
+    </developer>
+  </developers>
 )
