@@ -38,18 +38,13 @@ publishTo := {
   else
     Some("releases"  at nexus + "service/local/staging/deploy/maven2")
 }
-licenses := Seq("Apache 2.0 License" -> "http://www.apache.org/licenses/LICENSE-2.0.html")
+
+licenses := Seq("Apache 2.0 License" -> url("http://www.apache.org/licenses/LICENSE-2.0.html"))
+
 homepage := Some(url("https://github.com/holdenk/spark-testing-base"))
 
 pomExtra := (
   <url>https://github.com/holdenk/spark-testing-base</url>
-  <licenses>
-    <license>
-      <name>Apache 2.0 License</name>
-      <url>http://www.apache.org/licenses/LICENSE-2.0.html</url>
-      <distribution>repo</distribution>
-    </license>
-  </licenses>
   <scm>
     <url>git@github.com:holdenk/spark-testing-base.git</url>
     <connection>scm:git@github.com:holdenk/spark-testing-base.git</connection>
