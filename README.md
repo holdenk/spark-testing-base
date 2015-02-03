@@ -1,3 +1,4 @@
+[![buildstatus](https://travis-ci.org/holdenk/spark-testing-base.svg?branch=master)](https://travis-ci.org/holdenk/spark-testing-base)
 # spark-testing-base
 Base classes to use when writing tests with Spark.
 # Why?
