@@ -28,7 +28,7 @@ import scala.collection.mutable.Queue
 import scala.language.implicitConversions
 import scala.reflect.ClassTag
 
-import org.scalatest.{BeforeAndAfter, FunSuite}
+import org.scalatest.{BeforeAndAfterAll, FunSuite}
 import org.scalatest.time.{Span, Seconds => ScalaTestSeconds}
 import org.scalatest.concurrent.Eventually.timeout
 import org.scalatest.concurrent.PatienceConfiguration
@@ -58,7 +58,7 @@ class TestOutputStream[T: ClassTag](parent: DStream[T],
   * This is the base trait for Spark Streaming testsuites. This provides basic functionality
   * to run user-defined set of input on user-defined stream operations, and verify the output.
   */
-trait StreamingSuiteBase extends FunSuite with BeforeAndAfter with Logging with LocalSparkContext {
+trait StreamingSuiteBase extends FunSuite with BeforeAndAfterAll with Logging with SharedSparkContext {
 
   // Name of the framework for Spark context
   def framework = this.getClass.getSimpleName
@@ -101,7 +101,7 @@ trait StreamingSuiteBase extends FunSuite with BeforeAndAfter with Logging with 
   def actuallyWait = false
 
   //// A SparkConf to use in tests. Can be modified before calling setupStreams to configure things.
-  val conf = new SparkConf()
+  override val conf = new SparkConf()
     .setMaster(master)
     .setAppName(framework)
 
@@ -110,7 +110,7 @@ trait StreamingSuiteBase extends FunSuite with BeforeAndAfter with Logging with 
 
   // Default before function for any streaming test suite. Override this
   // if you want to add your stuff to "before" (i.e., don't call before { } )
-  def beforeFunction() {
+  override def beforeAll() {
     if (useManualClock) {
       logInfo("Using manual clock")
       conf.set("spark.streaming.clock", "org.apache.spark.streaming.util.ManualClock")
@@ -118,16 +118,16 @@ trait StreamingSuiteBase extends FunSuite with BeforeAndAfter with Logging with 
       logInfo("Using real clock")
       conf.set("spark.streaming.clock", "org.apache.spark.streaming.util.SystemClock")
     }
+    super.beforeAll()
   }
 
   // Default after function for any streaming test suite. Override this
   // if you want to add your stuff to "after" (i.e., don't call after { } )
-  def afterFunction() {
+  override def afterAll() {
     System.clearProperty("spark.streaming.clock")
+    super.afterAll()
   }
 
-  before(beforeFunction)
-  after(afterFunction)
 
   /**
     * Run a block of code with the given StreamingContext and automatically
@@ -159,7 +159,6 @@ trait StreamingSuiteBase extends FunSuite with BeforeAndAfter with Logging with 
     numPartitions: Int = numInputPartitions
   ): (TestOutputStream[V], TestStreamingContext) = {
     // Create TestStreamingContext
-    sc = new SparkContext(conf)
     val ssc = new TestStreamingContext(sc, batchDuration)
     if (checkpointDir != null) {
       ssc.checkpoint(checkpointDir)
@@ -183,7 +182,6 @@ trait StreamingSuiteBase extends FunSuite with BeforeAndAfter with Logging with 
     operation: (DStream[U], DStream[V]) => DStream[W]
   ): (TestOutputStream[W], TestStreamingContext) = {
     // Create StreamingContext
-    val sc = new SparkContext(conf)
     val ssc = new TestStreamingContext(sc, batchDuration)
     if (checkpointDir != null) {
       ssc.checkpoint(checkpointDir)
