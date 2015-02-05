@@ -58,7 +58,8 @@ class TestOutputStream[T: ClassTag](parent: DStream[T],
   * This is the base trait for Spark Streaming testsuites. This provides basic functionality
   * to run user-defined set of input on user-defined stream operations, and verify the output.
   */
-trait StreamingSuiteBase extends FunSuite with BeforeAndAfterAll with Logging with SharedSparkContext {
+trait StreamingSuiteBase extends FunSuite with BeforeAndAfterAll with Logging
+    with SharedSparkContext {
 
   // Name of the framework for Spark context
   def framework = this.getClass.getSimpleName
@@ -81,7 +82,8 @@ trait StreamingSuiteBase extends FunSuite with BeforeAndAfterAll with Logging wi
     * replayable, reliable message queue like Kafka. It requires a sequence as input, and
     * returns the i_th element at the i_th batch under manual clock.
     */
-  def createTestInputStream[T: ClassTag](sc: SparkContext, ssc_ : TestStreamingContext, input: Seq[Seq[T]]) = {
+  def createTestInputStream[T: ClassTag](sc: SparkContext, ssc_ : TestStreamingContext,
+    input: Seq[Seq[T]]) = {
     val rdds: Queue[RDD[T]] = (new Queue() ++= input.map(elems => sc.parallelize(elems)))
     val defaultRDD: RDD[T] = sc.parallelize(Seq[T]())
     ssc_.queueStream[T](rdds, oneAtATime = true, defaultRDD = defaultRDD)
@@ -100,7 +102,7 @@ trait StreamingSuiteBase extends FunSuite with BeforeAndAfterAll with Logging wi
   // Whether to actually wait in real time before changing manual clock
   def actuallyWait = false
 
-  //// A SparkConf to use in tests. Can be modified before calling setupStreams to configure things.
+  // A SparkConf to use in tests. Can be modified before calling setupStreams to configure things.
   override val conf = new SparkConf()
     .setMaster(master)
     .setAppName(framework)
@@ -133,7 +135,8 @@ trait StreamingSuiteBase extends FunSuite with BeforeAndAfterAll with Logging wi
     * Run a block of code with the given StreamingContext and automatically
     * stop the context when the block completes or when an exception is thrown.
     */
-  def withOutputAndStreamingContext[R](outputStreamSSC: (TestOutputStream[R], TestStreamingContext))(block: (TestOutputStream[R], TestStreamingContext) => Unit): Unit = {
+  def withOutputAndStreamingContext[R](outputStreamSSC: (TestOutputStream[R], TestStreamingContext))
+    (block: (TestOutputStream[R], TestStreamingContext) => Unit): Unit = {
     val outputStream = outputStreamSSC._1
     val ssc = outputStreamSSC._2
     try {
@@ -235,7 +238,8 @@ trait StreamingSuiteBase extends FunSuite with BeforeAndAfterAll with Logging wi
 
       // Wait until expected number of output items have been generated
       val startTime = System.currentTimeMillis()
-      while (output.size < numExpectedOutput && System.currentTimeMillis() - startTime < maxWaitTimeMillis) {
+      while (output.size < numExpectedOutput &&
+        System.currentTimeMillis() - startTime < maxWaitTimeMillis) {
         logInfo("output.size = " + output.size + ", numExpectedOutput = " + numExpectedOutput)
         ssc.awaitTermination(50)
       }
@@ -353,7 +357,8 @@ trait StreamingSuiteBase extends FunSuite with BeforeAndAfterAll with Logging wi
     useSet: Boolean
   ) {
     val numBatches_ = if (numBatches > 0) numBatches else expectedOutput.size
-    withOutputAndStreamingContext(setupStreams[U, V, W](input1, input2, operation)) { (outputStream, ssc) =>
+    withOutputAndStreamingContext(setupStreams[U, V, W](input1, input2, operation)) {
+      (outputStream, ssc) =>
       val output = runStreams[W](outputStream, ssc, numBatches_, expectedOutput.size)
       verifyOutput[W](output, expectedOutput, useSet)
     }
