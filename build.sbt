@@ -1,4 +1,6 @@
-name := "spark-testing-base"
+organization := "com.holdenkarau"
+
+name := "spark.testing.base"
 
 publishMavenStyle := true
 
