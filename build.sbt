@@ -17,6 +17,10 @@ libraryDependencies ++= Seq(
   "org.scalatest" %% "scalatest" % "2.2.1"
 )
 
+scalacOptions ++= Seq("-deprecation", "-unchecked")
+
+pomIncludeRepository := { x => false }
+
 resolvers ++= Seq(
   "JBoss Repository" at "http://repository.jboss.org/nexus/content/repositories/releases/",
   "Spray Repository" at "http://repo.spray.cc/",
