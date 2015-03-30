@@ -50,7 +50,6 @@ licenses := Seq("Apache 2.0 License" -> url("http://www.apache.org/licenses/LICE
 homepage := Some(url("https://github.com/holdenk/spark-testing-base"))
 
 pomExtra := (
-  <url>https://github.com/holdenk/spark-testing-base</url>
   <scm>
     <url>git@github.com:holdenk/spark-testing-base.git</url>
     <connection>scm:git@github.com:holdenk/spark-testing-base.git</connection>
