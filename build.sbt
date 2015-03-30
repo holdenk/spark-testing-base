@@ -4,18 +4,20 @@ name := "spark-testing-base"
 
 publishMavenStyle := true
 
-version := "0.0.1"
+version := "0.0.2"
 
 scalaVersion := "2.10.4"
 
 javacOptions ++= Seq("-source", "1.7", "-target", "1.7")
 
+spName := "holdenk/spark-testing-base"
+
+sparkVersion := "1.1.1"
+
+sparkComponents ++= Seq("core", "streaming")
+
 // additional libraries
-libraryDependencies ++= Seq(
-  "org.apache.spark" %% "spark-core" % "1.1.1" % "provided",
-  "org.apache.spark" %% "spark-streaming" % "1.1.1" % "provided",
-  "org.scalatest" %% "scalatest" % "2.2.1"
-)
+libraryDependencies += "org.scalatest" %% "scalatest" % "2.2.1"
 
 scalacOptions ++= Seq("-deprecation", "-unchecked")
 
@@ -45,7 +47,7 @@ publishTo := {
     Some("releases"  at nexus + "service/local/staging/deploy/maven2")
 }
 
-licenses := Seq("Apache 2.0 License" -> url("http://www.apache.org/licenses/LICENSE-2.0.html"))
+licenses := Seq("Apache License 2.0" -> url("http://www.apache.org/licenses/LICENSE-2.0.html"))
 
 homepage := Some(url("https://github.com/holdenk/spark-testing-base"))
 
@@ -64,3 +66,5 @@ pomExtra := (
     </developer>
   </developers>
 )
+
+credentials += Credentials(Path.userHome / ".ivy2" / ".sbtcredentials")
