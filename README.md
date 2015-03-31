@@ -8,5 +8,6 @@ This is not my beautiful code.
 So you include com.holdenkarau.spark-testing-base [spark_version]_0.0.5 and extend one
 of the classes and write some simple tests instead. For example to include this in a project using Spark 1.3.0:
 "com.holdenkarau" % "spark-testing-base" %% "1.3.0_0.0.5"
+This package is also cross compiled against scala 2.10.4 and 2.11.6 in the traditional manner.
 # Where is this from?
 This code is a stripped down version of the test suite bases that are in Apache Spark but are not accessiable.
