@@ -20,12 +20,18 @@ foreach my $spark_version (@spark_versions) {
     my $new_build = $input;
     $new_build =~ s/version\s+\:\=\s+\".+?\"/version := "$target_version"/;
     $new_build =~ s/sparkVersion\s+\:\=\s+\".+?\"/sparkVersion := "$spark_version"/;
+    print `git branch -d release-v$target_version`;
+    print `git checkout -b release-v$target_version`;
     print "new build file $new_build hit";
     open (OUT, ">build.sbt");
     print OUT $new_build;
     close (OUT);
+    print `git commit -am "Make release for $target_version"`;
+    print `git push --set-upstream origin release-v$target_version`;
     print "building";
     print `./sbt/sbt clean compile package publishSigned spPublish`;
+    print "switch back to master";
+    print `git checkout master`;
     print "built"
 }
 `cp build.sbt_back build.sbt`;
