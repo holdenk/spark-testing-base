@@ -115,7 +115,7 @@ trait StreamingSuiteBase extends FunSuite with BeforeAndAfterAll with Logging
   override def beforeAll() {
     if (useManualClock) {
       logInfo("Using manual clock")
-      conf.set("spark.streaming.clock", "org.apache.spark.streaming.util.ManualClock")
+      conf.set("spark.streaming.clock", "org.apache.spark.streaming.util.TestManualClock")
     } else {
       logInfo("Using real clock")
       conf.set("spark.streaming.clock", "org.apache.spark.streaming.util.SystemClock")
@@ -223,7 +223,7 @@ trait StreamingSuiteBase extends FunSuite with BeforeAndAfterAll with Logging
       ssc.start()
 
       // Advance manual clock
-      val clock = new TestManualClock(ssc.getScheduler().clock)
+      val clock = ssc.getScheduler().clock.asInstanceOf[TestManualClock]
       logInfo("Manual clock before advancing = " + clock.currentTime())
       if (actuallyWait) {
         for (i <- 1 to numBatches) {
