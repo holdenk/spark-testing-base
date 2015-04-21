@@ -59,7 +59,7 @@ class TestOutputStream[T: ClassTag](parent: DStream[T],
   * to run user-defined set of input on user-defined stream operations, and verify the output.
   */
 trait StreamingSuiteBase extends FunSuite with BeforeAndAfterAll with Logging
-    with PerTestSparkContext {
+    with SharedSparkContext {
 
   // Name of the framework for Spark context
   def framework = this.getClass.getSimpleName
