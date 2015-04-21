@@ -143,7 +143,7 @@ trait StreamingSuiteBase extends FunSuite with BeforeAndAfterAll with Logging
       block(outputStream, ssc)
     } finally {
       try {
-        ssc.stop(stopSparkContext = true)
+        ssc.stop(stopSparkContext = false)
       } catch {
         case e: Exception =>
           logError("Error stopping StreamingContext", e)
@@ -253,7 +253,7 @@ trait StreamingSuiteBase extends FunSuite with BeforeAndAfterAll with Logging
 
       Thread.sleep(100) // Give some time for the forgetting old RDDs to complete
     } finally {
-      ssc.stop(stopSparkContext = true)
+      ssc.stop(stopSparkContext = false)
     }
     output.toSeq
   }
