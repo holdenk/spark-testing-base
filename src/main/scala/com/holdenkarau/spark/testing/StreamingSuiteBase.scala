@@ -59,13 +59,13 @@ class TestOutputStream[T: ClassTag](parent: DStream[T],
   * to run user-defined set of input on user-defined stream operations, and verify the output.
   */
 trait StreamingSuiteBase extends FunSuite with BeforeAndAfterAll with Logging
-    with SharedSparkContext {
+    with PerTestSparkContext {
 
   // Name of the framework for Spark context
   def framework = this.getClass.getSimpleName
 
   // Master for Spark context
-  def master = "local[2]"
+  def master = "local[4]"
 
   // Batch duration
   def batchDuration = Seconds(1)
@@ -162,6 +162,8 @@ trait StreamingSuiteBase extends FunSuite with BeforeAndAfterAll with Logging
     numPartitions: Int = numInputPartitions
   ): (TestOutputStream[V], TestStreamingContext) = {
     // Create TestStreamingContext
+    println("creating teststreamingcontext")
+    println("spark context is "+sc)
     val ssc = new TestStreamingContext(sc, batchDuration)
     if (checkpointDir != null) {
       ssc.checkpoint(checkpointDir)

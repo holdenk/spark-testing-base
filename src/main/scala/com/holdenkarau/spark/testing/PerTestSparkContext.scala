@@ -14,28 +14,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package com.holdenkarau.spark.testing
 
-import org.apache.spark.streaming._
-import org.apache.spark.streaming.dstream._
 import org.apache.spark._
-import org.apache.spark.SparkContext._
 
-import org.scalatest.FunSuite
+import org.scalatest.BeforeAndAfterAll
+import org.scalatest.BeforeAndAfterEach
+import org.scalatest.Suite
 
-class SampleStreamingTest extends StreamingSuiteBase {
-  test("really simple transformation") {
-    val input = List(List("hi"), List("hi holden"), List("bye"))
-    val expected = List(List("hi"), List("hi", "holden"), List("bye"))
-    testOperation[String, String](input, tokenize _, expected, useSet = true)
-  }
-  def tokenize(f: DStream[String]) = {
-    f.flatMap(_.split(" "))
-  }
+/** Provides a local `sc` {@link SparkContext} variable, correctly stopping it after each test.
+ * The stopping logic is provided in {@link LocalSparkContext} */
+trait PerTestSparkContext extends LocalSparkContext with BeforeAndAfterEach  { self: Suite =>
+  val conf = new SparkConf().setMaster("local[4]").setAppName("test")
 
-  test("noop simple transformation") {
-    def noop(s: DStream[String]) = s
-    val input = List(List("hi"), List("hi holden"), List("bye"))
-    testOperation[String, String](input, noop _, input, useSet = true)
+  override def beforeEach() {
+    sc = new SparkContext(conf)
+    super.beforeEach()
   }
 }
