@@ -1,0 +1,5 @@
+#!/bin/bash
+if [ -z "$SPARK_HOME" ]; then
+   echo "$(tput setaf 1)Error: SPARK_HOME is not set, may not be able to run tests.$(tput sgr0)"
+fi
+PYTHON_PATH=./:$PYTHON_PATH nosetests --logging-level=INFO --detailed-errors --verbosity=2 --with-coverage --cover-html-dir=./htmlcov --cover-package=spark-testing-base
