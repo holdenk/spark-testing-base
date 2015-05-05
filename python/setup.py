@@ -1,7 +1,7 @@
 from setuptools import setup
 
 setup(
-    name='spark-testing-base',
+    name='sparktestingbase',
     version='0.0.7-snapshot',
     author='Holden Karau',
     author_email='holden@pigscanfly.ca',

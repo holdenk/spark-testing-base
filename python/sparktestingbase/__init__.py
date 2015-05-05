@@ -15,12 +15,7 @@
 # limitations under the License.
 #
 
-"""Provides a common test case base for Python Spark tests"""
 
-from utils import add_pyspark_path
-
-add_pyspark_path()
-import unittest2
-from pyspark import context
-
-
+"""
+Helpful classes to write Spark tests.
+"""
