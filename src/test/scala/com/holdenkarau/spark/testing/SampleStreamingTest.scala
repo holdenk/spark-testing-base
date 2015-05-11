@@ -22,6 +22,7 @@ import org.apache.spark._
 import org.apache.spark.SparkContext._
 
 import org.scalatest.FunSuite
+import org.scalatest.exceptions.TestFailedException
 
 class SampleStreamingTest extends StreamingSuiteBase {
   test("really simple transformation") {
@@ -37,5 +38,13 @@ class SampleStreamingTest extends StreamingSuiteBase {
     def noop(s: DStream[String]) = s
     val input = List(List("hi"), List("hi holden"), List("bye"))
     testOperation[String, String](input, noop _, input, useSet = true)
+  }
+  
+  test("a wrong expected multiset for a micro batch leads to a test fail") {
+    val input = List(List("hi"), List("hi holden"), List("bye"))
+    val badMultisetExpected = List(List("hi"), List("hi", "holden", "hi"), List("bye"))
+    val thrown = intercept[TestFailedException] {
+    	testOperation[String, String](input, tokenize _, badMultisetExpected, useSet = true)
+    }
   }
 }

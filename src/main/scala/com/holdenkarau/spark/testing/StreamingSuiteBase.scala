@@ -25,6 +25,7 @@ import java.io._
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.SynchronizedBuffer
 import scala.collection.mutable.Queue
+import scala.collection.immutable.{HashBag=>Bag}
 import scala.language.implicitConversions
 import scala.reflect.ClassTag
 
@@ -281,7 +282,8 @@ trait StreamingSuiteBase extends FunSuite with BeforeAndAfterAll with Logging
     assert(output.size === expectedOutput.size, "Number of outputs do not match")
     for (i <- 0 until output.size) {
       if (useSet) {
-        assert(output(i).toSet === expectedOutput(i).toSet)
+        implicit val config = Bag.configuration.compact[V]
+        assert(Bag(output(i):_*) === Bag(expectedOutput(i):_*))
       } else {
         assert(output(i).toList === expectedOutput(i).toList)
       }

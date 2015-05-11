@@ -21,6 +21,8 @@ sparkComponents ++= Seq("core", "streaming")
 // additional libraries
 libraryDependencies += "org.scalatest" %% "scalatest" % "2.2.1"
 
+libraryDependencies += "io.github.nicolasstucki" % "multisets_2.10" % "0.1"
+
 scalacOptions ++= Seq("-deprecation", "-unchecked")
 
 pomIncludeRepository := { x => false }
