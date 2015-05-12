@@ -15,12 +15,19 @@
 # limitations under the License.
 #
 
+"""Simple test example"""
 
-"""
-Helpful classes to write Spark tests.
-"""
+from sparktestingbase.testcase import SparkTestingBaseTestCase
+import unittest2
 
-"""from sparktestingbase import SparkTestingBaseTestCase
+class SimpleTest(SparkTestingBaseTestCase):
 
-__all__ = ["SparkTestingBaseTestCase"]
-"""
+    def test_basic(self):
+        """Test a simple collect."""
+        input = ["hello world"]
+        rdd = self.sc.parallelize(input)
+        result = rdd.collect()
+        assert result == input
+
+if __name__ == "__main__":
+    unittest2.main()

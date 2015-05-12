@@ -29,7 +29,8 @@ class SparkTestingBaseTestCase(unittest2.TestCase):
     """Basic common test case for Spark. Provides a Spark context as sc. Override sparkMaster
     or set the enviroment property SPARK_MASTER for non-local mode testing."""
 
-    def getMaster(self):
+    @classmethod
+    def getMaster(cls):
         return os.getenv('SPARK_MASTER', "local[4]")
 
     def setUp(self):
@@ -45,6 +46,35 @@ class SparkTestingBaseTestCase(unittest2.TestCase):
         # To avoid Akka rebinding to the same port, since it doesn't unbind
         # immediately on shutdown
         self.sc._jvm.System.clearProperty("spark.driver.port")
+
+class SparkTestingBaseReuse(unittest2.TestCase):
+
+    """Basic common test case for Spark. Provides a Spark context as sc. Override sparkMaster
+    or set the enviroment property SPARK_MASTER for non-local mode testing. Re-uses the same
+    context per class."""
+
+    @classmethod
+    def getMaster(cls):
+        return os.getenv('SPARK_MASTER', "local[4]")
+
+    @classmethod
+    def setUpClass(cls):
+        """Setup a basic Spark context for testing"""
+        print "setting up class"
+        cls.sc = SparkContext(cls.getMaster())
+
+    @classmethod
+    def tearDownClass(cls):
+        """
+        Tear down the basic panda spark test case. This stops the running
+        context and does a hack to prevent Akka rebinding on the same port.
+        """
+        print "stopping class"
+        cls.sc.stop()
+        # To avoid Akka rebinding to the same port, since it doesn't unbind
+        # immediately on shutdown
+        cls.sc._jvm.System.clearProperty("spark.driver.port")
+
 
 if __name__ == "__main__":
     unittest2.main()

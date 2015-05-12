@@ -15,12 +15,20 @@
 # limitations under the License.
 #
 
+"""Simple test example"""
 
-"""
-Helpful classes to write Spark tests.
-"""
+from sparktestingbase.testcase import SparkTestingBaseReuse
+import unittest2
 
-"""from sparktestingbase import SparkTestingBaseTestCase
+class ReuseSparkContextTest(SparkTestingBaseReuse):
 
-__all__ = ["SparkTestingBaseTestCase"]
-"""
+    def test_samecontext_1(self):
+        """Set a system property"""
+        self.sc.setLocalProperty("pandas", "123")
+
+    def test_samecontext_2(self):
+        """Test that we have the same context."""
+        assert self.sc.getLocalProperty("pandas") == "123"
+
+if __name__ == "__main__":
+    unittest2.main()
