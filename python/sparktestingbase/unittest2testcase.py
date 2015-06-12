@@ -17,7 +17,7 @@
 
 """Provides a common test case base for Python Spark tests"""
 
-from utils import add_pyspark_path
+from utils import add_pyspark_path, quiet_py4j
 
 add_pyspark_path()
 import unittest2
@@ -38,6 +38,7 @@ class SparkTestingBaseTestCase(unittest2.TestCase):
     def setUp(self):
         """Setup a basic Spark context for testing"""
         self.sc = SparkContext(self.getMaster())
+        quiet_py4j()
 
     def tearDown(self):
         """
@@ -65,6 +66,7 @@ class SparkTestingBaseReuse(unittest2.TestCase):
         """Setup a basic Spark context for testing"""
         print "setting up class"
         cls.sc = SparkContext(cls.getMaster())
+        quiet_py4j()
 
     @classmethod
     def tearDownClass(cls):

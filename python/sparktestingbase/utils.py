@@ -3,8 +3,10 @@ Utils function.
 """
 import sys
 import os
+import logging
 
 from glob import glob
+from pyspark import SparkContext
 
 
 def add_pyspark_path_if_needed():
@@ -38,3 +40,8 @@ def add_pyspark_path():
     except ValueError as e:
         print(str(e))
         exit(-1)
+
+def quiet_py4j():
+    logger = logging.getLogger('py4j')
+    logger.setLevel(logging.INFO)
+
