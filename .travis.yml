@@ -1,3 +1,11 @@
 language: scala
 scala:
    - 2.10.4
+install:
+  # Download spark 1.3.1
+  - "wget http://download.nextag.com/apache/spark/spark-1.3.1/spark-1.3.1-bin-hadoop2.4.tgz"
+  - "tar -xvf spark-1.3.1-bin-hadoop2.4.tgz"
+script:
+  - ./sbt/sbt test
+  - "export SPARK_HOME=./spark-1.3.1-bin-hadoop2.4/"
+  - cd python; ./run-tests
