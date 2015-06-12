@@ -20,7 +20,9 @@
 from sparktestingbase.testcase import SparkTestingBaseTestCase
 import unittest2
 
+
 class SimpleTest(SparkTestingBaseTestCase):
+    """A simple test."""
 
     def test_basic(self):
         """Test a simple collect."""

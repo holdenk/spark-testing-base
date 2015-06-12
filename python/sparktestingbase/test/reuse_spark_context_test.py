@@ -20,7 +20,9 @@
 from sparktestingbase.testcase import SparkTestingBaseReuse
 import unittest2
 
+
 class ReuseSparkContextTest(SparkTestingBaseReuse):
+    """Test that we re-use the spark context when asked to."""
 
     def test_samecontext_1(self):
         """Set a system property"""

@@ -19,9 +19,12 @@
 
 from sparktestingbase.testcase import SparkTestingBaseTestCase
 
+
 class HelloWorldTest(SparkTestingBaseTestCase):
+    """Simple hell world example test."""
 
     def test_basic(self):
+        """Test a parallelize & collect."""
         input = ["hello world"]
         rdd = self.sc.parallelize(input)
         result = rdd.collect()

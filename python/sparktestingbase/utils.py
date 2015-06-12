@@ -8,11 +8,13 @@ from glob import glob
 
 
 def add_pyspark_path_if_needed():
-    """Add PySpark to the library path based on the value of SPARK_HOME if pyspark is not already in our path"""
+    """Add PySpark to the library path based on the value of SPARK_HOME if
+    pyspark is not already in our path"""
     try:
         from pyspark import context
     except ImportError:
         add_pyspark_path()
+
 
 def add_pyspark_path():
     """Add PySpark to the library path based on the value of SPARK_HOME."""

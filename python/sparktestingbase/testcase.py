@@ -24,9 +24,11 @@ import unittest2
 from pyspark.context import SparkContext
 import os
 
+
 class SparkTestingBaseTestCase(unittest2.TestCase):
 
-    """Basic common test case for Spark. Provides a Spark context as sc. Override sparkMaster
+    """Basic common test case for Spark. Provides a Spark context as sc.
+    For non local mode testing you can either override sparkMaster
     or set the enviroment property SPARK_MASTER for non-local mode testing."""
 
     @classmethod
@@ -47,11 +49,12 @@ class SparkTestingBaseTestCase(unittest2.TestCase):
         # immediately on shutdown
         self.sc._jvm.System.clearProperty("spark.driver.port")
 
+
 class SparkTestingBaseReuse(unittest2.TestCase):
 
-    """Basic common test case for Spark. Provides a Spark context as sc. Override sparkMaster
-    or set the enviroment property SPARK_MASTER for non-local mode testing. Re-uses the same
-    context per class."""
+    """Basic common test case for Spark. Provides a Spark context as sc.
+    For non local mode testing you can either override sparkMaster
+    or set the enviroment property SPARK_MASTER for non-local mode testing."""
 
     @classmethod
     def getMaster(cls):
