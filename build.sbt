@@ -16,7 +16,7 @@ spName := "holdenk/spark-testing-base"
 
 sparkVersion := "1.3.0"
 
-sparkComponents ++= Seq("core", "streaming")
+sparkComponents ++= Seq("core", "streaming", "sql", "hive")
 
 // additional libraries
 libraryDependencies += "org.scalatest" %% "scalatest" % "2.2.1"
