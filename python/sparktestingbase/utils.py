@@ -41,7 +41,7 @@ def add_pyspark_path():
         print(str(e))
         exit(-1)
 
+
 def quiet_py4j():
     logger = logging.getLogger('py4j')
     logger.setLevel(logging.INFO)
-
