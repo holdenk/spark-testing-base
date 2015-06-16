@@ -6,7 +6,6 @@ import os
 import logging
 
 from glob import glob
-from pyspark import SparkContext
 
 
 def add_pyspark_path_if_needed():

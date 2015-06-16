@@ -64,8 +64,8 @@ class SparkTestingBaseReuse(unittest2.TestCase):
     @classmethod
     def setUpClass(cls):
         """Setup a basic Spark context for testing"""
-        print "setting up class"
-        cls.sc = SparkContext(cls.getMaster())
+        class_name = cls.__name__
+        cls.sc = SparkContext(cls.getMaster(), appName=class_name)
         quiet_py4j()
 
     @classmethod
