@@ -33,14 +33,14 @@ from functools import reduce
 
 from pyspark.context import SparkConf, SparkContext, RDD
 from pyspark.streaming.context import StreamingContext
-from pyspark.streaming.kafka import Broker, KafkaUtils, OffsetRange, TopicAndPartition
 
 
 class StreamingTestCase(SparkTestingBaseReuse):
 
-    """Basic common test case for Spark Streaming tests. Provides a Spark Streaming context,
-    as well as some helper methods for creating streaming input and collecting 
-    streaming output. Based on PySparkStreamingTestCase."""
+    """Basic common test case for Spark Streaming tests. Provides a
+    Spark Streaming context as well as some helper methods for creating
+    streaming input and collecting streaming output.
+    Modeled after PySparkStreamingTestCase."""
 
     timeout = 10  # seconds
     duration = .5
@@ -49,7 +49,6 @@ class StreamingTestCase(SparkTestingBaseReuse):
     def setUpClass(cls):
         super(StreamingTestCase, cls).setUpClass()
         cls.sc.setCheckpointDir("/tmp")
-        
 
     @classmethod
     def tearDownClass(cls):
@@ -109,23 +108,25 @@ class StreamingTestCase(SparkTestingBaseReuse):
 
     def run_func(self, input, func, expected, sort=False, input2=None):
         """
-        @param input: dataset for the test. This should be list of lists or list of RDDs.
-        @param input2: Optional second dataset for the test. If provided func must
-        take two PythonDStreams as input.
-        @param func: wrapped function. This function should return PythonDStream object.
+        @param input: dataset for the test. This should be list of lists
+        or list of RDDs.
+        @param input2: Optional second dataset for the test. If provided your
+        func must take two PythonDStreams as input.
+        @param func: wrapped function. This function should return
+        PythonDStream.
         @param expected: expected output for this testcase.
-        Warning: If output is longer than expected this will silently discard the additional
-        output. TODO: fail when this happens.
+        Warning: If output is longer than expected this will silently
+        discard the additional output. TODO: fail when this happens.
         """
         if not isinstance(input[0], RDD):
             input = [self.sc.parallelize(d, 1) for d in input]
         input_stream = self.ssc.queueStream(input)
         if input2 and not isinstance(input2[0], RDD):
             input2 = [self.sc.parallelize(d, 1) for d in input2]
-        input_stream2 = self.ssc.queueStream(input2) if input2 is not None else None
 
         # Apply test function to stream.
         if input2:
+            input_stream2 = self.ssc.queueStream(input2)
             stream = func(input_stream, input_stream2)
         else:
             stream = func(input_stream)
