@@ -36,24 +36,24 @@ from pyspark.streaming.context import StreamingContext
 from pyspark.streaming.kafka import Broker, KafkaUtils, OffsetRange, TopicAndPartition
 
 
-class PySparkStreamingTestCase(SparkTestingBaseReuse):
+class StreamingTestCase(SparkTestingBaseReuse):
 
     """Basic common test case for Spark Streaming tests. Provides a Spark Streaming context,
     as well as some helper methods for creating streaming input and collecting 
-    streaming output."""
+    streaming output. Based on PySparkStreamingTestCase."""
 
     timeout = 10  # seconds
     duration = .5
 
     @classmethod
     def setUpClass(cls):
-        super.setupClass()
+        super(StreamingTestCase, cls).setUpClass()
         cls.sc.setCheckpointDir("/tmp")
         
 
     @classmethod
     def tearDownClass(cls):
-        cls.sc.stop()
+        super(StreamingTestCase, cls).tearDownClass()
 
     def setUp(self):
         self.ssc = StreamingContext(self.sc, self.duration)
@@ -107,11 +107,15 @@ class PySparkStreamingTestCase(SparkTestingBaseReuse):
         self.wait_for(result, n)
         return result
 
-    def _test_func(self, input, func, expected, sort=False, input2=None):
+    def run_func(self, input, func, expected, sort=False, input2=None):
         """
-        @param input: dataset for the test. This should be list of lists.
+        @param input: dataset for the test. This should be list of lists or list of RDDs.
+        @param input2: Optional second dataset for the test. If provided func must
+        take two PythonDStreams as input.
         @param func: wrapped function. This function should return PythonDStream object.
         @param expected: expected output for this testcase.
+        Warning: If output is longer than expected this will silently discard the additional
+        output. TODO: fail when this happens.
         """
         if not isinstance(input[0], RDD):
             input = [self.sc.parallelize(d, 1) for d in input]
