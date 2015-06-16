@@ -27,11 +27,20 @@ class SimpleStreamingTest(StreamingTestCase):
     @classmethod
     def tokenize(cls, f):
         return f.flatMap(lambda line: line.split(" "))
-    
+
+    @classmethod
+    def noop(cls, f):
+        return f.map(lambda x: x)
+
     def test_simple_transformation(self):
         input = [["hi"], ["hi holden"], ["bye"]]
         expected = [["hi"], ["hi", "holden"], ["bye"]]
         self.run_func(input, SimpleStreamingTest.tokenize, expected)
+
+    def test_noop_transformation(self):
+        input = [["hi"], ["hi holden"], ["bye"]]
+        self.run_func(input, SimpleStreamingTest.noop, input)
+
 
 if __name__ == "__main__":
     unittest2.main()
