@@ -19,9 +19,11 @@ sparkVersion := "1.3.0"
 sparkComponents ++= Seq("core", "streaming", "sql", "hive")
 
 // additional libraries
-libraryDependencies += "org.scalatest" %% "scalatest" % "2.2.1"
-
-libraryDependencies += "io.github.nicolasstucki" % "multisets_2.10" % "0.1"
+libraryDependencies ++= Seq(
+  "org.scalatest" %% "scalatest" % "2.2.1",
+  "io.github.nicolasstucki" % "multisets_2.10" % "0.1",
+  "org.scalacheck" %% "scalacheck" % "1.12.4" % "test",
+  "junit" % "junit" % "4.12")
 
 scalacOptions ++= Seq("-deprecation", "-unchecked")
 
