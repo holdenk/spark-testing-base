@@ -14,8 +14,13 @@ def add_pyspark_path_if_needed():
     try:
         from pyspark import context
     except ImportError:
-        add_pyspark_path()
-
+        # We need to add PySpark, try findspark if we can but it has an
+        # undeclared IPython dep.
+        try:
+            import findspark
+            findspark.init()
+        except ImportError:
+            add_pyspark_path()
 
 def add_pyspark_path():
     """Add PySpark to the library path based on the value of SPARK_HOME."""
