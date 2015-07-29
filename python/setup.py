@@ -12,7 +12,9 @@ setup(
     long_description='',
     install_requires=[
         'unittest2',
-        'findspark'
+        'findspark',
+        'py.test',
+        'hypothesis'
     ],
     test_requires=[
         'nose',
