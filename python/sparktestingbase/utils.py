@@ -22,6 +22,7 @@ def add_pyspark_path_if_needed():
         except ImportError:
             add_pyspark_path()
 
+
 def add_pyspark_path():
     """Add PySpark to the library path based on the value of SPARK_HOME."""
 
