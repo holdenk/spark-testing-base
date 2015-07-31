@@ -22,7 +22,7 @@ sparkComponents ++= Seq("core", "streaming", "sql", "hive")
 libraryDependencies ++= Seq(
   "org.scalatest" %% "scalatest" % "2.2.1",
   "io.github.nicolasstucki" % "multisets_2.10" % "0.1",
-  "org.scalacheck" %% "scalacheck" % "1.12.4" % "test",
+  "org.scalacheck" %% "scalacheck" % "1.12.4",
   "junit" % "junit" % "4.12")
 
 scalacOptions ++= Seq("-deprecation", "-unchecked")
