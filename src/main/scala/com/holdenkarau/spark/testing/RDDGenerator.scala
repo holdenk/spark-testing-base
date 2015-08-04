@@ -22,5 +22,5 @@ package com.holdenkarau.spark.testing
 
 import org.scalacheck.Gen
 
-class RDDGenerator[T] {
+class RDDGenerator[T] extends Gen[RDD[T]] {
 }
