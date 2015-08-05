@@ -16,11 +16,38 @@
  */
 
 /*
- * Generator for RDDs
+ * Generator for RDDs for testing with ScalaCheck
  */
 package com.holdenkarau.spark.testing
 
-import org.scalacheck.Gen
+import scala.reflect.{ClassTag, classTag}
 
-class RDDGenerator[T] extends Gen[RDD[T]] {
+import org.apache.spark.rdd.RDD
+import org.apache.spark.SparkContext
+import org.scalacheck._
+
+object RDDGenerator {
+  // Generate an RDD of the desired type. Attempt to try different number of partitions
+  // so as to catch problems with empty partitions, etc.
+  def generateRDD[T: ClassTag](sc: SparkContext)(implicit a: Arbitrary[T]): Arbitrary[RDD[T]] = {
+    Arbitrary {
+      val genElem = for(e <- Arbitrary.arbitrary[T]) yield e
+      def generateRDDOfSize(size: Int) = {
+        val special = List(size, (size/2).toInt, 2, 3)
+        val myGen = for {
+          n <- Gen.chooseNum(1, 2*size, special:_*)
+          m <- Gen.listOfN(n, genElem)
+        } yield (n,m)
+        myGen.map{case (numPartitions, data) => sc.parallelize(data, numPartitions)}
+      }
+      def generateEmptyRDDOfType() = {
+        sc.emptyRDD[T]
+      }
+      Gen.sized(sz =>
+        sz match {
+          case 0 => generateEmptyRDDOfType()
+          case _ => generateRDDOfSize(sz)
+        })
+    }
+  }
 }
