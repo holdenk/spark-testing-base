@@ -29,7 +29,10 @@ import org.scalacheck._
 object RDDGenerator {
   // Generate an RDD of the desired type. Attempt to try different number of partitions
   // so as to catch problems with empty partitions, etc.
-  def generateRDD[T: ClassTag](sc: SparkContext)(implicit a: Arbitrary[T]): Arbitrary[RDD[T]] = {
+  def genRDD[T: ClassTag](sc: SparkContext)(implicit a: Arbitrary[T]): Gen[RDD[T]] = {
+    arbitraryRDD(sc).arbitrary
+  }
+  def arbitraryRDD[T: ClassTag](sc: SparkContext)(implicit a: Arbitrary[T]): Arbitrary[RDD[T]] = {
     Arbitrary {
       val genElem = for(e <- Arbitrary.arbitrary[T]) yield e
       def generateRDDOfSize(size: Int) = {
