@@ -24,8 +24,10 @@ import scala.reflect.{ClassTag, classTag}
 
 import org.apache.spark.rdd.RDD
 import org.apache.spark.SparkContext
+import org.apache.spark.annotation.Experimental
 import org.scalacheck._
 
+@Experimental
 object RDDGenerator {
   // Generate an RDD of the desired type. Attempt to try different number of partitions
   // so as to catch problems with empty partitions, etc.
