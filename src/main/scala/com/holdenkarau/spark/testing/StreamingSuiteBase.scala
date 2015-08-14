@@ -79,15 +79,12 @@ trait StreamingSuiteBase extends FunSuite with BeforeAndAfterAll with Logging
   }
 
   /**
-    * This is a input stream just for the testsuites. This is equivalent to a checkpointable,
-    * replayable, reliable message queue like Kafka. It requires a sequence as input, and
-    * returns the i_th element at the i_th batch under manual clock.
-    */
+   * Create an input stream for the provided input sequence. This is done using
+   * TestInputStream as queueStream's are not checkpointable.
+   */
   def createTestInputStream[T: ClassTag](sc: SparkContext, ssc_ : TestStreamingContext,
     input: Seq[Seq[T]]) = {
-    val rdds: Queue[RDD[T]] = (new Queue() ++= input.map(elems => sc.parallelize(elems)))
-    val defaultRDD: RDD[T] = sc.parallelize(Seq[T]())
-    ssc_.queueStream[T](rdds, oneAtATime = true, defaultRDD = defaultRDD)
+    new TestInputStream(sc, ssc_, input, numInputPartitions)
   }
 
 
