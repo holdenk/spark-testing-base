@@ -2,7 +2,7 @@
 use File::Slurp;
 use strict;
 use warnings;
-my @spark_versions = ("1.1.1", "1.2.0", "1.3.0", "1.4.0");
+my @spark_versions = ("1.3.0", "1.4.0", "1.4.1");
 # Backup the build file
 `cp build.sbt build.sbt_back`;
 # Get the original version
