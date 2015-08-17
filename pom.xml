@@ -69,12 +69,12 @@
     </dependency>
     <dependency>
       <groupId>org.scalatest</groupId>
-      <artifactId>scalatest</artifactId>
+      <artifactId>scalatest_2.10</artifactId>
       <version>2.2.1</version>
     </dependency>
     <dependency>
       <groupId>org.scalacheck</groupId>
-      <artifactId>scalacheck</artifactId>
+      <artifactId>scalacheck_2.10</artifactId>
       <version>1.12.4</version>
     </dependency>
     <dependency>
