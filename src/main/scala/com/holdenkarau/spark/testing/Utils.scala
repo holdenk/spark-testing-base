@@ -33,7 +33,10 @@ object Utils {
         try {
           Utils.deleteRecursively(new File(dirPath))
         } catch {
+          // Doesn't really matter if we fail.
+          // scalastyle:off println
           case e: Exception => println("Exception during cleanup")
+          // scalastyle:on println
         }
       }
     }

@@ -38,7 +38,7 @@ class TestManualClock(var time: Long) extends Clock {
   /**
    * @param timeToSet new time (in milliseconds) that the clock should represent
    */
-  def setTime(timeToSet: Long) =
+  def setTime(timeToSet: Long): Unit =
     synchronized {
       time = timeToSet
       notifyAll()
@@ -47,13 +47,13 @@ class TestManualClock(var time: Long) extends Clock {
   /**
    * @param timeToAdd time (in milliseconds) to add to the clock's time
    */
-  def advance(timeToAdd: Long) =
+  def advance(timeToAdd: Long): Unit =
     synchronized {
       time += timeToAdd
       notifyAll()
     }
 
-  def addToTime(timeToAdd: Long) = advance(timeToAdd) // Compat
+  def addToTime(timeToAdd: Long): Unit = advance(timeToAdd) // Compat
 
   /**
    * @param targetTime block until the clock time is set or advanced to at least this time

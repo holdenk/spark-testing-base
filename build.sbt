@@ -41,6 +41,7 @@ resolvers ++= Seq(
   "Apache HBase" at "https://repository.apache.org/content/repositories/releases",
   "Twitter Maven Repo" at "http://maven.twttr.com/",
   "scala-tools" at "https://oss.sonatype.org/content/groups/scala-tools",
+  "sonatype-releases" at "https://oss.sonatype.org/content/repositories/releases/",
   "Typesafe repository" at "http://repo.typesafe.com/typesafe/releases/",
   "Second Typesafe repo" at "http://repo.typesafe.com/typesafe/maven-releases/",
   "Mesosphere Public Repository" at "http://downloads.mesosphere.io/maven",

@@ -34,5 +34,5 @@ class TestStreamingContext (
   def this(sparkContext: SparkContext, batchDuration: Duration) = {
     this(sparkContext, null, batchDuration)
   }
-  def getScheduler() = scheduler
+  def getScheduler(): JobScheduler = scheduler
 }

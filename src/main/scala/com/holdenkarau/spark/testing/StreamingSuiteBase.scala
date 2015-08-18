@@ -25,7 +25,7 @@ import java.io._
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.SynchronizedBuffer
 import scala.collection.mutable.Queue
-import scala.collection.immutable.{HashBag=>Bag}
+import scala.collection.immutable.{HashBag => Bag}
 import scala.language.implicitConversions
 import scala.reflect.ClassTag
 
@@ -63,13 +63,13 @@ trait StreamingSuiteBase extends FunSuite with BeforeAndAfterAll with Logging
     with SharedSparkContext {
 
   // Name of the framework for Spark context
-  def framework = this.getClass.getSimpleName
+  def framework: String = this.getClass.getSimpleName
 
   // Master for Spark context
-  def master = "local[4]"
+  def master: String = "local[4]"
 
   // Batch duration
-  def batchDuration = Seconds(1)
+  def batchDuration: Duration = Seconds(1)
 
   // Directory where the checkpoint data will be saved
   lazy val checkpointDir = {
@@ -83,22 +83,22 @@ trait StreamingSuiteBase extends FunSuite with BeforeAndAfterAll with Logging
    * TestInputStream as queueStream's are not checkpointable.
    */
   def createTestInputStream[T: ClassTag](sc: SparkContext, ssc_ : TestStreamingContext,
-    input: Seq[Seq[T]]) = {
+    input: Seq[Seq[T]]): TestInputStream[T] = {
     new TestInputStream(sc, ssc_, input, numInputPartitions)
   }
 
 
   // Number of partitions of the input parallel collections created for testing
-  def numInputPartitions = 2
+  def numInputPartitions: Int = 2
 
   // Maximum time to wait before the test times out
-  def maxWaitTimeMillis = 10000
+  def maxWaitTimeMillis: Int = 10000
 
   // Whether to use manual clock or not
-  def useManualClock = true
+  def useManualClock: Boolean = true
 
   // Whether to actually wait in real time before changing manual clock
-  def actuallyWait = false
+  def actuallyWait: Boolean = false
 
   // A SparkConf to use in tests. Can be modified before calling setupStreams to configure things.
   override val conf = new SparkConf()
@@ -160,8 +160,6 @@ trait StreamingSuiteBase extends FunSuite with BeforeAndAfterAll with Logging
     numPartitions: Int = numInputPartitions
   ): (TestOutputStream[V], TestStreamingContext) = {
     // Create TestStreamingContext
-    println("creating teststreamingcontext")
-    println("spark context is "+sc)
     val ssc = new TestStreamingContext(sc, batchDuration)
     if (checkpointDir != null) {
       ssc.checkpoint(checkpointDir)
@@ -280,7 +278,7 @@ trait StreamingSuiteBase extends FunSuite with BeforeAndAfterAll with Logging
     for (i <- 0 until output.size) {
       if (useSet) {
         implicit val config = Bag.configuration.compact[V]
-        assert(Bag(output(i):_*) === Bag(expectedOutput(i):_*))
+        assert(Bag(output(i): _*) === Bag(expectedOutput(i): _*))
       } else {
         assert(output(i).toList === expectedOutput(i).toList)
       }

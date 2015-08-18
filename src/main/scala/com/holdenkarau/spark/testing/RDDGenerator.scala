@@ -36,16 +36,16 @@ object RDDGenerator {
   }
   def arbitraryRDD[T: ClassTag](sc: SparkContext)(implicit a: Arbitrary[T]): Arbitrary[RDD[T]] = {
     Arbitrary {
-      val genElem = for(e <- Arbitrary.arbitrary[T]) yield e
-      def generateRDDOfSize(size: Int) = {
+      val genElem = for (e <- Arbitrary.arbitrary[T]) yield e
+      def generateRDDOfSize(size: Int): Gen[RDD[T]] = {
         val special = List(size, (size/2).toInt, 2, 3)
         val myGen = for {
-          n <- Gen.chooseNum(1, 2*size, special:_*)
+          n <- Gen.chooseNum(1, 2*size, special: _*)
           m <- Gen.listOfN(n, genElem)
-        } yield (n,m)
+        } yield (n, m)
         myGen.map{case (numPartitions, data) => sc.parallelize(data, numPartitions)}
       }
-      def generateEmptyRDDOfType() = {
+      def generateEmptyRDDOfType(): RDD[T] = {
         sc.emptyRDD[T]
       }
       Gen.sized(sz =>
