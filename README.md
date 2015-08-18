@@ -13,5 +13,8 @@ of the classes and write some simple tests instead. For example to include this 
 Note that new versions (0.0.8+) are built against Spark 1.3.0+ for simplicity, but if you need an old version file an issue and I will re-enable cross-builds for older versions.
 
 This package is also cross compiled against scala 2.10.4 and 2.11.6 in the traditional manner.
+
 # Where is this from?
-This code is a stripped down version of the test suite bases that are in Apache Spark but are not accessiable.
+Much of this code is a stripped down version of the test suite bases that are in Apache Spark but are not accessiable.
+
+Other parts of this are implemented on top of the test suite bases to make your life even easier.
