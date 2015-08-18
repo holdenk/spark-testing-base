@@ -35,7 +35,7 @@ foreach my $spark_version (@spark_versions) {
     print "built"
 }
 print "Press enter once published to maven central";
-$j = <>;
+my $j = <>;
 foreach my $spark_version (@spark_versions) {
     my $target_version = $spark_version."_".$original_version;
     print "Publishing new target version ".$target_version;
