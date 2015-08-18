@@ -32,7 +32,7 @@ import static org.junit.Assert.*;
 import org.junit.runner.*;
 import org.junit.runners.JUnit4;
 
-class SampleJavaRDDTest extends SharedJavaSparkContext implements Serializable {
+public class SampleJavaRDDTest extends SharedJavaSparkContext implements Serializable {
   @Test public void verifyMapTest() {
     List<Integer> input =  Arrays.asList(1,2);
     JavaRDD<Integer> inputRDD = jsc().parallelize(input);

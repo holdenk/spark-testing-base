@@ -14,16 +14,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.holdenkarau.spark.testing
+package com.holdenkarau.spark.testing;
 
-import org.apache.spark._
-import org.apache.spark.api.java._
-import org.junit._
+import org.apache.spark.*;
+import org.apache.spark.api.java.*;
+import org.junit.*;
 
 /** Shares a local `SparkContext` between all tests in a suite and closes it at the end */
-class SharedJavaSparkContext {
-  @transient private SparkContext _sc = null;
-  @transient private JavaSparkContext _jsc = null;
+public class SharedJavaSparkContext {
+  private static transient SparkContext _sc;
+  private static transient JavaSparkContext _jsc;
+  private static SparkConf conf = new SparkConf().setMaster("local[4]").setAppName("magic");
 
   SparkContext sc() {
     return _sc;
@@ -33,18 +34,16 @@ class SharedJavaSparkContext {
     return _jsc;
   }
 
-  SparkConf conf = new SparkConf().setMaster("local[4]").setAppName("test")
-
   @BeforeClass
-  static void runBeforeClass() {
-    _sc = new SparkContext(conf)
-    _jsc = new JavaSparkContext(_sc)
+  static public void runBeforeClass() {
+      _sc = new SparkContext(conf);
+      _jsc = new JavaSparkContext(_sc);
   }
 
   @AfterClass
-  static void runAfterClass() {
-    LocalSparkContext.stop(_sc)
-    _sc = null
-    _jsc = null
+  static public void runAfterClass() {
+    LocalSparkContext$.MODULE$.stop(_sc);
+    _sc = null;
+    _jsc = null;
   }
 }
