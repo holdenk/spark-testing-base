@@ -77,3 +77,4 @@ pomExtra := (
 )
 
 credentials += Credentials(Path.userHome / ".ivy2" / ".sbtcredentials")
+spIncludeMaven := true
