@@ -27,7 +27,7 @@ foreach my $spark_version (@spark_versions) {
     print OUT $new_build;
     close (OUT);
     print `git commit -am "Make release for $target_version"`;
-    print `git push --set-upstream origin release-v$target_version`;
+    print `git push -f --set-upstream origin release-v$target_version`;
     print "building";
     print `./sbt/sbt clean compile package publishSigned spPublish`;
     print "switch back to master";
