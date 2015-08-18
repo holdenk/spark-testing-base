@@ -29,10 +29,26 @@ foreach my $spark_version (@spark_versions) {
     print `git commit -am "Make release for $target_version"`;
     print `git push -f --set-upstream origin release-v$target_version`;
     print "building";
-    print `./sbt/sbt clean compile package publishSigned spPublish`;
+    print `./sbt/sbt clean compile package publishSigned`;
     print "switch back to master";
     print `git checkout master`;
     print "built"
+}
+print "Press enter once published to maven central";
+$j = <>;
+foreach my $spark_version (@spark_versions) {
+    my $target_version = $spark_version."_".$original_version;
+    print "Publishing new target version ".$target_version;
+    my $new_build = $input;
+    $new_build =~ s/version\s+\:\=\s+\".+?\"/version := "$target_version"/;
+    $new_build =~ s/sparkVersion\s+\:\=\s+\".+?\"/sparkVersion := "$spark_version"/;
+    print `git checkout -b release-v$target_version`;
+    print "new build file $new_build hit";
+    open (OUT, ">build.sbt");
+    print OUT $new_build;
+    close (OUT);
+    print "publishing";
+    print `./sbt/sbt clean spPublish`;
 }
 `cp build.sbt_back build.sbt`;
 `./sbt/sbt clean compile package publishSigned spPublish`;
