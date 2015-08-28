@@ -93,6 +93,16 @@
       <artifactId>spark-streaming_2.10</artifactId>
       <version>1.4.1</version>
     </dependency>
+    <dependency> <!-- Spark dependency -->
+      <groupId>org.apache.spark</groupId>
+      <artifactId>spark-streaming-kafka_2.10</artifactId>
+      <version>1.4.1</version>
+    </dependency>
+    <dependency>
+        <groupId>org.eclipse.jetty</groupId>
+        <artifactId>jetty-util</artifactId>
+        <version>9.3.2.v20150730</version>
+    </dependency>
     <dependency>
       <groupId>org.scalatest</groupId>
       <artifactId>scalatest_2.10</artifactId>
@@ -120,12 +130,7 @@
   </properties>
   <build>
     <pluginManagement>
-      <plugins>
-	<plugin>
-	  <groupId>net.alchim31.maven</groupId>
-	  <artifactId>scala-maven-plugin</artifactId>
-	  <version>3.2.2</version>
-	</plugin>
+     <plugins>
 	<plugin>
 	  <groupId>org.apache.maven.plugins</groupId>
 	  <artifactId>maven-compiler-plugin</artifactId>

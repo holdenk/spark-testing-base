@@ -22,8 +22,14 @@ package com.holdenkarau.spark.testing
 
 import java.io._
 import java.util.UUID
+import java.net.BindException
 
-object Utils {
+import org.eclipse.jetty.util.MultiException
+
+import org.apache.spark.{Logging, SparkConf, SparkException}
+
+
+object Utils extends Logging{
   private val shutdownDeletePaths = new scala.collection.mutable.HashSet[String]()
 
   // Add a shutdown hook to delete the temp dirs when the JVM exits
@@ -148,5 +154,75 @@ object Utils {
     val dir = createDirectory(root)
     registerShutdownDeleteDir(dir)
     dir
+  }
+
+
+  /**
+   * Attempt to start a service on the given port, or fail after a number of attempts.
+   * Each subsequent attempt uses 1 + the port used in the previous attempt (unless the port is 0).
+   *
+   * @param startPort The initial port to start the service on.
+   * @param startService Function to start service on a given port.
+   *                     This is expected to throw java.net.BindException on port collision.
+   * @param conf A SparkConf used to get the maximum number of retries when binding to a port.
+   * @param serviceName Name of the service.
+   */
+  def startServiceOnPort[T](
+      startPort: Int,
+      startService: Int => (T, Int),
+      conf: SparkConf,
+      serviceName: String = ""): (T, Int) = {
+
+    require(startPort == 0 || (1024 <= startPort && startPort < 65536),
+      "startPort should be between 1024 and 65535 (inclusive), or 0 for a random free port.")
+
+   val serviceString = if (serviceName.isEmpty) "" else s" '$serviceName'"
+   val maxRetries = 100
+   for (offset <- 0 to maxRetries) {
+     // Do not increment port if startPort is 0, which is treated as a special port
+     val tryPort = if (startPort == 0) {
+       startPort
+     } else {
+       // If the new port wraps around, do not try a privilege port
+       ((startPort + offset - 1024) % (65536 - 1024)) + 1024
+     }
+     try {
+       val (service, port) = startService(tryPort)
+       logInfo(s"Successfully started service$serviceString on port $port.")
+       return (service, port)
+     } catch {
+       case e: Exception if isBindCollision(e) =>
+         if (offset >= maxRetries) {
+           val exceptionMessage =
+             s"${e.getMessage}: Service$serviceString failed after $maxRetries retries!"
+           val exception = new BindException(exceptionMessage)
+           // restore original stack trace
+           exception.setStackTrace(e.getStackTrace)
+           throw exception
+         }
+         logWarning(s"Service$serviceString could not bind on port $tryPort. " +
+           s"Attempting port ${tryPort + 1}.")
+     }
+   }
+   // Should never happen
+   throw new SparkException(s"Failed to start service$serviceString on port $startPort")
+  }
+
+  /**
+   * Return whether the exception is caused by an address-port collision when binding.
+   */
+  def isBindCollision(exception: Throwable): Boolean = {
+    import scala.collection.JavaConversions._
+
+    exception match {
+     case e: BindException =>
+       if (e.getMessage != null) {
+         return true
+       }
+       isBindCollision(e.getCause)
+     case e: MultiException => e.getThrowables.exists(isBindCollision)
+     case e: Exception => isBindCollision(e.getCause)
+     case _ => false
+   }
   }
 }
