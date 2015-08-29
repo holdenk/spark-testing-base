@@ -63,7 +63,7 @@ class KafkaTestUtils extends Logging{
   private var brokerPort = 9092
   private var brokerConf: KafkaConfig = _
 
-  // Kafka broker server 
+  // Kafka broker server
   private var server: KafkaServer = _
 
   // Kafka producer
@@ -119,7 +119,7 @@ class KafkaTestUtils extends Logging{
   }
 
   private def waitUntilMetadataIsPropagated(topic: String, partition: Int): Unit = {
-    def isPropagated = server.apis.metadataCache.getPartitionInfo(topic, partition) match {
+    def isPropagated: Boolean = server.apis.metadataCache.getPartitionInfo(topic, partition) match {
       case Some(partitionState) =>
         val leaderAndInSyncReplicas = partitionState.leaderIsrAndControllerEpoch.leaderAndIsr
 
@@ -180,7 +180,7 @@ class KafkaTestUtils extends Logging{
       zookeeper = null
     }
   }
-  
+
   /** Create a Kafka topic and wait until it propagated to the whole cluster */
   def createTopic(topic: String): Unit = {
     AdminUtils.createTopic(zkClient, topic, 1, 1)
@@ -215,7 +215,7 @@ class KafkaTestUtils extends Logging{
       factory.shutdown()
     }
   }
-  
+
   // A simplified version of scalatest eventually, rewritten here to avoid adding extra test
   // dependency
   def eventually[T](timeout: Time, interval: Time)(func: => T): T = {
