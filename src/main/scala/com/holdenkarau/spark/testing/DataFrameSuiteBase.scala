@@ -17,7 +17,10 @@
 
 package com.holdenkarau.spark.testing
 
-import org.apache.spark.sql.DataFrame
+import scala.util.hashing.MurmurHash3
+
+import org.apache.spark.rdd.RDD
+import org.apache.spark.sql.{DataFrame, Row}
 import org.apache.spark.sql.types.StructType
 
 import org.scalatest.FunSuite
@@ -27,12 +30,35 @@ import org.scalatest.FunSuite
  * Base class for testing Spark DataFrames.
  */
 trait DataFrameSuiteBase extends FunSuite {
+  val maxCount = 10
+
   /**
    * Compares if two [[DataFrame]]s are equal, checks the schema and then if that matches
-   * checks if the rows are equal.
+   * checks if the rows are equal. May compute underlying DataFrame multiple times.
    */
   def equalDataFrames(expected: DataFrame, result: DataFrame) {
     equalSchema(expected.schema, result.schema)
+    val expectedRDD = zipWithIndex(expected).rdd
+    val resultRDD = zipWithIndex(result).rdd
+    assert(expectedRDD.count() == resultRDD.count())
+    val unequal = expectedRDD.cogroup(resultRDD).filter{case (idx, (r1, r2)) =>
+      !(r1.isEmpty || r2.isEmpty) && (r1.head.equals(r2.head))
+    }.take(maxCount)
+    assert(unequal === List())
+  }
+
+
+  /**
+   * Zip RDD's with precise indexes. This is used so we can join two DataFrame's
+   * Rows together regardless of if the source is different but still compare based on
+   * the order.
+   */
+  private def zipWithIndex[T](input: RDD[T]): RDD[(Int, T)] = {
+    val counts = input.mapPartitions{itr => Iterator(itr.size)}.collect()
+    val countSums = counts.scanLeft(0)(_ + _).zipWithIndex.map{case (x, y) => (y,x)}.toMap
+    input.mapPartitionsWithIndex{case (idx, itr) => itr.zipWithIndex.map{case (y, i) =>
+      (i + countSums(idx), y)}
+    }
   }
 
   /**
@@ -41,6 +67,12 @@ trait DataFrameSuiteBase extends FunSuite {
    */
   def approxEqualDataFrames(expected: DataFrame, result: DataFrame, tol: Double) {
     equalSchema(expected.schema, result.schema)
+    val expectedRDD = zipWithIndex(expected).rdd
+    val resultRDD = zipWithIndex(result).rdd
+    val unequal = expectedRDD.cogroup(resultRDD).filter{case (idx, (r1, r2)) =>
+      !(r1.isEmpty || r2.isEmpty) && (r1.head.equals(r2.head))
+    }.take(maxCount)
+    assert(unequal === List())
   }
 
   /**
