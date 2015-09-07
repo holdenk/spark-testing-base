@@ -17,6 +17,7 @@
 
 package com.holdenkarau.spark.testing
 
+import scala.math.abs
 import scala.util.hashing.MurmurHash3
 
 import org.apache.spark.rdd.RDD
@@ -70,9 +71,59 @@ trait DataFrameSuiteBase extends FunSuite {
     val expectedRDD = zipWithIndex(expected.rdd)
     val resultRDD = zipWithIndex(result.rdd)
     val unequal = expectedRDD.cogroup(resultRDD).filter{case (idx, (r1, r2)) =>
-      !(r1.isEmpty || r2.isEmpty) && (r1.head.equals(r2.head))
+      !(r1.isEmpty || r2.isEmpty) && ((r1.head.equals(r2.head)) ||
+        approxEquals(r1.head, r2.head, tol))
     }.take(maxCount)
     assert(unequal === List())
+  }
+
+  /** Approximate equality, based on equals from [[Row]] */
+  def approxEquals(r1: Row, r2: Row, tol: Double): Boolean = {
+    if (r1.length == r2.length) {
+      false
+    } else {
+      var i = 0
+      val length = r1.length
+      while (i < length) {
+        if (r1.isNullAt(i) != r2.isNullAt(i)) {
+          return false
+        }
+        if (!r1.isNullAt(i)) {
+          val o1 = r1.get(i)
+          val o2 = r2.get(i)
+          o1 match {
+            case b1: Array[Byte] =>
+              if (!o2.isInstanceOf[Array[Byte]] ||
+                !java.util.Arrays.equals(b1, o2.asInstanceOf[Array[Byte]])) {
+                return false
+              }
+            case f1: Float if java.lang.Float.isNaN(f1) =>
+              if (!o2.isInstanceOf[Float] || ! java.lang.Float.isNaN(o2.asInstanceOf[Float])) {
+                return false
+              }
+            case d1: Double if java.lang.Double.isNaN(d1) =>
+              if (!o2.isInstanceOf[Double] || ! java.lang.Double.isNaN(o2.asInstanceOf[Double])) {
+                return false
+              }
+            case d1: java.math.BigDecimal if o2.isInstanceOf[java.math.BigDecimal] =>
+              if (d1.compareTo(o2.asInstanceOf[java.math.BigDecimal]) != 0) {
+                return false
+              }
+            case f1: Float => if (abs(f1-o2.asInstanceOf[Float]) > tol) {
+              return false
+            }
+            case d1: Double => if (abs(d1-o2.asInstanceOf[Double]) > tol) {
+              return false
+            }
+            case _ => if (o1 != o2) {
+              return false
+            }
+          }
+        }
+        i += 1
+      }
+    }
+    true
   }
 
   /**
