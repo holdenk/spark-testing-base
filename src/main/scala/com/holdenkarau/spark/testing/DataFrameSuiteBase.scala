@@ -56,7 +56,7 @@ trait DataFrameSuiteBase extends FunSuite {
    */
   private def zipWithIndex[T](input: RDD[T]): RDD[(Int, T)] = {
     val counts = input.mapPartitions{itr => Iterator(itr.size)}.collect()
-    val countSums = counts.scanLeft(0)(_ + _).zipWithIndex.map{case (x, y) => (y,x)}.toMap
+    val countSums = counts.scanLeft(0)(_ + _).zipWithIndex.map{case (x, y) => (y, x)}.toMap
     input.mapPartitionsWithIndex{case (idx, itr) => itr.zipWithIndex.map{case (y, i) =>
       (i + countSums(idx), y)}
     }
@@ -129,7 +129,7 @@ trait DataFrameSuiteBase extends FunSuite {
   /**
    * Compares the schema
    */
-  def equalSchema(expected: StructType, result: StructType) = {
+  def equalSchema(expected: StructType, result: StructType): Unit = {
     assert(expected.treeString === result.treeString)
   }
 }
