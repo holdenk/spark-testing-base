@@ -38,8 +38,8 @@ trait DataFrameSuiteBase extends FunSuite {
    */
   def equalDataFrames(expected: DataFrame, result: DataFrame) {
     equalSchema(expected.schema, result.schema)
-    val expectedRDD = zipWithIndex(expected).rdd
-    val resultRDD = zipWithIndex(result).rdd
+    val expectedRDD = zipWithIndex(expected.rdd)
+    val resultRDD = zipWithIndex(result.rdd)
     assert(expectedRDD.count() == resultRDD.count())
     val unequal = expectedRDD.cogroup(resultRDD).filter{case (idx, (r1, r2)) =>
       !(r1.isEmpty || r2.isEmpty) && (r1.head.equals(r2.head))
@@ -67,8 +67,8 @@ trait DataFrameSuiteBase extends FunSuite {
    */
   def approxEqualDataFrames(expected: DataFrame, result: DataFrame, tol: Double) {
     equalSchema(expected.schema, result.schema)
-    val expectedRDD = zipWithIndex(expected).rdd
-    val resultRDD = zipWithIndex(result).rdd
+    val expectedRDD = zipWithIndex(expected.rdd)
+    val resultRDD = zipWithIndex(result.rdd)
     val unequal = expectedRDD.cogroup(resultRDD).filter{case (idx, (r1, r2)) =>
       !(r1.isEmpty || r2.isEmpty) && (r1.head.equals(r2.head))
     }.take(maxCount)
