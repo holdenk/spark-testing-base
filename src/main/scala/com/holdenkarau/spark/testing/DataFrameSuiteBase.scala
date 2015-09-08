@@ -21,17 +21,27 @@ import scala.math.abs
 import scala.util.hashing.MurmurHash3
 
 import org.apache.spark.rdd.RDD
-import org.apache.spark.sql.{DataFrame, Row}
+import org.apache.spark.sql.{DataFrame, Row, SQLContext}
 import org.apache.spark.sql.types.StructType
 
+import org.scalatest.BeforeAndAfterAll
 import org.scalatest.FunSuite
 
 /**
  * :: Experimental ::
  * Base class for testing Spark DataFrames.
  */
-trait DataFrameSuiteBase extends FunSuite {
+trait DataFrameSuiteBase extends FunSuite with BeforeAndAfterAll
+    with SharedSparkContext {
   val maxCount = 10
+  @transient private var _sqlContext: SQLContext = _
+
+  def sqlContext = _sqlContext
+
+  override def beforeAll() {
+    super.beforeAll()
+    _sqlContext = new org.apache.spark.sql.SQLContext(sc)
+  }
 
   /**
    * Compares if two [[DataFrame]]s are equal, checks the schema and then if that matches
@@ -43,7 +53,7 @@ trait DataFrameSuiteBase extends FunSuite {
     val resultRDD = zipWithIndex(result.rdd)
     assert(expectedRDD.count() == resultRDD.count())
     val unequal = expectedRDD.cogroup(resultRDD).filter{case (idx, (r1, r2)) =>
-      !(r1.isEmpty || r2.isEmpty) && (r1.head.equals(r2.head))
+      !(r1.isEmpty || r2.isEmpty) && (!r1.head.equals(r2.head))
     }.take(maxCount)
     assert(unequal === List())
   }
@@ -71,12 +81,21 @@ trait DataFrameSuiteBase extends FunSuite {
     val expectedRDD = zipWithIndex(expected.rdd)
     val resultRDD = zipWithIndex(result.rdd)
     val unequal = expectedRDD.cogroup(resultRDD).filter{case (idx, (r1, r2)) =>
-      !(r1.isEmpty || r2.isEmpty) && ((r1.head.equals(r2.head)) ||
-        approxEquals(r1.head, r2.head, tol))
+      !(r1.isEmpty || r2.isEmpty) && (
+        !DataFrameSuiteBase.approxEquals(r1.head, r2.head, tol))
     }.take(maxCount)
     assert(unequal === List())
   }
 
+  /**
+   * Compares the schema
+   */
+  def equalSchema(expected: StructType, result: StructType): Unit = {
+    assert(expected.treeString === result.treeString)
+  }
+}
+
+object DataFrameSuiteBase {
   /** Approximate equality, based on equals from [[Row]] */
   def approxEquals(r1: Row, r2: Row, tol: Double): Boolean = {
     if (r1.length == r2.length) {
@@ -111,8 +130,12 @@ trait DataFrameSuiteBase extends FunSuite {
               }
             case f1: Float => if (abs(f1-o2.asInstanceOf[Float]) > tol) {
               return false
+            } else {
+              return false
             }
             case d1: Double => if (abs(d1-o2.asInstanceOf[Double]) > tol) {
+              return false
+            } else {
               return false
             }
             case _ => if (o1 != o2) {
@@ -124,12 +147,5 @@ trait DataFrameSuiteBase extends FunSuite {
       }
     }
     true
-  }
-
-  /**
-   * Compares the schema
-   */
-  def equalSchema(expected: StructType, result: StructType): Unit = {
-    assert(expected.treeString === result.treeString)
   }
 }
