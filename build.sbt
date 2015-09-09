@@ -16,7 +16,7 @@ spName := "holdenk/spark-testing-base"
 
 sparkVersion := "1.4.1"
 
-sparkComponents ++= Seq("core", "streaming", "sql", "hive")
+sparkComponents ++= Seq("core", "streaming", "sql", "hive","streaming-kafka")
 
 parallelExecution in Test := false
 
@@ -26,6 +26,7 @@ libraryDependencies ++= Seq(
   "io.github.nicolasstucki" % "multisets_2.10" % "0.1",
   "org.scalacheck" %% "scalacheck" % "1.12.4",
   "junit" % "junit" % "4.10",
+  "org.eclipse.jetty" % "jetty-util" % "9.3.2.v20150730",
   "com.novocode" % "junit-interface" % "0.10" % "test->default")
 
 scalacOptions ++= Seq("-deprecation", "-unchecked")
@@ -76,6 +77,7 @@ pomExtra := (
   </developers>
 )
 
-credentials += Credentials(Path.userHome / ".ivy2" / ".spcredentials")
+//credentials += Credentials(Path.userHome / ".ivy2" / ".spcredentials")
 credentials += Credentials(Path.userHome / ".ivy2" / ".sbtcredentials")
+
 spIncludeMaven := true
