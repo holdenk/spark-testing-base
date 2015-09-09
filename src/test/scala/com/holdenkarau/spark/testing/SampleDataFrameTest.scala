@@ -54,6 +54,15 @@ class SampleDataFrameTest extends FunSuite with SharedSparkContext with DataFram
       approxEqualDataFrames(input, input2, 1E-7)
     }
   }
+
+  test("dataframe approxEquals") {
+    val sqlCtx = sqlContext
+    import sqlCtx.implicits._
+    val row = sc.parallelize(inputList).toDF.collect()(0)
+    val row2 = sc.parallelize(inputList2).toDF.collect()(0)
+    assert(false === DataFrameSuiteBase.approxEquals(row, row2, 1E-7))
+    assert(true === DataFrameSuiteBase.approxEquals(row, row2, 1E-5))
+  }
 }
 
 case class Magic(name: String, power: Double)

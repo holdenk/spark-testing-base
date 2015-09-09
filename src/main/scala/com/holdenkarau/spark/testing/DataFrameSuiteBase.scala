@@ -40,7 +40,12 @@ trait DataFrameSuiteBase extends FunSuite with BeforeAndAfterAll
 
   override def beforeAll() {
     super.beforeAll()
-    _sqlContext = new org.apache.spark.sql.SQLContext(sc)
+    _sqlContext = org.apache.spark.sql.SQLContext.getOrCreate(sc)
+  }
+
+  override def afterAll() {
+    super.afterAll()
+    _sqlContext = null
   }
 
   /**
@@ -98,7 +103,7 @@ trait DataFrameSuiteBase extends FunSuite with BeforeAndAfterAll
 object DataFrameSuiteBase {
   /** Approximate equality, based on equals from [[Row]] */
   def approxEquals(r1: Row, r2: Row, tol: Double): Boolean = {
-    if (r1.length == r2.length) {
+    if (r1.length != r2.length) {
       false
     } else {
       var i = 0
@@ -130,12 +135,8 @@ object DataFrameSuiteBase {
               }
             case f1: Float => if (abs(f1-o2.asInstanceOf[Float]) > tol) {
               return false
-            } else {
-              return false
             }
             case d1: Double => if (abs(d1-o2.asInstanceOf[Double]) > tol) {
-              return false
-            } else {
               return false
             }
             case _ => if (o1 != o2) {
