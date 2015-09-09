@@ -50,10 +50,12 @@ trait DataFrameSuiteBase extends FunSuite with BeforeAndAfterAll
 
   /**
    * Compares if two [[DataFrame]]s are equal, checks the schema and then if that matches
-   * checks if the rows are equal. May compute underlying DataFrame multiple times.
+   * checks if the rows are equal.
    */
   def equalDataFrames(expected: DataFrame, result: DataFrame) {
     equalSchema(expected.schema, result.schema)
+    expected.rdd.cache()
+    result.rdd.cache()
     val expectedRDD = zipWithIndex(expected.rdd)
     val resultRDD = zipWithIndex(result.rdd)
     assert(expectedRDD.count() == resultRDD.count())
@@ -61,6 +63,8 @@ trait DataFrameSuiteBase extends FunSuite with BeforeAndAfterAll
       !(r1.isEmpty || r2.isEmpty) && (!r1.head.equals(r2.head))
     }.take(maxCount)
     assert(unequal === List())
+    expected.rdd.unpersist()
+    result.rdd.unpersist()
   }
 
 
@@ -83,12 +87,16 @@ trait DataFrameSuiteBase extends FunSuite with BeforeAndAfterAll
    */
   def approxEqualDataFrames(expected: DataFrame, result: DataFrame, tol: Double) {
     equalSchema(expected.schema, result.schema)
+    expected.rdd.cache()
+    result.rdd.cache()
     val expectedRDD = zipWithIndex(expected.rdd)
     val resultRDD = zipWithIndex(result.rdd)
     val unequal = expectedRDD.cogroup(resultRDD).filter{case (idx, (r1, r2)) =>
       !(r1.isEmpty || r2.isEmpty) && (
         !DataFrameSuiteBase.approxEquals(r1.head, r2.head, tol))
     }.take(maxCount)
+    expected.rdd.unpersist()
+    result.rdd.unpersist()
     assert(unequal === List())
   }
 
