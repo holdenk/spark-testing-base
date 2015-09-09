@@ -36,7 +36,7 @@ trait DataFrameSuiteBase extends FunSuite with BeforeAndAfterAll
   val maxCount = 10
   @transient private var _sqlContext: SQLContext = _
 
-  def sqlContext = _sqlContext
+  def sqlContext: SQLContext = _sqlContext
 
   override def beforeAll() {
     super.beforeAll()
