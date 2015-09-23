@@ -29,6 +29,25 @@ libraryDependencies ++= Seq(
   "org.eclipse.jetty" % "jetty-util" % "9.3.2.v20150730",
   "com.novocode" % "junit-interface" % "0.10" % "test->default")
 
+// Based on Hadoop Mini Cluster tests from Alpine's PluginSDK (Apache licensed)
+// javax.servlet signing issues can be tricky, we can just exclude the dep
+def excludeFromAll(items: Seq[ModuleID], group: String, artifact: String) =
+  items.map(_.exclude(group, artifact))
+
+def excludeJavaxServlet(items: Seq[ModuleID]) =
+  excludeFromAll(items, "javax.servlet", "servlet-api")
+
+lazy val miniClusterDependencies = excludeJavaxServlet(Seq(
+  "org.apache.hadoop" % "hadoop-hdfs" % "2.6.0" % "compile,test" classifier "" classifier "tests",
+  "org.apache.hadoop" % "hadoop-common" % "2.6.0" % "compile,test" classifier "" classifier "tests" ,
+  "org.apache.hadoop" % "hadoop-client" % "2.6.0" % "compile,test" classifier "" classifier "tests" ,
+  "org.apache.hadoop" % "hadoop-mapreduce-client-jobclient" % "2.6.0" % "compile,test" classifier "" classifier "tests",
+  "org.apache.hadoop" % "hadoop-yarn-server-tests" % "2.6.0" % "compile,test" classifier "" classifier "tests",
+  "org.apache.hadoop" % "hadoop-yarn-server-web-proxy" % "2.6.0" % "compile,test" classifier "" classifier "tests",
+  "org.apache.hadoop" % "hadoop-minicluster" % "2.6.0"))
+
+libraryDependencies ++= miniClusterDependencies
+
 scalacOptions ++= Seq("-deprecation", "-unchecked")
 
 pomIncludeRepository := { x => false }
