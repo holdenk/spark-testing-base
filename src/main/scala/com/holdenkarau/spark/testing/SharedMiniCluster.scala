@@ -67,9 +67,16 @@ trait SharedMiniCluster extends BeforeAndAfterAll { self: Suite =>
   def sc: SparkContext = _sc
 
   // Program specific class path, override if this isn't working for you
+  // TODO: This is a hack, but classPathFromCurrentClassLoader isn't sufficient :(
   def extraClassPath(): Seq[String] = {
-    List(new File("target/scala-2.10/classes"),
-      new File("target/scala-2.10/test-classes")).map(_.getAbsolutePath)
+    List(
+      // Likely sbt classes & test-classes directory
+      new File("target/scala-2.10/classes"),
+      new File("target/scala-2.10/test-classes"),
+      // Likely maven classes & test-classes directory
+      new File("target/classes"),
+      new File("target/test-classes")
+    ).filter(_ != null).map(_.getAbsolutePath).filter(_ != null)
   }
 
   // Class path based on current env + program specific class path.
