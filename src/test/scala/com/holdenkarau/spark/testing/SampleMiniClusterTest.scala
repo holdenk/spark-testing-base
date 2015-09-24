@@ -23,6 +23,7 @@ import org.apache.spark.SparkContext._
 import org.scalatest.FunSuite
 import org.scalatest.exceptions.TestFailedException
 
+/*
 class SampleMiniClusterTest extends FunSuite with SharedMiniCluster {
   test("really simple transformation") {
     val input = List("hi", "hi holden", "bye")
@@ -33,3 +34,4 @@ class SampleMiniClusterTest extends FunSuite with SharedMiniCluster {
     f.map(_.split(" ").toList)
   }
 }
+*/
