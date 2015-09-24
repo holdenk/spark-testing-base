@@ -16,7 +16,7 @@ spName := "holdenk/spark-testing-base"
 
 sparkVersion := "1.4.1"
 
-sparkComponents ++= Seq("core", "streaming", "sql", "hive","streaming-kafka")
+sparkComponents ++= Seq("core", "streaming", "sql", "hive", "streaming-kafka", "yarn")
 
 parallelExecution in Test := false
 
