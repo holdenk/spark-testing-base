@@ -22,6 +22,7 @@ import org.apache.spark._
 import java.io.{File, FileOutputStream, OutputStreamWriter}
 import java.util.Properties
 import java.util.concurrent.TimeUnit
+import java.net.URLClassLoader
 
 import scala.collection.JavaConversions._
 import scala.collection.mutable
@@ -102,8 +103,22 @@ trait SharedMiniCluster extends BeforeAndAfterAll { self: Suite =>
     // Set some yarn props
     sys.props += ("spark.yarn.jar" -> ("local:" + sparkAssemblyJar))
     sys.props += ("spark.executor.instances" -> "1")
-    val childClasspath = logConfDir.getAbsolutePath() + File.pathSeparator +
-      sys.props("java.class.path")
+    // Figure out our class path
+    println("Resolving class path")
+    // This _assumes_ that either the current class loader or parent class loader is a URLClassLoader
+    val urlClassLoader = Thread.currentThread().getContextClassLoader() match {
+      case uc: URLClassLoader => uc
+      case xy => xy.getParent.asInstanceOf[URLClassLoader]
+    }
+    val childClasspath = (logConfDir.getAbsolutePath() + File.pathSeparator +
+      sys.props("java.class.path") +
+      urlClassLoader.getURLs().toSeq.map(u => new File(u.toURI()).getAbsolutePath()).mkString(File.pathSeparator) +
+      // TODO: figure out how to discovery these paths "properly"
+      File.pathSeparator +
+      "/home/holden/repos/spark-testing-base/target/scala-2.10/classes" +
+      File.pathSeparator +
+      "/home/holden/repos/spark-testing-base/target/scala-2.10/test-classes")
+    println("Using class path "+childClasspath)
     sys.props += ("spark.driver.extraClassPath" -> childClasspath)
     sys.props += ("spark.executor.extraClassPath" -> childClasspath)
     val configurationFile = new File(configurationFilePath)
