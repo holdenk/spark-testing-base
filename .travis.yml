@@ -16,6 +16,6 @@ install:
 script:
   - ./sbt/sbt scalastyle
   - "export SPARK_HOME=./spark-1.4.1-bin-hadoop2.4/"
-- ./sbt/sbt test
+  - ./sbt/sbt test
   - cd python; ./run-tests; cd ..
   - "pep8 --ignore=E402 ./python"
