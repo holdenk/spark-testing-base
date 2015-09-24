@@ -29,6 +29,9 @@ import scala.collection.mutable
 import com.google.common.base.Charsets.UTF_8
 import com.google.common.io.ByteStreams
 import com.google.common.io.Files
+import org.apache.hadoop.fs.{FileSystem, Path}
+import org.apache.hadoop.fs.permission.FsPermission
+import org.apache.hadoop.hdfs.{HdfsConfiguration, MiniDFSCluster}
 import org.apache.hadoop.yarn.conf.YarnConfiguration
 import org.apache.hadoop.yarn.server.MiniYARNCluster
 import org.scalatest.{BeforeAndAfterAll, FunSuite, Matchers}
@@ -51,10 +54,12 @@ trait SharedMiniCluster extends BeforeAndAfterAll { self: Suite =>
     |log4j.appender.console.layout.ConversionPattern=%d{yy/MM/dd HH:mm:ss} %p %c{1}: %m%n
     """.stripMargin
 
+  private val configurationFilePath = new File(this.getClass.getProtectionDomain().getCodeSource().getLocation().getPath()).getParentFile.getAbsolutePath + "/hadoop-site.xml"
+
   @transient private var _sc: SparkContext = _
   @transient private var yarnCluster: MiniYARNCluster = null
+  var miniDFSCluster: MiniDFSCluster = null
   private var tempDir: File = _
-  private var fakeSparkJar: File = _
   private var hadoopConfDir: File = _
   private var logConfDir: File = _
 
@@ -66,13 +71,12 @@ trait SharedMiniCluster extends BeforeAndAfterAll { self: Suite =>
     logConfDir.mkdir()
     System.setProperty("SPARK_YARN_MODE", "true")
 
-    val master = "yarn-client"
-    val conf = new SparkConf().setMaster(master).setAppName("test")
     val logConfFile = new File(logConfDir, "log4j.properties")
     Files.write(LOG4J_CONF, logConfFile, UTF_8)
 
+    val yarnConf = new YarnConfiguration()
     yarnCluster = new MiniYARNCluster(getClass().getName(), 1, 1, 1)
-    yarnCluster.init(new YarnConfiguration())
+    yarnCluster.init(yarnConf)
     yarnCluster.start()
     val config = yarnCluster.getConfig()
     val deadline = System.currentTimeMillis() + TimeUnit.SECONDS.toMillis(10)
@@ -83,15 +87,55 @@ trait SharedMiniCluster extends BeforeAndAfterAll { self: Suite =>
       TimeUnit.MILLISECONDS.sleep(100)
     }
 
-    fakeSparkJar = File.createTempFile("sparkJar", null, tempDir)
-    sys.props += ("spark.yarn.jar" -> ("local:" + fakeSparkJar.getAbsolutePath()))
+    // Find the spark assembly jar
+    // TODO: Better error messaging
+    val sparkAssemblyDir = sys.env("SPARK_HOME")+"/assembly/target/scala-2.10/"
+    println("Looking for spark assembly in "+sparkAssemblyDir)
+    val candidates = new File(sparkAssemblyDir).listFiles.filter(_ != null).toSeq
+    println(candidates)
+    val sparkAssemblyJar = candidates.filter(_.getName.endsWith(".jar")).head.getAbsolutePath()
+    // Set some yarn props
+    sys.props += ("spark.yarn.jar" -> ("local:" + sparkAssemblyJar))
     sys.props += ("spark.executor.instances" -> "1")
     val childClasspath = logConfDir.getAbsolutePath() + File.pathSeparator +
       sys.props("java.class.path")
     sys.props += ("spark.driver.extraClassPath" -> childClasspath)
     sys.props += ("spark.executor.extraClassPath" -> childClasspath)
+    val configurationFile = new File(configurationFilePath)
+    if (configurationFile.exists()) {
+      configurationFile.delete()
+    }
+    val configuration = yarnCluster.getConfig
+    iterableAsScalaIterable(configuration).foreach { e =>
+      sys.props += ("spark.hadoop." + e.getKey() -> e.getValue())
+    }
+    configuration.writeXml(new FileOutputStream(configurationFile))
+    // Copy the system props
+    val props = new Properties()
+    sys.props.foreach { case (k, v) =>
+      if (k.startsWith("spark.")) {
+        props.setProperty(k, v)
+      }
+    }
+    val propsFile = File.createTempFile("spark", ".properties", tempDir)
+    val writer = new OutputStreamWriter(new FileOutputStream(propsFile), UTF_8)
+    props.store(writer, "Spark properties.")
+    writer.close()
 
-    _sc = new SparkContext(conf)
+
+    // Set up DFS
+    val hdfsConf = new HdfsConfiguration(yarnConf)
+    miniDFSCluster = new MiniDFSCluster.Builder(hdfsConf)
+      .nameNodePort(9020).format(true).build()
+    miniDFSCluster.waitClusterUp()
+
+    val r = miniDFSCluster.getConfiguration(0)
+    miniDFSCluster.getFileSystem.mkdir(new Path("/tmp"), new FsPermission(777.toShort))
+
+
+    val master = "yarn-client"
+    val sparkConf = new SparkConf().setMaster(master).setAppName("test")
+    _sc = new SparkContext(sparkConf)
     super.beforeAll()
   }
 
