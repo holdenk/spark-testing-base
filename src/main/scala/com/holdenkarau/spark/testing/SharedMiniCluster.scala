@@ -42,7 +42,7 @@ import org.scalatest.BeforeAndAfterAll
 import org.scalatest.Suite
 
 /** Shares an HDFS MiniCluster based `SparkContext` between all tests in a suite and
- * closes it at the end */
+ * closes it at the end. This requires that the env variable SPARK_HOME is set. */
 trait SharedMiniCluster extends BeforeAndAfterAll { self: Suite =>
 
   // log4j configuration for the YARN containers, so that their output is collected
@@ -66,7 +66,44 @@ trait SharedMiniCluster extends BeforeAndAfterAll { self: Suite =>
 
   def sc: SparkContext = _sc
 
+  // Program specific class path, override if this isn't working for you
+  def extraClassPath(): Seq[String] = {
+    List(new File("target/scala-2.10/classes"),
+      new File("target/scala-2.10/test-classes")).map(_.getAbsolutePath)
+  }
+
+  // Class path based on current env + program specific class path.
+  def classPathFromCurrentClassLoader(): Seq[String] = {
+    // This _assumes_ that either the current class loader or parent class loader is a URLClassLoader
+    val urlClassLoader = Thread.currentThread().getContextClassLoader() match {
+      case uc: URLClassLoader => uc
+      case xy => xy.getParent.asInstanceOf[URLClassLoader]
+    }
+    urlClassLoader.getURLs().toSeq.map(u => new File(u.toURI()).getAbsolutePath())
+  }
+
+  def generateClassPath() = {
+    // Class path
+    (logConfDir.getAbsolutePath() + File.pathSeparator + sys.props("java.class.path") +
+      File.pathSeparator + (classPathFromCurrentClassLoader() ++
+        extraClassPath()).mkString(File.pathSeparator))
+  }
+
+
   override def beforeAll() {
+    // Try and do setup, and in-case we fail shutdown
+    try {
+      setup()
+    } catch {
+      case e: Exception => {
+        shutdown()
+        throw e
+      }
+    }
+    super.beforeAll()
+  }
+
+  def setup() {
     tempDir = Utils.createTempDir();
     logConfDir = new File(tempDir, "log4j")
     logConfDir.mkdir()
@@ -92,33 +129,17 @@ trait SharedMiniCluster extends BeforeAndAfterAll { self: Suite =>
     // TODO: Better error messaging
     val sparkAssemblyDir = sys.env("SPARK_HOME")+"/assembly/target/scala-2.10/"
     val sparkLibDir = sys.env("SPARK_HOME")+"/lib/"
-    println("Looking for spark assembly in "+sparkAssemblyDir)
     val candidates = List(new File(sparkAssemblyDir).listFiles,
       new File(sparkLibDir).listFiles).filter(_ != null).flatMap(_.toSeq)
-    println(candidates)
     val sparkAssemblyJar = candidates.filter{f =>
       val name = f.getName
       name.endsWith(".jar") && name.startsWith("spark-assembly")}
-      .head.getAbsolutePath()
+      .headOption.getOrElse(throw new Exception("Failed to find spark assembly jar, make sure SPARK_HOME is set correctly")).getAbsolutePath()
     // Set some yarn props
     sys.props += ("spark.yarn.jar" -> ("local:" + sparkAssemblyJar))
     sys.props += ("spark.executor.instances" -> "1")
     // Figure out our class path
-    println("Resolving class path")
-    // This _assumes_ that either the current class loader or parent class loader is a URLClassLoader
-    val urlClassLoader = Thread.currentThread().getContextClassLoader() match {
-      case uc: URLClassLoader => uc
-      case xy => xy.getParent.asInstanceOf[URLClassLoader]
-    }
-    val childClasspath = (logConfDir.getAbsolutePath() + File.pathSeparator +
-      sys.props("java.class.path") +
-      urlClassLoader.getURLs().toSeq.map(u => new File(u.toURI()).getAbsolutePath()).mkString(File.pathSeparator) +
-      // TODO: figure out how to discovery these paths "properly"
-      File.pathSeparator +
-      "/home/holden/repos/spark-testing-base/target/scala-2.10/classes" +
-      File.pathSeparator +
-      "/home/holden/repos/spark-testing-base/target/scala-2.10/test-classes")
-    println("Using class path "+childClasspath)
+    val childClasspath = generateClassPath()
     sys.props += ("spark.driver.extraClassPath" -> childClasspath)
     sys.props += ("spark.executor.extraClassPath" -> childClasspath)
     val configurationFile = new File(configurationFilePath)
@@ -156,14 +177,22 @@ trait SharedMiniCluster extends BeforeAndAfterAll { self: Suite =>
     val master = "yarn-client"
     val sparkConf = new SparkConf().setMaster(master).setAppName("test")
     _sc = new SparkContext(sparkConf)
-    super.beforeAll()
+  }
+
+  def shutdown() {
+    if (yarnCluster != null) {
+      yarnCluster.stop()
+    }
+    if (_sc != null) {
+      _sc.stop()
+    }
+    System.clearProperty("SPARK_YARN_MODE")
+    _sc = null
+    yarnCluster = null
   }
 
   override def afterAll() {
-    yarnCluster.stop()
-    _sc.stop()
-    System.clearProperty("SPARK_YARN_MODE")
-    _sc = null
+    shutdown()
     super.afterAll()
   }
 }
