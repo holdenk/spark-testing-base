@@ -42,7 +42,9 @@ import org.scalatest.BeforeAndAfterAll
 import org.scalatest.Suite
 
 /** Shares an HDFS MiniCluster based `SparkContext` between all tests in a suite and
- * closes it at the end. This requires that the env variable SPARK_HOME is set. */
+ * closes it at the end. This requires that the env variable SPARK_HOME is set.
+ * Further more if this is used, all Spark tests must run against the yarn mini cluster
+ * (see https://issues.apache.org/jira/browse/SPARK-10812 for details).*/
 trait SharedMiniCluster extends BeforeAndAfterAll { self: Suite =>
 
   // log4j configuration for the YARN containers, so that their output is collected
@@ -65,6 +67,7 @@ trait SharedMiniCluster extends BeforeAndAfterAll { self: Suite =>
   private var logConfDir: File = _
 
   def sc: SparkContext = _sc
+  val master = "yarn-client"
 
   // Program specific class path, override if this isn't working for you
   // TODO: This is a hack, but classPathFromCurrentClassLoader isn't sufficient :(
@@ -76,7 +79,7 @@ trait SharedMiniCluster extends BeforeAndAfterAll { self: Suite =>
       // Likely maven classes & test-classes directory
       new File("target/classes"),
       new File("target/test-classes")
-    ).filter(_ != null).map(_.getAbsolutePath).filter(_ != null)
+    ).map(_.getAbsolutePath).filter(_ != null)
   }
 
   // Class path based on current env + program specific class path.
@@ -91,9 +94,11 @@ trait SharedMiniCluster extends BeforeAndAfterAll { self: Suite =>
 
   def generateClassPath() = {
     // Class path
-    (logConfDir.getAbsolutePath() + File.pathSeparator + sys.props("java.class.path") +
-      File.pathSeparator + (classPathFromCurrentClassLoader() ++
-        extraClassPath()).mkString(File.pathSeparator))
+    val clList = (List(logConfDir.getAbsolutePath(), sys.props("java.class.path")) ++
+      classPathFromCurrentClassLoader() ++ extraClassPath())
+    val clPath = clList.mkString(File.pathSeparator)
+    println("Using clPath "+clPath)
+    clPath
   }
 
 
@@ -180,8 +185,6 @@ trait SharedMiniCluster extends BeforeAndAfterAll { self: Suite =>
     val r = miniDFSCluster.getConfiguration(0)
     miniDFSCluster.getFileSystem.mkdir(new Path("/tmp"), new FsPermission(777.toShort))
 
-
-    val master = "yarn-client"
     val sparkConf = new SparkConf().setMaster(master).setAppName("test")
     _sc = new SparkContext(sparkConf)
   }

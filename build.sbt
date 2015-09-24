@@ -20,6 +20,8 @@ sparkComponents ++= Seq("core", "streaming", "sql", "hive", "streaming-kafka", "
 
 parallelExecution in Test := false
 
+javaOptions ++= Seq("-Xms512M", "-Xmx2048M", "-XX:MaxPermSize=2048M", "-XX:+CMSClassUnloadingEnabled")
+
 // additional libraries
 libraryDependencies ++= Seq(
   "org.scalatest" %% "scalatest" % "2.2.1",
@@ -44,8 +46,7 @@ lazy val miniClusterDependencies = excludeJavaxServlet(Seq(
   "org.apache.hadoop" % "hadoop-mapreduce-client-jobclient" % "2.6.0" % "compile,test" classifier "" classifier "tests",
   "org.apache.hadoop" % "hadoop-yarn-server-tests" % "2.6.0" % "compile,test" classifier "" classifier "tests",
   "org.apache.hadoop" % "hadoop-yarn-server-web-proxy" % "2.6.0" % "compile,test" classifier "" classifier "tests",
-  "org.apache.hadoop" % "hadoop-minicluster" % "2.6.0",
-  "org.scala-sbt" % "sbt" % "0.13.9"))
+  "org.apache.hadoop" % "hadoop-minicluster" % "2.6.0"))
 
 libraryDependencies ++= miniClusterDependencies
 
