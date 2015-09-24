@@ -16,7 +16,7 @@ install:
   - pip install unittest2
 script:
   - ./sbt/sbt scalastyle
-  - "export SPARK_HOME=./spark-1.4.1-bin-hadoop2.4/"
+  - "export SPARK_HOME=`pwd`/spark-1.4.1-bin-hadoop2.4/"
   - ./sbt/sbt test
   - cd python && ./run-tests && cd ..
   - "pep8 --ignore=E402 ./python"
