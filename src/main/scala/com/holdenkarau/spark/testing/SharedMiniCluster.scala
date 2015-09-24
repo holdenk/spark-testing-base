@@ -90,10 +90,15 @@ trait SharedMiniCluster extends BeforeAndAfterAll { self: Suite =>
     // Find the spark assembly jar
     // TODO: Better error messaging
     val sparkAssemblyDir = sys.env("SPARK_HOME")+"/assembly/target/scala-2.10/"
+    val sparkLibDir = sys.env("SPARK_HOME")+"/lib/"
     println("Looking for spark assembly in "+sparkAssemblyDir)
-    val candidates = new File(sparkAssemblyDir).listFiles.filter(_ != null).toSeq
+    val candidates = List(new File(sparkAssemblyDir).listFiles,
+      new File(sparkLibDir).listFiles).filter(_ != null).flatMap(_.toSeq)
     println(candidates)
-    val sparkAssemblyJar = candidates.filter(_.getName.endsWith(".jar")).head.getAbsolutePath()
+    val sparkAssemblyJar = candidates.filter{f =>
+      val name = f.getName
+      name.endsWith(".jar") && name.startsWith("spark-assembly")}
+      .head.getAbsolutePath()
     // Set some yarn props
     sys.props += ("spark.yarn.jar" -> ("local:" + sparkAssemblyJar))
     sys.props += ("spark.executor.instances" -> "1")
