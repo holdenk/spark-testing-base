@@ -2,14 +2,15 @@ language: scala
 scala:
    - 2.10.4
 before_install:
-  - sudo pip install --upgrade conda
+  - sudo pip install --upgrade conda py4j
+  - pip install codecov
 install:
 # Download spark 1.4.1
   - "wget http://d3kbcqa49mib13.cloudfront.net/spark-1.4.1-bin-hadoop2.4.tgz || wget http://www.us.apache.org/dist/spark/spark-1.4.1/spark-1.4.1-bin-hadoop2.4.tgz || wget http://download.nextag.com/apache/spark/spark-1.4.1/spark-1.4.1-bin-hadoop2.4.tgz"
   - "tar -xvf spark-1.4.1-bin-hadoop2.4.tgz"
   # install python deps
   - sudo conda init
-  - deps='pip requests nose sphinx pep8'
+  - deps='pip requests nose sphinx pep8 coverage'
   - conda create -p $HOME/py --yes $deps "python=2.7"
   - export PATH=$HOME/py/bin:$PATH
   - pip install unittest2
@@ -17,5 +18,5 @@ script:
   - ./sbt/sbt scalastyle
   - "export SPARK_HOME=./spark-1.4.1-bin-hadoop2.4/"
   - ./sbt/sbt test
-  - cd python; ./run-tests; cd ..
+  - cd python && ./run-tests && cd ..
   - "pep8 --ignore=E402 ./python"

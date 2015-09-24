@@ -1,4 +1,5 @@
 #!/bin/bash
+set -x
 if [ -z "$SPARK_HOME" ]; then
    echo "$(tput setaf 1)Error: SPARK_HOME is not set, may not be able to run tests.$(tput sgr0)"
 fi
