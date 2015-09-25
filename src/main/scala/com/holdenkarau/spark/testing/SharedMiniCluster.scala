@@ -41,10 +41,12 @@ import org.scalatest.{BeforeAndAfterAll, FunSuite, Matchers}
 import org.scalatest.BeforeAndAfterAll
 import org.scalatest.Suite
 
-/** Shares an HDFS MiniCluster based `SparkContext` between all tests in a suite and
+/**
+ * Shares an HDFS MiniCluster based `SparkContext` between all tests in a suite and
  * closes it at the end. This requires that the env variable SPARK_HOME is set.
  * Further more if this is used, all Spark tests must run against the yarn mini cluster
- * (see https://issues.apache.org/jira/browse/SPARK-10812 for details).*/
+ * (see https://issues.apache.org/jira/browse/SPARK-10812 for details).
+ */
 trait SharedMiniCluster extends BeforeAndAfterAll { self: Suite =>
 
   // log4j configuration for the YARN containers, so that their output is collected
@@ -57,7 +59,9 @@ trait SharedMiniCluster extends BeforeAndAfterAll { self: Suite =>
     |log4j.appender.console.layout.ConversionPattern=%d{yy/MM/dd HH:mm:ss} %p %c{1}: %m%n
     """.stripMargin
 
-  private val configurationFilePath = new File(this.getClass.getProtectionDomain().getCodeSource().getLocation().getPath()).getParentFile.getAbsolutePath + "/hadoop-site.xml"
+  private val configurationFilePath = new File(
+    this.getClass.getProtectionDomain().getCodeSource().getLocation().getPath())
+    .getParentFile.getAbsolutePath + "/hadoop-site.xml"
 
   @transient private var _sc: SparkContext = _
   @transient private var yarnCluster: MiniYARNCluster = null
@@ -84,7 +88,8 @@ trait SharedMiniCluster extends BeforeAndAfterAll { self: Suite =>
 
   // Class path based on current env + program specific class path.
   def classPathFromCurrentClassLoader(): Seq[String] = {
-    // This _assumes_ that either the current class loader or parent class loader is a URLClassLoader
+    // This _assumes_ that either the current class loader or parent class loader is a
+    // URLClassLoader
     val urlClassLoader = Thread.currentThread().getContextClassLoader() match {
       case uc: URLClassLoader => uc
       case xy => xy.getParent.asInstanceOf[URLClassLoader]
@@ -92,12 +97,11 @@ trait SharedMiniCluster extends BeforeAndAfterAll { self: Suite =>
     urlClassLoader.getURLs().toSeq.map(u => new File(u.toURI()).getAbsolutePath())
   }
 
-  def generateClassPath() = {
+  def generateClassPath(): String = {
     // Class path
     val clList = (List(logConfDir.getAbsolutePath(), sys.props("java.class.path")) ++
       classPathFromCurrentClassLoader() ++ extraClassPath())
     val clPath = clList.mkString(File.pathSeparator)
-    println("Using clPath "+clPath)
     clPath
   }
 
@@ -139,14 +143,17 @@ trait SharedMiniCluster extends BeforeAndAfterAll { self: Suite =>
 
     // Find the spark assembly jar
     // TODO: Better error messaging
-    val sparkAssemblyDir = sys.env("SPARK_HOME")+"/assembly/target/scala-2.10/"
-    val sparkLibDir = sys.env("SPARK_HOME")+"/lib/"
+    val sparkAssemblyDir = sys.env("SPARK_HOME") + "/assembly/target/scala-2.10/"
+    val sparkLibDir = sys.env("SPARK_HOME") + "/lib/"
     val candidates = List(new File(sparkAssemblyDir).listFiles,
       new File(sparkLibDir).listFiles).filter(_ != null).flatMap(_.toSeq)
     val sparkAssemblyJar = candidates.filter{f =>
       val name = f.getName
       name.endsWith(".jar") && name.startsWith("spark-assembly")}
-      .headOption.getOrElse(throw new Exception("Failed to find spark assembly jar, make sure SPARK_HOME is set correctly")).getAbsolutePath()
+      .headOption.getOrElse(throw new Exception(
+        "Failed to find spark assembly jar, make sure SPARK_HOME is set correctly"))
+      .getAbsolutePath()
+
     // Set some yarn props
     sys.props += ("spark.yarn.jar" -> ("local:" + sparkAssemblyJar))
     sys.props += ("spark.executor.instances" -> "1")
