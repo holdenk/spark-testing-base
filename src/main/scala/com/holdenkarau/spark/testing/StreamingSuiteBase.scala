@@ -130,9 +130,9 @@ trait StreamingSuiteBase extends FunSuite with BeforeAndAfterAll with Logging
 
 
   /**
-    * Run a block of code with the given StreamingContext and automatically
-    * stop the context when the block completes or when an exception is thrown.
-    */
+   * Run a block of code with the given StreamingContext and automatically
+   * stop the context when the block completes or when an exception is thrown.
+   */
   def withOutputAndStreamingContext[R](outputStreamSSC: (TestOutputStream[R], TestStreamingContext))
     (block: (TestOutputStream[R], TestStreamingContext) => Unit): Unit = {
     val outputStream = outputStreamSSC._1
@@ -151,9 +151,9 @@ trait StreamingSuiteBase extends FunSuite with BeforeAndAfterAll with Logging
 
 
   /**
-    * Set up required DStreams to test the DStream operation using the two sequences
-    * of input collections.
-    */
+   * Set up required DStreams to test the DStream operation using the two sequences
+   * of input collections.
+   */
   def setupStreams[U: ClassTag, V: ClassTag](
     input: Seq[Seq[U]],
     operation: DStream[U] => DStream[V],
@@ -174,9 +174,9 @@ trait StreamingSuiteBase extends FunSuite with BeforeAndAfterAll with Logging
   }
 
   /**
-    * Set up required DStreams to test the binary operation using the sequence
-    * of input collections.
-    */
+   * Set up required DStreams to test the binary operation using the sequence
+   * of input collections.
+   */
   def setupStreams[U: ClassTag, V: ClassTag, W: ClassTag](
     input1: Seq[Seq[U]],
     input2: Seq[Seq[V]],
@@ -198,12 +198,12 @@ trait StreamingSuiteBase extends FunSuite with BeforeAndAfterAll with Logging
   }
 
   /**
-    * Runs the streams set up in `ssc` on manual clock for `numBatches` batches and
-    * returns the collected output. It will wait until `numExpectedOutput` number of
-    * output data has been collected or timeout (set by `maxWaitTimeMillis`) is reached.
-    *
-    * Returns a sequence of items for each RDD.
-    */
+   * Runs the streams set up in `ssc` on manual clock for `numBatches` batches and
+   * returns the collected output. It will wait until `numExpectedOutput` number of
+   * output data has been collected or timeout (set by `maxWaitTimeMillis`) is reached.
+   *
+   * Returns a sequence of items for each RDD.
+   */
   def runStreams[V: ClassTag](
     outputStream: TestOutputStream[V],
     ssc: TestStreamingContext,
@@ -255,10 +255,10 @@ trait StreamingSuiteBase extends FunSuite with BeforeAndAfterAll with Logging
   }
 
   /**
-    * Verify whether the output values after running a DStream operation
-    * is same as the expected output values, by comparing the output
-    * collections either as lists (order matters) or sets (order does not matter)
-    */
+   * Verify whether the output values after running a DStream operation
+   * is same as the expected output values, by comparing the output
+   * collections either as lists (order matters) or sets (order does not matter)
+   */
   def verifyOutput[V: ClassTag](
     output: Seq[Seq[V]],
     expectedOutput: Seq[Seq[V]],
@@ -287,9 +287,9 @@ trait StreamingSuiteBase extends FunSuite with BeforeAndAfterAll with Logging
   }
 
   /**
-    * Test unary DStream operation with a list of inputs, with number of
-    * batches to run same as the number of expected output values
-    */
+   * Test unary DStream operation with a list of inputs, with number of
+   * batches to run same as the number of expected output values
+   */
   def testOperation[U: ClassTag, V: ClassTag](
     input: Seq[Seq[U]],
     operation: DStream[U] => DStream[V],
@@ -300,14 +300,14 @@ trait StreamingSuiteBase extends FunSuite with BeforeAndAfterAll with Logging
   }
 
   /**
-    * Test unary DStream operation with a list of inputs
-    * @param input      Sequence of input collections
-    * @param operation  Binary DStream operation to be applied to the 2 inputs
-    * @param expectedOutput Sequence of expected output collections
-    * @param numBatches Number of batches to run the operation for
-    * @param useSet     Compare the output values with the expected output values
-    *                   as sets (order matters) or as lists (order does not matter)
-    */
+   * Test unary DStream operation with a list of inputs
+   * @param input      Sequence of input collections
+   * @param operation  Binary DStream operation to be applied to the 2 inputs
+   * @param expectedOutput Sequence of expected output collections
+   * @param numBatches Number of batches to run the operation for
+   * @param useSet     Compare the output values with the expected output values
+   *                   as sets (order matters) or as lists (order does not matter)
+   */
   def testOperation[U: ClassTag, V: ClassTag](
     input: Seq[Seq[U]],
     operation: DStream[U] => DStream[V],
@@ -324,9 +324,9 @@ trait StreamingSuiteBase extends FunSuite with BeforeAndAfterAll with Logging
   }
 
   /**
-    * Test binary DStream operation with two lists of inputs, with number of
-    * batches to run same as the number of expected output values
-    */
+   * Test binary DStream operation with two lists of inputs, with number of
+   * batches to run same as the number of expected output values
+   */
   def testOperation[U: ClassTag, V: ClassTag, W: ClassTag](
     input1: Seq[Seq[U]],
     input2: Seq[Seq[V]],
@@ -338,15 +338,15 @@ trait StreamingSuiteBase extends FunSuite with BeforeAndAfterAll with Logging
   }
 
   /**
-    * Test binary DStream operation with two lists of inputs
-    * @param input1     First sequence of input collections
-    * @param input2     Second sequence of input collections
-    * @param operation  Binary DStream operation to be applied to the 2 inputs
-    * @param expectedOutput Sequence of expected output collections
-    * @param numBatches Number of batches to run the operation for
-    * @param useSet     Compare the output values with the expected output values
-    *                   as sets (order matters) or as lists (order does not matter)
-    */
+   * Test binary DStream operation with two lists of inputs
+   * @param input1     First sequence of input collections
+   * @param input2     Second sequence of input collections
+   * @param operation  Binary DStream operation to be applied to the 2 inputs
+   * @param expectedOutput Sequence of expected output collections
+   * @param numBatches Number of batches to run the operation for
+   * @param useSet     Compare the output values with the expected output values
+   *                   as sets (order matters) or as lists (order does not matter)
+   */
   def testOperation[U: ClassTag, V: ClassTag, W: ClassTag](
     input1: Seq[Seq[U]],
     input2: Seq[Seq[V]],
