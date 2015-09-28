@@ -3,7 +3,7 @@ scala:
    - 2.10.4
 before_install:
   - sudo pip install --upgrade conda py4j
-  - sudo pip install codecov
+  - pip install --user codecov
 install:
 # Download spark 1.4.1
   - "wget http://d3kbcqa49mib13.cloudfront.net/spark-1.4.1-bin-hadoop2.4.tgz || wget http://www.us.apache.org/dist/spark/spark-1.4.1/spark-1.4.1-bin-hadoop2.4.tgz || wget http://download.nextag.com/apache/spark/spark-1.4.1/spark-1.4.1-bin-hadoop2.4.tgz"
@@ -20,3 +20,5 @@ script:
   - ./sbt/sbt test
   - cd python && ./run-tests && cd ..
   - "pep8 --ignore=E402 ./python"
+after_success:
+  - codecov
