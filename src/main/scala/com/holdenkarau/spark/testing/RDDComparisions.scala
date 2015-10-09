@@ -31,7 +31,7 @@ object RDDComparisions {
    * Compare two RDDs. If they are equal returns None, otherwise
    * returns Some with the first mismatch. Assumes we have the same partitioner.
    */
-  def compareWithOrder[T: ClassTag](expected: RDD[T], result: RDD[T]): Option[(T,T)] = {
+  def compareWithOrder[T: ClassTag](expected: RDD[T], result: RDD[T]): Option[(T, T)] = {
     expected.zip(result).filter{case (x, y) => x != y}.take(1).headOption
   }
   // end:PANDA_ORDERED
