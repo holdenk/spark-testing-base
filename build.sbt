@@ -20,6 +20,11 @@ sparkComponents ++= Seq("core", "streaming", "sql", "hive", "streaming-kafka", "
 
 parallelExecution in Test := false
 
+coverageHighlighting := {
+  if (scalaBinaryVersion.value == "2.10") false
+  else true
+}
+
 javaOptions ++= Seq("-Xms512M", "-Xmx2048M", "-XX:MaxPermSize=2048M", "-XX:+CMSClassUnloadingEnabled")
 
 // additional libraries
