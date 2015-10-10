@@ -26,7 +26,7 @@ import org.apache.spark.rdd._
 
 
 object RDDComparisions {
-  // tag:PANDA_ORDERED
+  // tag::PANDA_ORDERED
   /**
    * Compare two RDDs. If they are equal returns None, otherwise
    * returns Some with the first mismatch. Assumes we have the same partitioner.
@@ -34,9 +34,9 @@ object RDDComparisions {
   def compareWithOrder[T: ClassTag](expected: RDD[T], result: RDD[T]): Option[(T, T)] = {
     expected.zip(result).filter{case (x, y) => x != y}.take(1).headOption
   }
-  // end:PANDA_ORDERED
+  // end::PANDA_ORDERED
 
-  // tag:PANDA_UNORDERED
+  // tag::PANDA_UNORDERED
   /**
    * Compare two RDDs where we do not require the order to be equal.
    * If they are equal returns None, otherwise returns Some with the first mismatch.
@@ -50,5 +50,5 @@ object RDDComparisions {
       i1.isEmpty || i2.isEmpty || i1.head != i2.head}.take(1).headOption.
       map{case (v, (i1, i2)) => (v, i1.headOption.getOrElse(0), i2.headOption.getOrElse(0))}
   }
-  // end:PANDA_UNORDERED
+  // end::PANDA_UNORDERED
 }
