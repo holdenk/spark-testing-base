@@ -78,6 +78,7 @@ trait StreamingSuiteBase extends FunSuite with BeforeAndAfterAll with Logging
     dir.toString
   }
 
+  // tag::createTestInputStream
   /**
    * Create an input stream for the provided input sequence. This is done using
    * TestInputStream as queueStream's are not checkpointable.
@@ -86,7 +87,7 @@ trait StreamingSuiteBase extends FunSuite with BeforeAndAfterAll with Logging
     input: Seq[Seq[T]]): TestInputStream[T] = {
     new TestInputStream(sc, ssc_, input, numInputPartitions)
   }
-
+  // end::createTestInputStream
 
   // Number of partitions of the input parallel collections created for testing
   def numInputPartitions: Int = 2
