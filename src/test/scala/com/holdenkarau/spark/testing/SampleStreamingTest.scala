@@ -25,26 +25,31 @@ import org.scalatest.FunSuite
 import org.scalatest.exceptions.TestFailedException
 
 class SampleStreamingTest extends StreamingSuiteBase {
+
+  //tag::simpleStreamingTest
   test("really simple transformation") {
     val input = List(List("hi"), List("hi holden"), List("bye"))
     val expected = List(List("hi"), List("hi", "holden"), List("bye"))
     testOperation[String, String](input, tokenize _, expected, useSet = true)
   }
-  def tokenize(f: DStream[String]) = {
+
+  // This is the sample function we are testing
+  def tokenize(f: DStream[String]): DStream[String] = {
     f.flatMap(_.split(" "))
   }
+  //end::simpleStreamingTest
 
   test("noop simple transformation") {
     def noop(s: DStream[String]) = s
     val input = List(List("hi"), List("hi holden"), List("bye"))
     testOperation[String, String](input, noop _, input, useSet = true)
   }
-  
+
   test("a wrong expected multiset for a micro batch leads to a test fail") {
     val input = List(List("hi"), List("hi holden"), List("bye"))
     val badMultisetExpected = List(List("hi"), List("hi", "holden", "hi"), List("bye"))
     val thrown = intercept[TestFailedException] {
-    	testOperation[String, String](input, tokenize _, badMultisetExpected, useSet = true)
+        testOperation[String, String](input, tokenize _, badMultisetExpected, useSet = true)
     }
   }
 }

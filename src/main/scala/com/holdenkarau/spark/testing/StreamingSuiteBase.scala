@@ -24,7 +24,6 @@ import java.io._
 
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.SynchronizedBuffer
-import scala.collection.mutable.Queue
 import scala.collection.immutable.{HashBag => Bag}
 import scala.language.implicitConversions
 import scala.reflect.ClassTag
@@ -46,6 +45,7 @@ import org.apache.spark.rdd.RDD
   *
   * The buffer contains a sequence of RDD's, each containing a sequence of items
   */
+// tag::collectResults
 class TestOutputStream[T: ClassTag](parent: DStream[T],
   val output: ArrayBuffer[Seq[T]] = ArrayBuffer[Seq[T]]()) extends Serializable {
   parent.foreachRDD{(rdd: RDD[T], time) =>
@@ -53,7 +53,7 @@ class TestOutputStream[T: ClassTag](parent: DStream[T],
     output += collected
   }
 }
-
+// end::colectResults
 
 /**
   * This is the base trait for Spark Streaming testsuites. This provides basic functionality
