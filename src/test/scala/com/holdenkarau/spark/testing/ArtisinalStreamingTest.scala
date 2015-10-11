@@ -37,6 +37,7 @@ import org.scalatest.exceptions.TestFailedException
  * sleep approach. Instead please look at [[SampleStreamingTest]].
  */
 class ArtisinalStreamingTest extends FunSuite with SharedSparkContext {
+  //tag:artisinalTest
   test("artisinal streaming test") {
     val ssc = new StreamingContext(sc, Seconds(1))
     val input = List(List("hi"), List("happy pandas", "sad pandas"))
@@ -56,4 +57,5 @@ class ArtisinalStreamingTest extends FunSuite with SharedSparkContext {
     ssc.stop()
     assert(List("happy pandas", "sad pandas") === result.toList)
   }
+  //end:artisinalTest
 }
