@@ -54,7 +54,7 @@ class ArtisinalStreamingTest extends FunSuite with SharedSparkContext {
     while (result.size < 2 && System.currentTimeMillis() - startTime < maxWaitTime) {
       ssc.awaitTermination(50)
     }
-    ssc.stop()
+    ssc.stop(stopSparkContext = false)
     assert(List("happy pandas", "sad pandas") === result.toList)
   }
   //end:artisinalTest

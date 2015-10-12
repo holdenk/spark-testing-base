@@ -212,6 +212,7 @@ class KafkaTestUtils extends Logging{
     val actualPort = factory.getLocalPort
 
     def shutdown() {
+      zookeeper.shutdown()
       factory.shutdown()
     }
   }

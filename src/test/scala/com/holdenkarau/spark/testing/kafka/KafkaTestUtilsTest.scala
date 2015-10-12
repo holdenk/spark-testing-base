@@ -42,7 +42,8 @@ extends FunSuite with BeforeAndAfterAll{
   }
 
   override def afterAll(): Unit = if (kafkaTestUtils != null) {
-      kafkaTestUtils.teardown()
+    kafkaTestUtils.teardown()
+    kafkaTestUtils = null
   }
 
   test("Kafka send and receive message"){
