@@ -32,4 +32,13 @@ class SampleRDDTest extends FunSuite with SharedSparkContext {
   def tokenize(f: RDD[String]) = {
     f.map(_.split(" ").toList)
   }
+
+  test("really simple transformation with rdd - rdd comparision") {
+    val input = List("hi", "hi holden", "bye")
+    val expected = List(List("hi"), List("hi", "holden"), List("bye"))
+    assert(None ===
+      RDDComparisions.compare(sc.parallelize(expected), tokenize(sc.parallelize(input))))
+  }
+
+
 }
