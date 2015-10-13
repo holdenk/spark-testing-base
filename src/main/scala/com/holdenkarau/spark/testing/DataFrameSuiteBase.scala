@@ -91,8 +91,9 @@ trait DataFrameSuiteBase extends FunSuite with BeforeAndAfterAll
     result.rdd.cache()
     val expectedRDD = zipWithIndex(expected.rdd)
     val resultRDD = zipWithIndex(result.rdd)
-    val unequal = expectedRDD.cogroup(resultRDD).filter{case (idx, (r1, r2)) =>
-      !(r1.isEmpty || r2.isEmpty) && (
+    val cogrouped = expectedRDD.cogroup(resultRDD)
+    val unequal = cogrouped.filter{case (idx, (r1, r2)) =>
+      (r1.isEmpty || r2.isEmpty) || (
         !DataFrameSuiteBase.approxEquals(r1.head, r2.head, tol))
     }.take(maxCount)
     expected.rdd.unpersist()
@@ -112,7 +113,7 @@ object DataFrameSuiteBase {
   /** Approximate equality, based on equals from [[Row]] */
   def approxEquals(r1: Row, r2: Row, tol: Double): Boolean = {
     if (r1.length != r2.length) {
-      false
+      return false
     } else {
       var i = 0
       val length = r1.length
@@ -141,10 +142,10 @@ object DataFrameSuiteBase {
               if (d1.compareTo(o2.asInstanceOf[java.math.BigDecimal]) != 0) {
                 return false
               }
-            case f1: Float => if (abs(f1-o2.asInstanceOf[Float]) > tol) {
+            case f1: Float if o2.isInstanceOf[Float] => if (abs(f1-o2.asInstanceOf[Float]) > tol) {
               return false
             }
-            case d1: Double => if (abs(d1-o2.asInstanceOf[Double]) > tol) {
+            case d1: Double if o2.isInstanceOf[Double] => if (abs(d1-o2.asInstanceOf[Double]) > tol) {
               return false
             }
             case _ => if (o1 != o2) {

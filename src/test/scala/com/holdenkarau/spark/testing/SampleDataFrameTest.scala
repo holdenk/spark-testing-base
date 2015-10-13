@@ -18,15 +18,19 @@ package com.holdenkarau.spark.testing
 
 import org.apache.spark._
 import org.apache.spark.rdd.RDD
+import org.apache.spark.sql.Row
 import org.apache.spark.SparkContext._
 
 import org.scalatest.FunSuite
 import org.scalatest.exceptions.TestFailedException
 
 class SampleDataFrameTest extends FunSuite with SharedSparkContext with DataFrameSuiteBase {
-  val inputList = List(Magic("panda", 9001.0), Magic("coffee", 9002.0))
-  val inputList2 = List(Magic("panda", 9001.0 + 1E-6), Magic("coffee", 9002.0))
-
+  val byteArray = new Array[Byte](1)
+  val diffByteArray = Array[Byte](192.toByte)
+  val inputList = List(Magic("panda", 9001.0, byteArray),
+    Magic("coffee", 9002.0, byteArray))
+  val inputList2 = List(Magic("panda", 9001.0 + 1E-6, byteArray),
+    Magic("coffee", 9002.0, byteArray))
   test("dataframe should be equal to its self") {
     val sqlCtx = sqlContext
     import sqlCtx.implicits._
@@ -55,14 +59,56 @@ class SampleDataFrameTest extends FunSuite with SharedSparkContext with DataFram
     }
   }
 
-  test("dataframe approxEquals") {
+  test("dataframe approxEquals on rows") {
     val sqlCtx = sqlContext
     import sqlCtx.implicits._
     val row = sc.parallelize(inputList).toDF.collect()(0)
     val row2 = sc.parallelize(inputList2).toDF.collect()(0)
+    val row3 = Row()
+    val row4 = Row(1)
+    val row5 = Row(null)
+    val row6 = Row("1")
+    val row6a = Row("2")
+    val row7 = Row(1.toFloat)
     assert(false === DataFrameSuiteBase.approxEquals(row, row2, 1E-7))
     assert(true === DataFrameSuiteBase.approxEquals(row, row2, 1E-5))
+    assert(true === DataFrameSuiteBase.approxEquals(row3, row3, 1E-5))
+    assert(false === DataFrameSuiteBase.approxEquals(row, row3, 1E-5))
+    assert(false === DataFrameSuiteBase.approxEquals(row4, row5, 1E-5))
+    assert(true === DataFrameSuiteBase.approxEquals(row5, row5, 1E-5))
+    assert(false === DataFrameSuiteBase.approxEquals(row4, row6, 1E-5))
+    assert(false === DataFrameSuiteBase.approxEquals(row6, row4, 1E-5))
+    assert(false === DataFrameSuiteBase.approxEquals(row6, row7, 1E-5))
+    assert(false === DataFrameSuiteBase.approxEquals(row7, row6, 1E-5))
+    assert(false === DataFrameSuiteBase.approxEquals(row6, row6a, 1E-5))
+  }
+
+  test("unequal dataframes should not be equal when length differs") {
+    val sqlCtx = sqlContext
+    import sqlCtx.implicits._
+    val input = sc.parallelize(inputList).toDF
+    val input2 = sc.parallelize(inputList.headOption.toSeq).toDF
+    intercept[org.scalatest.exceptions.TestFailedException] {
+      equalDataFrames(input, input2)
+    }
+    intercept[org.scalatest.exceptions.TestFailedException] {
+      approxEqualDataFrames(input, input2, 1E-5)
+    }
+  }
+  test("unequal dataframes should not be equal when byte array differs") {
+    val sqlCtx = sqlContext
+    import sqlCtx.implicits._
+    val input = sc.parallelize(inputList).toDF
+    val diffInputList = List(Magic("panda", 9001.0, byteArray),
+      Magic("coffee", 9002.0, diffByteArray))
+    val input2 = sc.parallelize(diffInputList).toDF
+    intercept[org.scalatest.exceptions.TestFailedException] {
+      equalDataFrames(input, input2)
+    }
+    intercept[org.scalatest.exceptions.TestFailedException] {
+      approxEqualDataFrames(input, input2, 1E-5)
+    }
   }
 }
 
-case class Magic(name: String, power: Double)
+case class Magic(name: String, power: Double, byteArray: Array[Byte])
