@@ -39,6 +39,4 @@ class SampleRDDTest extends FunSuite with SharedSparkContext {
     assert(None ===
       RDDComparisions.compare(sc.parallelize(expected), tokenize(sc.parallelize(input))))
   }
-
-
 }
