@@ -35,18 +35,22 @@ object Utils extends Logging{
   // Add a shutdown hook to delete the temp dirs when the JVM exits
   Runtime.getRuntime.addShutdownHook(new Thread("delete Spark temp dirs") {
     override def run(): Unit = {
-      shutdownDeletePaths.foreach { dirPath =>
-        try {
-          Utils.deleteRecursively(new File(dirPath))
-        } catch {
-          // Doesn't really matter if we fail.
-          // scalastyle:off println
-          case e: Exception => println("Exception during cleanup")
-          // scalastyle:on println
-        }
-      }
+      shutDownCleanUp()
     }
   })
+
+  def shutDownCleanUp(): Unit = {
+    shutdownDeletePaths.foreach { dirPath =>
+      try {
+        Utils.deleteRecursively(new File(dirPath))
+      } catch {
+        // Doesn't really matter if we fail.
+        // scalastyle:off println
+        case e: Exception => println("Exception during cleanup")
+          // scalastyle:on println
+      }
+    }
+  }
 
   /**
     * Check to see if file is a symbolic link.
