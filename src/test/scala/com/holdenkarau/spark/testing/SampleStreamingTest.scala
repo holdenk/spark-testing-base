@@ -26,7 +26,7 @@ import org.scalatest.exceptions.TestFailedException
 
 class SampleStreamingTest extends StreamingSuiteBase {
 
-  //tag::simpleStreamingTest
+  //tag::simpleStreamingTest[]
   test("really simple transformation") {
     val input = List(List("hi"), List("hi holden"), List("bye"))
     val expected = List(List("hi"), List("hi", "holden"), List("bye"))
@@ -37,7 +37,7 @@ class SampleStreamingTest extends StreamingSuiteBase {
   def tokenize(f: DStream[String]): DStream[String] = {
     f.flatMap(_.split(" "))
   }
-  //end::simpleStreamingTest
+  //end::simpleStreamingTest[]
 
   test("noop simple transformation") {
     def noop(s: DStream[String]) = s

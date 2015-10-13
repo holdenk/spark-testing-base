@@ -45,7 +45,7 @@ import org.apache.spark.rdd.RDD
   *
   * The buffer contains a sequence of RDD's, each containing a sequence of items
   */
-// tag::collectResults
+// tag::collectResults[]
 class TestOutputStream[T: ClassTag](parent: DStream[T],
   val output: ArrayBuffer[Seq[T]] = ArrayBuffer[Seq[T]]()) extends Serializable {
   parent.foreachRDD{(rdd: RDD[T], time) =>
@@ -53,7 +53,7 @@ class TestOutputStream[T: ClassTag](parent: DStream[T],
     output += collected
   }
 }
-// end::colectResults
+// end::colectResults[]
 
 /**
   * This is the base trait for Spark Streaming testsuites. This provides basic functionality
@@ -78,7 +78,7 @@ trait StreamingSuiteBase extends FunSuite with BeforeAndAfterAll with Logging
     dir.toString
   }
 
-  // tag::createTestInputStream
+  // tag::createTestInputStream[]
   /**
    * Create an input stream for the provided input sequence. This is done using
    * TestInputStream as queueStream's are not checkpointable.
@@ -87,7 +87,7 @@ trait StreamingSuiteBase extends FunSuite with BeforeAndAfterAll with Logging
     input: Seq[Seq[T]]): TestInputStream[T] = {
     new TestInputStream(sc, ssc_, input, numInputPartitions)
   }
-  // end::createTestInputStream
+  // end::createTestInputStream[]
 
   // Number of partitions of the input parallel collections created for testing
   def numInputPartitions: Int = 2
