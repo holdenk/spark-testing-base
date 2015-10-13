@@ -51,6 +51,9 @@ class SimpleStreamingTest(StreamingTestCase):
     def test_noop_transformation(self):
         input = [["hi"], ["hi holden"], ["bye"]]
         self.run_func(input, SimpleStreamingTest.noop, input)
+
+    def test_noop_transformation_with_sorting(self):
+        input = [["hi"], ["hi holden"], ["bye"]]
         self.run_func(input, SimpleStreamingTest.noop, input, sort=True)
 
 

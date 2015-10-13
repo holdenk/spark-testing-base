@@ -54,6 +54,10 @@ class StreamingTestCase(SparkTestingBaseReuse):
     def tearDownClass(cls):
         super(StreamingTestCase, cls).tearDownClass()
 
+    @classmethod
+    def _sort_result_based_on_key(cls, result):
+        return map(lambda x: sorted(x), result)
+
     def setUp(self):
         self.ssc = StreamingContext(self.sc, self.duration)
 
