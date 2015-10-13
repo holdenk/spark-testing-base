@@ -42,7 +42,7 @@ class StreamingTestCase(SparkTestingBaseReuse):
     streaming input and collecting streaming output.
     Modeled after PySparkStreamingTestCase."""
 
-    timeout = 10  # seconds
+    timeout = 15  # seconds
     duration = .5
 
     @classmethod
@@ -53,6 +53,10 @@ class StreamingTestCase(SparkTestingBaseReuse):
     @classmethod
     def tearDownClass(cls):
         super(StreamingTestCase, cls).tearDownClass()
+
+    @classmethod
+    def _sort_result_based_on_key(cls, result):
+        return map(lambda x: sorted(x), result)
 
     def setUp(self):
         self.ssc = StreamingContext(self.sc, self.duration)
