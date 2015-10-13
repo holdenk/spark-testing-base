@@ -16,7 +16,8 @@
  */
 package com.holdenkarau.spark.testing
 
-import java.io.File
+import java.io._
+import java.nio.file.Files
 
 import org.scalatest.FunSuite
 
@@ -26,5 +27,18 @@ class UtilsTest extends FunSuite {
     val tempPath = tempDir.toPath().toAbsolutePath().toString()
     Utils.shutDownCleanUp()
     assert(!(new File(tempPath)).exists())
+  }
+
+  test("test utils cleanup with sub items") {
+    val tempDir = Utils.createTempDir()
+    val tempPath = tempDir.toPath().toAbsolutePath().toString()
+    val f = new File(tempPath + "/magicpanda")
+    val pw = new PrintWriter(f)
+    pw.write("junk")
+    pw.close
+    Files.createSymbolicLink(f.toPath, new File(tempPath +"/murh2").toPath)
+    Utils.shutDownCleanUp()
+    assert(!(new File(tempPath)).exists())
+    assert(!(new File(f.toPath)).exists())
   }
 }
