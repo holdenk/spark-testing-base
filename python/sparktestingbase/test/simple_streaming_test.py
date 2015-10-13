@@ -34,7 +34,7 @@ class SimpleStreamingTest(StreamingTestCase):
 
     @classmethod
     def difference(cls, f1, f2):
-        return f1.subtract(f2)
+        return f1.transformWith(lambda r1, r2: r1.subtract(r2), f2)
 
     def test_simple_transformation(self):
         input = [["hi"], ["hi holden"], ["bye"]]
@@ -42,16 +42,39 @@ class SimpleStreamingTest(StreamingTestCase):
         self.run_func(input, SimpleStreamingTest.tokenize, expected)
 
     def test_diff_transformation(self):
-        input = [["hi"], ["hi holden"], ["bye"]]
+        input = [["hi", "pandas"], ["hi holden"], ["bye"]]
         input2 = [["hi"], ["pandas"], ["bye bye"]]
-        expected = [[], ["hi holden"], ["bye"]]
+        expected = [["pandas"], ["hi holden"], ["bye"]]
         self.run_func(input, SimpleStreamingTest.difference, expected,
                       input2=input2)
+
+    def test_diff_rdd_transformation(self):
+        input = [["hi", "pandas"], ["hi holden"], ["bye"]]
+        input_rdd = [self.sc.parallelize(d, 1) for d in input]
+        input2 = [["hi"], ["pandas"], ["bye bye"]]
+        input2_rdd = [self.sc.parallelize(d, 1) for d in input2]
+        expected = [["pandas"], ["hi holden"], ["bye"]]
+        self.run_func(input_rdd, SimpleStreamingTest.difference, expected,
+                      input2=input2_rdd)
 
     def test_noop_transformation(self):
         input = [["hi"], ["hi holden"], ["bye"]]
         self.run_func(input, SimpleStreamingTest.noop, input)
+
+    def test_noop_rdd_transformation(self):
+        input = [["hi"], ["hi holden"], ["bye"]]
+        input_rdd = [self.sc.parallelize(d, 1) for d in input]
+        self.run_func(input_rdd, SimpleStreamingTest.noop, input)
+
+    def test_noop_transformation_with_sorting(self):
+        input = [["hi"], ["hi holden"], ["bye"]]
         self.run_func(input, SimpleStreamingTest.noop, input, sort=True)
+
+    def test_noop_take(self):
+        input = [["hi"], ["hi holden"], ["bye"]]
+        input = [self.sc.parallelize(d, 1) for d in input]
+        input_stream = self.ssc.queueStream(input)
+        self.assertEqual(["hi"], self._take(input_stream, 1))
 
 
 if __name__ == "__main__":
