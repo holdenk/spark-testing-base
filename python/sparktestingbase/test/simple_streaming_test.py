@@ -34,7 +34,7 @@ class SimpleStreamingTest(StreamingTestCase):
 
     @classmethod
     def difference(cls, f1, f2):
-        return f1.subtract(f2)
+        return f1.transformWith(lambda r1, r2: r1.subtract(r2), f2)
 
     def test_simple_transformation(self):
         input = [["hi"], ["hi holden"], ["bye"]]
@@ -42,9 +42,9 @@ class SimpleStreamingTest(StreamingTestCase):
         self.run_func(input, SimpleStreamingTest.tokenize, expected)
 
     def test_diff_transformation(self):
-        input = [["hi"], ["hi holden"], ["bye"]]
+        input = [["hi", "pandas"], ["hi holden"], ["bye"]]
         input2 = [["hi"], ["pandas"], ["bye bye"]]
-        expected = [[], ["hi holden"], ["bye"]]
+        expected = [["pandas"], ["hi holden"], ["bye"]]
         self.run_func(input, SimpleStreamingTest.difference, expected,
                       input2=input2)
 

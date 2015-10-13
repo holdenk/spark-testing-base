@@ -42,7 +42,7 @@ class StreamingTestCase(SparkTestingBaseReuse):
     streaming input and collecting streaming output.
     Modeled after PySparkStreamingTestCase."""
 
-    timeout = 10  # seconds
+    timeout = 15  # seconds
     duration = .5
 
     @classmethod
