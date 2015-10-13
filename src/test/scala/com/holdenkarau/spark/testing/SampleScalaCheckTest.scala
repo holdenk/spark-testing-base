@@ -26,12 +26,12 @@ import org.scalatest.FunSuite
 import org.scalatest.exceptions.TestFailedException
 
 class SampleScalaCheckTest extends FunSuite with SharedSparkContext {
-  // tag:propertySample[]
+  // tag::propertySample[]
   // A trivial property that the map doesn't change the number of elements
   test("map should not change number of elements") {
     forAll(RDDGenerator.genRDD[String](sc)){
       rdd => rdd.map(_.length).count() == rdd.count()
     }
   }
-  // end:propertySample[]
+  // end::propertySample[]
 }
