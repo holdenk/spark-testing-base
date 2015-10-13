@@ -53,7 +53,7 @@ class TestOutputStream[T: ClassTag](parent: DStream[T],
     output += collected
   }
 }
-// end::colectResults[]
+// end::collectResults[]
 
 /**
   * This is the base trait for Spark Streaming testsuites. This provides basic functionality
