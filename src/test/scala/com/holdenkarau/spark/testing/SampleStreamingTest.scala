@@ -19,6 +19,7 @@ package com.holdenkarau.spark.testing
 import org.apache.spark.streaming._
 import org.apache.spark.streaming.dstream._
 import org.apache.spark._
+import org.apache.spark.rdd.RDD
 import org.apache.spark.SparkContext._
 
 import org.scalatest.FunSuite
@@ -39,6 +40,17 @@ class SampleStreamingTest extends StreamingSuiteBase {
   }
   //end::simpleStreamingTest[]
 
+  test("simple two stream streaming test") {
+    val input = List(List("hi", "pandas"), List("hi holden"), List("bye"))
+    val input2 = List(List("hi"), List("pandas"), List("byes"))
+    val expected = List(List("pandas"), List("hi holden"), List("bye"))
+    testOperation[String, String, String](input, input2, subtract _, expected, useSet = true)
+  }
+
+  def subtract(f1: DStream[String], f2: DStream[String]): DStream[String] = {
+    f1.transformWith(f2, SampleStreamingTest.subtractRDDs _)
+  }
+
   test("noop simple transformation") {
     def noop(s: DStream[String]) = s
     val input = List(List("hi"), List("hi holden"), List("bye"))
@@ -51,5 +63,11 @@ class SampleStreamingTest extends StreamingSuiteBase {
     val thrown = intercept[TestFailedException] {
         testOperation[String, String](input, tokenize _, badMultisetExpected, useSet = true)
     }
+  }
+}
+
+object SampleStreamingTest {
+  def subtractRDDs(r1: RDD[String], r2: RDD[String]): RDD[String] = {
+    r1.subtract(r2)
   }
 }

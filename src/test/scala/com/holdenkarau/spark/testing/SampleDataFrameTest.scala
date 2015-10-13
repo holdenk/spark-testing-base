@@ -95,6 +95,7 @@ class SampleDataFrameTest extends FunSuite with SharedSparkContext with DataFram
       approxEqualDataFrames(input, input2, 1E-5)
     }
   }
+
   test("unequal dataframes should not be equal when byte array differs") {
     val sqlCtx = sqlContext
     import sqlCtx.implicits._
