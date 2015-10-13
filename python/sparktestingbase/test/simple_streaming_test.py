@@ -45,7 +45,8 @@ class SimpleStreamingTest(StreamingTestCase):
         input = [["hi"], ["hi holden"], ["bye"]]
         input2 = [["hi"], ["pandas"], ["bye bye"]]
         expected = [[], ["hi holden"], ["bye"]]
-        self.run_func(input, SimpleStreamingTest.difference, expected, input2=input2)
+        self.run_func(input, SimpleStreamingTest.difference, expected,
+                      input2=input2)
 
     def test_noop_transformation(self):
         input = [["hi"], ["hi holden"], ["bye"]]
