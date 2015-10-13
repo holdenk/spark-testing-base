@@ -142,10 +142,12 @@ object DataFrameSuiteBase {
               if (d1.compareTo(o2.asInstanceOf[java.math.BigDecimal]) != 0) {
                 return false
               }
-            case f1: Float if o2.isInstanceOf[Float] => if (abs(f1-o2.asInstanceOf[Float]) > tol) {
+            case f1: Float if o2.isInstanceOf[Float] =>
+              if (abs(f1-o2.asInstanceOf[Float]) > tol) {
               return false
             }
-            case d1: Double if o2.isInstanceOf[Double] => if (abs(d1-o2.asInstanceOf[Double]) > tol) {
+            case d1: Double if o2.isInstanceOf[Double] =>
+              if (abs(d1-o2.asInstanceOf[Double]) > tol) {
               return false
             }
             case _ => if (o1 != o2) {
