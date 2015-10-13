@@ -32,14 +32,26 @@ class SimpleStreamingTest(StreamingTestCase):
     def noop(cls, f):
         return f.map(lambda x: x)
 
+    @classmethod
+    def difference(cls, f1, f2):
+        return f1.subtract(f2)
+
     def test_simple_transformation(self):
         input = [["hi"], ["hi holden"], ["bye"]]
         expected = [["hi"], ["hi", "holden"], ["bye"]]
         self.run_func(input, SimpleStreamingTest.tokenize, expected)
 
+    def test_diff_transformation(self):
+        input = [["hi"], ["hi holden"], ["bye"]]
+        input2 = [["hi"], ["pandas"], ["bye bye"]]
+        expected = [[], ["hi holden"], ["bye"]]
+        self.run_func(input, SimpleStreamingTest.difference, expected,
+                      input2=input2)
+
     def test_noop_transformation(self):
         input = [["hi"], ["hi holden"], ["bye"]]
         self.run_func(input, SimpleStreamingTest.noop, input)
+        self.run_func(input, SimpleStreamingTest.noop, input, sort=True)
 
 
 if __name__ == "__main__":
