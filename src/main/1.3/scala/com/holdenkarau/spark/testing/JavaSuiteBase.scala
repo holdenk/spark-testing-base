@@ -21,9 +21,17 @@ import junit.framework.TestSuite;
 import org.junit.Assert._
 
 class JavaSuiteBase extends SharedJavaSparkContext {
+  /**
+   * Utility wrapper around assertArrayEquals that resolves the types
+   */
   def compareArrays[U](i1: Array[U], i2: Array[U]): Unit = {
     (i1, i2) match {
       case (a1: Array[Long], a2: Array[Long]) => assertArrayEquals(a1, a2)
+      case (a1: Array[Int], a2: Array[Int]) => assertArrayEquals(a1, a2)
+      case (a1: Array[Short], a2: Array[Short]) => assertArrayEquals(a1, a2)
+      case (a1: Array[Char], a2: Array[Char]) => assertArrayEquals(a1, a2)
+      case (a1: Array[Byte], a2: Array[Byte]) => assertArrayEquals(a1, a2)
+      case (a1: Array[Object], a2: Array[Object]) => assertArrayEquals(a1, a2)
     }
   }
 }
