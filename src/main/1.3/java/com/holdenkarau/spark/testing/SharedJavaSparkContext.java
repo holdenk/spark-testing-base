@@ -21,22 +21,26 @@ import org.apache.spark.api.java.*;
 import org.junit.*;
 
 /** Shares a local `SparkContext` between all tests in a suite and closes it at the end */
-public class SharedJavaSparkContext {
+public class SharedJavaSparkContext implements SparkContextProvider {
   private static transient SparkContext _sc;
   private static transient JavaSparkContext _jsc;
-  private static SparkConf conf = new SparkConf().setMaster("local[4]").setAppName("magic");
+  public static SparkConf _conf = new SparkConf().setMaster("local[4]").setAppName("magic");
 
-  SparkContext sc() {
+  public SparkConf conf() {
+    return _conf;
+  }
+
+  public SparkContext sc() {
     return _sc;
   }
 
-  JavaSparkContext jsc() {
+  public JavaSparkContext jsc() {
     return _jsc;
   }
 
   @BeforeClass
   static public void runBeforeClass() {
-      _sc = new SparkContext(conf);
+      _sc = new SparkContext(_conf);
       _jsc = new JavaSparkContext(_sc);
   }
 

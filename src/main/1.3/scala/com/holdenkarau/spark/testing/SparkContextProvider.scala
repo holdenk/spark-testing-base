@@ -21,5 +21,5 @@ import org.apache.spark.SparkConf
 
 trait SparkContextProvider {
   def sc: SparkContext
-  val conf: SparkConf
+  def conf: SparkConf
 }
