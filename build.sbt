@@ -25,6 +25,34 @@ coverageHighlighting := {
   else true
 }
 
+// Allow kafka (and other) utils to have version specific files
+unmanagedSourceDirectories in Compile  := {
+  if (sparkVersion.value >= "1.4") Seq(
+    (sourceDirectory in Compile)(_ / "1.4/scala"),
+    (sourceDirectory in Compile)(_ / "1.4/java"),
+    (sourceDirectory in Compile)(_ / "1.3/scala"),
+    (sourceDirectory in Compile)(_ / "1.3/java")
+  ).join.value
+  else Seq(
+    (sourceDirectory in Compile)(_ / "1.3/scala"),
+    (sourceDirectory in Compile)(_ / "1.3/java")
+  ).join.value
+}
+
+unmanagedSourceDirectories in Test  := {
+  if (sparkVersion.value >= "1.4") Seq(
+    (sourceDirectory in Test)(_ / "1.4/scala"),
+    (sourceDirectory in Test)(_ / "1.4/java"),
+    (sourceDirectory in Test)(_ / "1.3/scala"),
+    (sourceDirectory in Test)(_ / "1.3/java")
+  ).join.value
+  else Seq(
+    (sourceDirectory in Test)(_ / "1.3/scala"),
+    (sourceDirectory in Test)(_ / "1.3/java")
+  ).join.value
+}
+
+
 javaOptions ++= Seq("-Xms512M", "-Xmx2048M", "-XX:MaxPermSize=2048M", "-XX:+CMSClassUnloadingEnabled")
 
 // additional libraries
