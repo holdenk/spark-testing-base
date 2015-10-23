@@ -14,30 +14,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.holdenkarau.spark.testing
-import org.apache.spark._
 
-import org.scalatest.BeforeAndAfterAll
-import org.scalatest.Suite
+import org.apache.spark.SparkContext
+import org.apache.spark.SparkConf
 
-/** Shares a local `SparkContext` between all tests in a suite and closes it at the end */
-trait SharedSparkContext extends BeforeAndAfterAll with SparkContextProvider { self: Suite =>
-
-  @transient private var _sc: SparkContext = _
-
-  override def sc: SparkContext = _sc
-
-  override val conf = new SparkConf().setMaster("local[4]").setAppName("test")
-
-  override def beforeAll() {
-    _sc = new SparkContext(conf)
-    super.beforeAll()
-  }
-
-  override def afterAll() {
-    LocalSparkContext.stop(_sc)
-    _sc = null
-    super.afterAll()
-  }
+trait SparkContextProvider {
+  def sc: SparkContext
+  val conf: SparkConf
 }
