@@ -40,6 +40,22 @@ import org.apache.spark.{SparkConf, Logging}
 import org.apache.spark.rdd.RDD
 
 /**
+  * This is a output stream just for testing.
+  *
+  * The buffer contains a sequence of RDD's, each containing a sequence of items
+  */
+// tag::collectResults[]
+class TestOutputStream[T: ClassTag](parent: DStream[T],
+  val output: ArrayBuffer[Seq[T]] = ArrayBuffer[Seq[T]]()) extends Serializable {
+  parent.foreachRDD{(rdd: RDD[T], time) =>
+    val collected = rdd.collect()
+    output += collected
+  }
+}
+// end::collectResults[]
+
+
+/**
  * Shared logic between the Java & Scala Streaming suites.
  */
 private[holdenkarau] trait StreamingSuiteCommon extends Logging with SparkContextProvider {
@@ -83,7 +99,7 @@ private[holdenkarau] trait StreamingSuiteCommon extends Logging with SparkContex
 
 
   // A SparkConf to use in tests. Can be modified before calling setupStreams to configure things.
-  override val conf = new SparkConf()
+  override def conf = new SparkConf()
     .setMaster(master)
     .setAppName(framework)
 

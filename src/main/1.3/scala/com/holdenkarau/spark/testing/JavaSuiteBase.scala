@@ -18,5 +18,12 @@ package com.holdenkarau.spark.testing;
 
 import junit.framework.TestSuite;
 
+import org.junit.Assert._
+
 class JavaSuiteBase extends SharedJavaSparkContext {
+  def compareArrays[U](i1: Array[U], i2: Array[U]): Unit = {
+    (i1, i2) match {
+      case (a1: Array[Long], a2: Array[Long]) => assertArrayEquals(a1, a2)
+    }
+  }
 }
