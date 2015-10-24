@@ -101,11 +101,17 @@ class JavaStreamingSuiteBase extends JavaSuiteBase with StreamingSuiteCommon {
    */
   def testOperation[U, V](
     input: JList[JList[U]],
-    operation: JavaDStream[U] => JavaDStream[V],
+    operation: Function[JavaDStream[U], JavaDStream[V]],
+    expectedOutput: JList[JList[V]]) {
+    testOperation1(input, operation, expectedOutput, -1, false)
+  }
+
+  def testOperation1[U, V](
+    input: JList[JList[U]],
+    operation: Function[JavaDStream[U], JavaDStream[V]],
     expectedOutput: JList[JList[V]],
-    useSet: Boolean = false
-  ) {
-    testOperation(input, operation, expectedOutput, -1, useSet)
+    useSet: Boolean) {
+    testOperation1(input, operation, expectedOutput, -1, useSet)
   }
 
   /**
@@ -117,9 +123,9 @@ class JavaStreamingSuiteBase extends JavaSuiteBase with StreamingSuiteCommon {
    * @param useSet     Compare the output values with the expected output values
    *                   as sets (order matters) or as lists (order does not matter)
    */
-  def testOperation[U, V](
+  def testOperation1[U, V](
     input: JList[JList[U]],
-    operation: JavaDStream[U] => JavaDStream[V],
+    operation: Function[JavaDStream[U], JavaDStream[V]],
     expectedOutput: JList[JList[V]],
     numBatches: Int,
     useSet: Boolean
