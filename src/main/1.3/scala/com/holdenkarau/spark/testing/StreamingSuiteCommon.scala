@@ -102,6 +102,7 @@ private[holdenkarau] trait StreamingSuiteCommon extends Logging with SparkContex
   override def conf = new SparkConf()
     .setMaster(master)
     .setAppName(framework)
+    .set("spark.streaming.clock", "org.apache.spark.streaming.util.TestManualClock")
 
   // Timeout for use in ScalaTest `eventually` blocks
   val eventuallyTimeout: PatienceConfiguration.Timeout = timeout(Span(10, ScalaTestSeconds))
