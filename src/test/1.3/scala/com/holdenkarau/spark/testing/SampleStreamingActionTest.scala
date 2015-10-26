@@ -19,6 +19,7 @@ package com.holdenkarau.spark.testing
 import org.apache.spark.streaming._
 import org.apache.spark.streaming.dstream._
 import org.apache.spark._
+import org.apache.spark.rdd.RDD
 import org.apache.spark.SparkContext._
 
 import org.scalatest.FunSuite
@@ -36,7 +37,8 @@ class SampleStreamingActionTest extends StreamingActionBase {
 
   def countWordsLength(acc: Accumulator[Int]): (DStream[String] => Unit) = {
     def c(input: DStream[String]): Unit = {
-      input.foreach(r => r.foreach(e=> acc += e.length()))
+      input.foreach{r: RDD[String] =>
+        r.foreach{e: String => acc += e.length()}}
     }
     c _
   }

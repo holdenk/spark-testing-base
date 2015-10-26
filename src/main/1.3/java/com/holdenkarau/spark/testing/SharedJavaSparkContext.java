@@ -38,10 +38,12 @@ public class SharedJavaSparkContext implements SparkContextProvider {
     return _jsc;
   }
 
-  @BeforeClass
-  static public void runBeforeClass() {
-      _sc = new SparkContext(_conf);
+  @Before
+  public void runBefore() {
+    if (_sc == null) {
+      _sc = new SparkContext(conf());
       _jsc = new JavaSparkContext(_sc);
+    }
   }
 
   @AfterClass
