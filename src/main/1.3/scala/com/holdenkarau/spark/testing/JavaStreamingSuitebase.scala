@@ -32,6 +32,7 @@ import scala.reflect.ClassTag
 
 import org.apache.spark.streaming.dstream.{DStream, InputDStream}
 import org.apache.spark.streaming.api.java._
+import org.apache.spark.api.java.function.{Function => JFunction}
 import org.apache.spark.streaming.scheduler.{StreamingListenerBatchStarted, StreamingListenerBatchCompleted, StreamingListener}
 import org.apache.spark.streaming.util.TestManualClock
 import org.apache.spark.{SparkConf, Logging}
@@ -101,17 +102,17 @@ class JavaStreamingSuiteBase extends JavaSuiteBase with StreamingSuiteCommon {
    */
   def testOperation[U, V](
     input: JList[JList[U]],
-    operation: Function[JavaDStream[U], JavaDStream[V]],
+    operation: JFunction[JavaDStream[U], JavaDStream[V]],
     expectedOutput: JList[JList[V]]) {
-    testOperation1(input, operation, expectedOutput, -1, false)
+    testOperation[U, V](input, operation, expectedOutput, -1, false)
   }
 
-  def testOperation1[U, V](
+  def testOperation[U, V](
     input: JList[JList[U]],
-    operation: Function[JavaDStream[U], JavaDStream[V]],
+    operation: JFunction[JavaDStream[U], JavaDStream[V]],
     expectedOutput: JList[JList[V]],
     useSet: Boolean) {
-    testOperation1(input, operation, expectedOutput, -1, useSet)
+    testOperation[U, V](input, operation, expectedOutput, -1, useSet)
   }
 
   /**
@@ -123,9 +124,9 @@ class JavaStreamingSuiteBase extends JavaSuiteBase with StreamingSuiteCommon {
    * @param useSet     Compare the output values with the expected output values
    *                   as sets (order matters) or as lists (order does not matter)
    */
-  def testOperation1[U, V](
+  def testOperation[U, V](
     input: JList[JList[U]],
-    operation: Function[JavaDStream[U], JavaDStream[V]],
+    operation: JFunction[JavaDStream[U], JavaDStream[V]],
     expectedOutput: JList[JList[V]],
     numBatches: Int,
     useSet: Boolean
@@ -136,7 +137,7 @@ class JavaStreamingSuiteBase extends JavaSuiteBase with StreamingSuiteCommon {
     val sInput = input.map(_.toSeq).toSeq
     val sExpectedOutput = expectedOutput.map(_.toSeq).toSeq
     def wrapedOperation(input: DStream[U]): DStream[V] = {
-      operation(new JavaDStream[U](input)).dstream
+      operation.call(new JavaDStream[U](input)).dstream
     }
     val output =
       withOutputAndStreamingContext(setupStreams[U, V](sInput, wrapedOperation)) {
