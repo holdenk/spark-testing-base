@@ -31,3 +31,7 @@ script:
   - "pep8 --ignore=E402 ./python"
 after_success:
   - codecov
+notifications:
+  email:
+    recipients:
+      - holden@pigscanfly.ca
