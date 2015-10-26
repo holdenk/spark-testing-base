@@ -5,6 +5,8 @@ cache:
 scala:
    - 2.10.4
 sudo: false
+before_install:
+  - pip install codecov coverage
 install:
   # Download spark 1.4.1
   - "wget http://d3kbcqa49mib13.cloudfront.net/spark-1.4.1-bin-hadoop2.4.tgz || wget http://www.us.apache.org/dist/spark/spark-1.4.1/spark-1.4.1-bin-hadoop2.4.tgz || wget http://download.nextag.com/apache/spark/spark-1.4.1/spark-1.4.1-bin-hadoop2.4.tgz"
