@@ -60,7 +60,8 @@ trait DataFrameSuiteBase extends FunSuite with BeforeAndAfterAll
     val resultRDD = zipWithIndex(result.rdd)
     assert(expectedRDD.count() == resultRDD.count())
     val unequal = expectedRDD.cogroup(resultRDD).filter{case (idx, (r1, r2)) =>
-      !(r1.isEmpty || r2.isEmpty) && (!r1.head.equals(r2.head))
+      !(r1.isEmpty || r2.isEmpty) &&
+      !(r1.head.equals(r2.head) || DataFrameSuiteBase.approxEquals(r1.head, r2.head, 0.0))
     }.take(maxCount)
     assert(unequal === List())
     expected.rdd.unpersist()

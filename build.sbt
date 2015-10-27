@@ -16,9 +16,10 @@ spName := "holdenk/spark-testing-base"
 
 sparkVersion := "1.5.0"
 
-sparkComponents ++= Seq("core", "streaming", "sql", "hive", "streaming-kafka", "yarn")
+sparkComponents ++= Seq("core", "streaming", "sql", "catalyst", "hive", "streaming-kafka", "yarn")
 
 parallelExecution in Test := false
+fork := true
 
 coverageHighlighting := {
   if (scalaBinaryVersion.value == "2.10") false
