@@ -38,7 +38,7 @@ import org.scalatest.exceptions.TestFailedException
  */
 class ArtisinalStreamingTest extends FunSuite with SharedSparkContext {
   // tag::createQueueStream[]
-  def makeSimpleQueueStream() = {
+  def makeSimpleQueueStream(ssc: StreamingContext) = {
     val input = List(List("hi"), List("happy pandas", "sad pandas"))
       .map(sc.parallelize(_))
     val idstream = ssc.queueStream(Queue(input:_*))
