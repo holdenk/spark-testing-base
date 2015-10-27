@@ -35,7 +35,8 @@ unmanagedSourceDirectories in Compile  := {
   ).join.value
   else Seq(
     (sourceDirectory in Compile)(_ / "1.3/scala"),
-    (sourceDirectory in Compile)(_ / "1.3/java")
+    (sourceDirectory in Compile)(_ / "1.3/java"),
+    (sourceDirectory in Compile)(_ / "1.3-only/scala")
   ).join.value
 }
 

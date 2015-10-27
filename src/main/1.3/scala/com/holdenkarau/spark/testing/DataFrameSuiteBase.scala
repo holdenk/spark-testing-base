@@ -40,7 +40,7 @@ trait DataFrameSuiteBase extends FunSuite with BeforeAndAfterAll
 
   override def beforeAll() {
     super.beforeAll()
-    _sqlContext = org.apache.spark.sql.SQLContext.getOrCreate(sc)
+    _sqlContext = SQLContext.getOrCreate(sc)
   }
 
   override def afterAll() {
