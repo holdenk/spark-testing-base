@@ -37,12 +37,21 @@ import org.scalatest.exceptions.TestFailedException
  * sleep approach. Instead please look at [[SampleStreamingTest]].
  */
 class ArtisinalStreamingTest extends FunSuite with SharedSparkContext {
+  // tag::createQueueStream[]
+  def makeSimpleQueueStream() = {
+    val input = List(List("hi"), List("happy pandas", "sad pandas"))
+      .map(sc.parallelize(_))
+    val idstream = ssc.queueStream(Queue(input:_*))
+  }
+  // end::createQueueStream[]
+
   // tag::HAPPY_PANDA[]
   test("artisinal streaming test") {
     val ssc = new StreamingContext(sc, Seconds(1))
     val input = List(List("hi"), List("happy pandas", "sad pandas"))
       .map(sc.parallelize(_))
-    val idstream = ssc.queueStream(Queue(input:_*)) // Note: does not work for windowing or checkpointing
+    // Note: does not work for windowing or checkpointing
+    val idstream = ssc.queueStream(Queue(input:_*))
     val tdstream = idstream.filter(_.contains("pandas"))
     val result = ArrayBuffer[String]()
     tdstream.foreach{(rdd: RDD[String], _) =>
