@@ -22,8 +22,11 @@ object SQLContext {
    */
   def getOrCreate(sparkContext: SparkContext): SQLContext = {
     INSTANTIATION_LOCK.synchronized {
-      if (lastInstantiatedContext.get() == null || lastInstantiatedContext.get().sparkContext != sparkContext) {
-        new SQLContext(sparkContext)
+      if (lastInstantiatedContext.get() == null) {
+        lastInstantiatedContext.set(new SQLContext(sparkContext))
+      } else if (lastInstantiatedContext.get().sparkContext != sparkContext) {
+        clearLastInstantiatedContext()
+        lastInstantiatedContext.set(new SQLContext(sparkContext))
       }
     }
     lastInstantiatedContext.get()
