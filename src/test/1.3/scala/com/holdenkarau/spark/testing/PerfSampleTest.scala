@@ -33,8 +33,8 @@ import java.nio.file.Files;
 class PerfSampleTest extends FunSuite with PerTestSparkContext {
   val tempPath = Files.createTempDirectory(null).toString()
 
-  test("can still parallelize") {
-    val input = List(1,2,3)
+  //tag::samplePerfTest[]
+  test("wordcount perf") {
     val listener = new PerfListener()
     sc.addSparkListener(listener)
     doWork(sc)
@@ -42,6 +42,7 @@ class PerfSampleTest extends FunSuite with PerTestSparkContext {
     assert(listener.totalExecutorRunTime > 0)
     assert(listener.totalExecutorRunTime < 10000)
   }
+  //end::samplePerfTest[]
 
   def doWork(sc: SparkContext): Unit = {
     val data = sc.textFile("README.md")
