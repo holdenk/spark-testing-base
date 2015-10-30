@@ -23,20 +23,29 @@ import org.apache.spark.SparkContext._
 import org.scalatest.FunSuite
 import org.scalatest.exceptions.TestFailedException
 
+import java.nio.file.Files;
+
 /**
  * Illustrate using per-test sample test. This is the one to use
  * when your tests may be destructive to the Spark context
  * (e.g. stopping it)
  */
-class PerTestSampleTest extends FunSuite with PerTestSparkContext {
-
-  test("sample test stops a context") {
-    sc.stop()
-  }
+class PerfSampleTest extends FunSuite with PerTestSparkContext {
+  val tempPath = Files.createTempDirectory(null).toString()
 
   test("can still parallelize") {
     val input = List(1,2,3)
-    assert(input === sc.parallelize(input).collect())
+    val listener = new PerfListener()
+    sc.addSparkListener(listener)
+    doWork(sc)
+    println(listener)
+    assert(listener.totalExecutorRunTime > 0)
+    assert(listener.totalExecutorRunTime < 10000)
   }
 
+  def doWork(sc: SparkContext): Unit = {
+    val data = sc.textFile("README.md")
+    val words = data.flatMap(_.split(" "))
+    words.map((_, 1)).reduceByKey(_ + _).saveAsTextFile(tempPath + "/magic")
+  }
 }
