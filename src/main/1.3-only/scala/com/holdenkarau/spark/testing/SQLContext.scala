@@ -5,6 +5,9 @@ import org.apache.spark.sql.SQLContext
 
 import java.util.concurrent.atomic.AtomicReference
 
+/**
+ * Utility companion object to provide getOrCreate on SQLContext
+ */
 object SQLContext {
     private val INSTANTIATION_LOCK = new Object()
 
