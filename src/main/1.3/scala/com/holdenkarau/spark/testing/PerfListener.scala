@@ -30,7 +30,7 @@ import org.apache.spark.executor.TaskMetrics
  * is a large amount of variability.
  */
 //tag::listener[]
-case class PerfListener extends SparkListener {
+class PerfListener extends SparkListener {
   var totalExecutorRunTime = 0L
   var jvmGCTime = 0L
   var recordsRead = 0L

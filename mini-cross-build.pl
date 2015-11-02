@@ -13,6 +13,8 @@ if ($input =~ /version\s+\:\=\s+\"(.+?)\"/) {
 } else {
     die "Could not extract version";
 }
+print "Building original version";
+print `./sbt/sbt clean +publishSigned`;
 print "Cross building for $original_version";
 foreach my $spark_version (@spark_versions) {
     my $target_version = $spark_version."_".$original_version;
@@ -30,6 +32,7 @@ foreach my $spark_version (@spark_versions) {
     print `git push -f --set-upstream origin release-v$target_version`;
     print "building";
     print `./sbt/sbt clean compile package publishSigned`;
+    print `./sbt/sbt +publishSigned`;
     print "switch back to master";
     print `git checkout master`;
     print "built"
@@ -49,6 +52,8 @@ foreach my $spark_version (@spark_versions) {
     close (OUT);
     print "publishing";
     print `./sbt/sbt clean spPublish`;
+    print `./sbt/sbt +spPublish`;
 }
 `cp build.sbt_back build.sbt`;
-`./sbt/sbt clean compile package publishSigned spPublish`;
+`./sbt/sbt spPublish`;
+`./sbt/sbt +spPublish`;
