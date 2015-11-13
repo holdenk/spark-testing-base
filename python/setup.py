@@ -13,7 +13,7 @@ setup(
     install_requires=[
         'unittest2',
         'findspark',
-        'py.test',
+        'pytest',
         'hypothesis'
     ],
     test_requires=[
