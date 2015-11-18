@@ -16,19 +16,28 @@
  */
 
 package com.holdenkarau.spark.testing
-import org.apache.spark._
 
+import java.util.Date
+import org.apache.spark._
 import org.scalatest.BeforeAndAfterAll
 import org.scalatest.Suite
 
 /** Shares a local `SparkContext` between all tests in a suite and closes it at the end */
-trait SharedSparkContext extends BeforeAndAfterAll with SparkContextProvider { self: Suite =>
+trait SharedSparkContext extends BeforeAndAfterAll with SparkContextProvider {
+  self: Suite =>
 
   @transient private var _sc: SparkContext = _
 
   override def sc: SparkContext = _sc
 
-  override val conf = new SparkConf().setMaster("local[4]").setAppName("test")
+  val appID = new Date().toString + math.floor(math.random * 10E4).toLong.toString
+
+  override val conf = new SparkConf().
+    setMaster("local[*]").
+    setAppName("test").
+    set("spark.ui.enabled", "false").
+    set("spark.app.id", appID)
+
 
   override def beforeAll() {
     _sc = new SparkContext(conf)
