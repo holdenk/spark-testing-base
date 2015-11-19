@@ -18,6 +18,7 @@ package com.holdenkarau.spark.testing
 
 import org.apache.spark.streaming.TestStreamingContext
 import org.apache.spark.streaming.dstream.DStream
+import org.apache.spark.streaming.scheduler.{StreamingListenerBatchCompleted, StreamingListener}
 import org.apache.spark.streaming.util.TestManualClock
 
 import scala.reflect.ClassTag
@@ -27,6 +28,8 @@ import scala.reflect.ClassTag
  * to verify the results of your test against mocks.
  */
 trait StreamingActionBase extends StreamingSuiteBase {
+
+  val batchCountListener = new BatchCountListener
 
   /**
    * Execute unary DStream operation with a list of inputs and no expected output
@@ -99,7 +102,15 @@ trait StreamingActionBase extends StreamingSuiteBase {
       }
       logInfo("Manual clock after advancing = " + clock.currentTime())
 
-      ssc.awaitTerminationOrTimeout(100)
+      // wait for expected number of batches to execute
+      val startTime = System.currentTimeMillis()
+      while (batchCountListener.batchCount < numBatches &&
+        System.currentTimeMillis() - startTime < maxWaitTimeMillis) {
+        logInfo("batches run = " + batchCountListener.batchCount + ", numBatches = " + numBatches)
+        ssc.awaitTerminationOrTimeout(50)
+      }
+      val timeTaken = System.currentTimeMillis() - startTime
+      logInfo("Output generated in " + timeTaken + " milliseconds")
 
       Thread.sleep(100) // Give some time for the forgetting old RDDs to complete
     } finally {
@@ -107,4 +118,12 @@ trait StreamingActionBase extends StreamingSuiteBase {
     }
   }
 
+}
+
+class BatchCountListener extends StreamingListener {
+  var batchCount = 0
+
+  override def onBatchCompleted(batchCompleted: StreamingListenerBatchCompleted): Unit = {
+    batchCount = batchCount + 1
+  }
 }
