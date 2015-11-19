@@ -4,7 +4,7 @@ name := "spark-testing-base"
 
 publishMavenStyle := true
 
-version := "0.0.5"
+version := "0.2.1"
 
 scalaVersion := "2.10.4"
 
@@ -14,12 +14,76 @@ javacOptions ++= Seq("-source", "1.7", "-target", "1.7")
 
 spName := "holdenk/spark-testing-base"
 
-sparkVersion := "1.3.0"
+sparkVersion := "1.5.0"
 
-sparkComponents ++= Seq("core", "streaming")
+sparkComponents ++= Seq("core", "streaming", "sql", "catalyst", "hive", "streaming-kafka", "yarn")
+
+parallelExecution in Test := false
+fork := true
+
+coverageHighlighting := {
+  if (scalaBinaryVersion.value == "2.10") false
+  else true
+}
+
+// Allow kafka (and other) utils to have version specific files
+unmanagedSourceDirectories in Compile  := {
+  if (sparkVersion.value >= "1.4") Seq(
+    (sourceDirectory in Compile)(_ / "1.4/scala"),
+    (sourceDirectory in Compile)(_ / "1.4/java"),
+    (sourceDirectory in Compile)(_ / "1.3/scala"),
+    (sourceDirectory in Compile)(_ / "1.3/java")
+  ).join.value
+  else Seq(
+    (sourceDirectory in Compile)(_ / "1.3/scala"),
+    (sourceDirectory in Compile)(_ / "1.3/java"),
+    (sourceDirectory in Compile)(_ / "1.3-only/scala")
+  ).join.value
+}
+
+unmanagedSourceDirectories in Test  := {
+  if (sparkVersion.value >= "1.4") Seq(
+    (sourceDirectory in Test)(_ / "1.4/scala"),
+    (sourceDirectory in Test)(_ / "1.4/java"),
+    (sourceDirectory in Test)(_ / "1.3/scala"),
+    (sourceDirectory in Test)(_ / "1.3/java")
+  ).join.value
+  else Seq(
+    (sourceDirectory in Test)(_ / "1.3/scala"),
+    (sourceDirectory in Test)(_ / "1.3/java")
+  ).join.value
+}
+
+
+javaOptions ++= Seq("-Xms512M", "-Xmx2048M", "-XX:MaxPermSize=2048M", "-XX:+CMSClassUnloadingEnabled")
 
 // additional libraries
-libraryDependencies += "org.scalatest" %% "scalatest" % "2.2.1"
+libraryDependencies ++= Seq(
+  "org.scalatest" %% "scalatest" % "2.2.1",
+  "io.github.nicolasstucki" % "multisets_2.10" % "0.1",
+  "org.scalacheck" %% "scalacheck" % "1.12.4",
+  "junit" % "junit" % "4.10",
+  "org.eclipse.jetty" % "jetty-util" % "9.3.2.v20150730",
+  "com.novocode" % "junit-interface" % "0.10" % "test->default")
+
+// Based on Hadoop Mini Cluster tests from Alpine's PluginSDK (Apache licensed)
+// javax.servlet signing issues can be tricky, we can just exclude the dep
+def excludeFromAll(items: Seq[ModuleID], group: String, artifact: String) =
+  items.map(_.exclude(group, artifact))
+
+def excludeJavaxServlet(items: Seq[ModuleID]) =
+  excludeFromAll(items, "javax.servlet", "servlet-api")
+
+lazy val miniClusterDependencies = excludeJavaxServlet(Seq(
+  "org.apache.hadoop" % "hadoop-hdfs" % "2.6.0" % "compile,test" classifier "" classifier "tests",
+  "org.apache.hadoop" % "hadoop-common" % "2.6.0" % "compile,test" classifier "" classifier "tests" ,
+  "org.apache.hadoop" % "hadoop-client" % "2.6.0" % "compile,test" classifier "" classifier "tests" ,
+  "org.apache.hadoop" % "hadoop-mapreduce-client-jobclient" % "2.6.0" % "compile,test" classifier "" classifier "tests",
+  "org.apache.hadoop" % "hadoop-yarn-server-tests" % "2.6.0" % "compile,test" classifier "" classifier "tests",
+  "org.apache.hadoop" % "hadoop-yarn-server-web-proxy" % "2.6.0" % "compile,test" classifier "" classifier "tests",
+  "org.apache.hadoop" % "hadoop-minicluster" % "2.6.0"))
+
+libraryDependencies ++= miniClusterDependencies
 
 scalacOptions ++= Seq("-deprecation", "-unchecked")
 
@@ -34,6 +98,7 @@ resolvers ++= Seq(
   "Apache HBase" at "https://repository.apache.org/content/repositories/releases",
   "Twitter Maven Repo" at "http://maven.twttr.com/",
   "scala-tools" at "https://oss.sonatype.org/content/groups/scala-tools",
+  "sonatype-releases" at "https://oss.sonatype.org/content/repositories/releases/",
   "Typesafe repository" at "http://repo.typesafe.com/typesafe/releases/",
   "Second Typesafe repo" at "http://repo.typesafe.com/typesafe/maven-releases/",
   "Mesosphere Public Repository" at "http://downloads.mesosphere.io/maven",
@@ -68,4 +133,7 @@ pomExtra := (
   </developers>
 )
 
-credentials += Credentials(Path.userHome / ".ivy2" / ".sbtcredentials")
+//credentials += Credentials(Path.userHome / ".ivy2" / ".spcredentials")
+credentials ++= Seq(Credentials(Path.userHome / ".ivy2" / ".sbtcredentials"), Credentials(Path.userHome / ".ivy2" / ".sparkcredentials"))
+
+spIncludeMaven := true
