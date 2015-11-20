@@ -68,6 +68,7 @@ trait StreamingActionBase extends StreamingSuiteBase {
 
     // Create TestStreamingContext
     val ssc = new TestStreamingContext(sc, batchDuration)
+    ssc.addStreamingListener(batchCountListener)
     if (checkpointDir != null) {
       ssc.checkpoint(checkpointDir)
     }
