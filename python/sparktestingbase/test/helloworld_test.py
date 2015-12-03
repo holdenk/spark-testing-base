@@ -17,6 +17,7 @@
 
 """Simple test example"""
 
+import unittest2
 from sparktestingbase.testcase import SparkTestingBaseTestCase
 
 
