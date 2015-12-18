@@ -18,35 +18,53 @@
 package com.holdenkarau.spark.testing
 
 import scala.math.abs
-import scala.util.hashing.MurmurHash3
 
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql._
 import org.apache.spark.sql.hive._
 import org.apache.spark.sql.types.StructType
 
-import org.scalatest.BeforeAndAfterAll
-import org.scalatest.FunSuite
+import org.scalatest.{FunSuiteLike}
 
 /**
  * :: Experimental ::
  * Base class for testing Spark DataFrames.
  */
-trait DataFrameSuiteBase extends FunSuite with BeforeAndAfterAll
-    with SharedSparkContext {
-  val maxCount = 10
-  @transient private var _sqlContext: HiveContext = _
 
-  def sqlContext: HiveContext = _sqlContext
-
+trait DataFrameSuiteBase extends DataFrameSuiteBaseLike with SharedSparkContext {
   override def beforeAll() {
     super.beforeAll()
-    _sqlContext = new HiveContext(sc)
+    super.beforeAllTestCases()
   }
 
   override def afterAll() {
+    super.afterAllTestCases()
     super.afterAll()
-    _sqlContext = null
+  }
+
+}
+
+class JavaDataFrameSuiteBase extends SharedJavaSparkContext with DataFrameSuiteBaseLike {
+
+  override def runBefore() {
+    super.runBefore()
+
+    if (!initialized)
+      super.beforeAllTestCases()
+  }
+}
+
+trait DataFrameSuiteBaseLike extends FunSuiteLike with SparkContextProvider with Serializable {
+  val maxCount = 10
+
+  def sqlContext: HiveContext = DataFrameSuiteBaseLike._sqlContext
+
+  def beforeAllTestCases() {
+    DataFrameSuiteBaseLike._sqlContext = new HiveContext(sc)
+  }
+
+  def afterAllTestCases() {
+    DataFrameSuiteBaseLike._sqlContext = null
   }
 
   /**
@@ -109,9 +127,18 @@ trait DataFrameSuiteBase extends FunSuite with BeforeAndAfterAll
   def equalSchema(expected: StructType, result: StructType): Unit = {
     assert(expected.treeString === result.treeString)
   }
+
+  def approxEquals(r1: Row, r2: Row, tol: Double): Boolean = {
+    DataFrameSuiteBase.approxEquals(r1, r2, tol)
+  }
+}
+
+object DataFrameSuiteBaseLike {
+  @transient var _sqlContext: HiveContext = _
 }
 
 object DataFrameSuiteBase {
+
   /** Approximate equality, based on equals from [[Row]] */
   def approxEquals(r1: Row, r2: Row, tol: Double): Boolean = {
     if (r1.length != r2.length) {
