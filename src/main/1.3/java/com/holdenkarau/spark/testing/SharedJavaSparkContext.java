@@ -24,6 +24,7 @@ import org.junit.*;
 public class SharedJavaSparkContext implements SparkContextProvider {
   private static transient SparkContext _sc;
   private static transient JavaSparkContext _jsc;
+  protected boolean initialized = false;
   public static SparkConf _conf = new SparkConf().setMaster("local[4]").setAppName("magic");
 
   public SparkConf conf() {
@@ -40,7 +41,9 @@ public class SharedJavaSparkContext implements SparkContextProvider {
 
   @Before
   public void runBefore() {
-    if (_sc == null) {
+    initialized = (_sc != null);
+
+    if (!initialized) {
       _sc = new SparkContext(conf());
       _jsc = new JavaSparkContext(_sc);
     }

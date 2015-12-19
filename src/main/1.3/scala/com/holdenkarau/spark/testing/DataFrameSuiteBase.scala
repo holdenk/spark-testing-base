@@ -18,35 +18,42 @@
 package com.holdenkarau.spark.testing
 
 import scala.math.abs
-import scala.util.hashing.MurmurHash3
 
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql._
 import org.apache.spark.sql.hive._
 import org.apache.spark.sql.types.StructType
 
-import org.scalatest.BeforeAndAfterAll
-import org.scalatest.FunSuite
+import org.scalatest.{FunSuiteLike}
 
 /**
  * :: Experimental ::
  * Base class for testing Spark DataFrames.
  */
-trait DataFrameSuiteBase extends FunSuite with BeforeAndAfterAll
-    with SharedSparkContext {
-  val maxCount = 10
-  @transient private var _sqlContext: HiveContext = _
 
-  def sqlContext: HiveContext = _sqlContext
-
+trait DataFrameSuiteBase extends DataFrameSuiteBaseLike with SharedSparkContext {
   override def beforeAll() {
     super.beforeAll()
-    _sqlContext = new HiveContext(sc)
+    super.beforeAllTestCases()
   }
 
   override def afterAll() {
+    super.afterAllTestCases()
     super.afterAll()
-    _sqlContext = null
+  }
+
+}
+
+trait DataFrameSuiteBaseLike extends FunSuiteLike with SparkContextProvider with Serializable {
+
+  def sqlContext: HiveContext = SQLContextProvider._sqlContext
+
+  def beforeAllTestCases() {
+    SQLContextProvider._sqlContext = new HiveContext(sc)
+  }
+
+  def afterAllTestCases() {
+    SQLContextProvider._sqlContext = null
   }
 
   /**
@@ -58,12 +65,18 @@ trait DataFrameSuiteBase extends FunSuite with BeforeAndAfterAll
     expected.rdd.cache()
     result.rdd.cache()
     val expectedRDD = zipWithIndex(expected.rdd)
+    println("ExpectedRDD")
+    expectedRDD.collect().foreach(x => println(x))
+
     val resultRDD = zipWithIndex(result.rdd)
+    println("ResultRDD")
+    resultRDD.foreach(x => println(x))
+
     assert(expectedRDD.count() == resultRDD.count())
     val unequal = expectedRDD.cogroup(resultRDD).filter{case (idx, (r1, r2)) =>
       !(r1.isEmpty || r2.isEmpty) &&
       !(r1.head.equals(r2.head) || DataFrameSuiteBase.approxEquals(r1.head, r2.head, 0.0))
-    }.take(maxCount)
+    }.take(1)
     assert(unequal === List())
     expected.rdd.unpersist()
     result.rdd.unpersist()
@@ -97,7 +110,7 @@ trait DataFrameSuiteBase extends FunSuite with BeforeAndAfterAll
     val unequal = cogrouped.filter{case (idx, (r1, r2)) =>
       (r1.isEmpty || r2.isEmpty) || (
         !DataFrameSuiteBase.approxEquals(r1.head, r2.head, tol))
-    }.take(maxCount)
+    }.take(1)
     expected.rdd.unpersist()
     result.rdd.unpersist()
     assert(unequal === List())
@@ -109,9 +122,18 @@ trait DataFrameSuiteBase extends FunSuite with BeforeAndAfterAll
   def equalSchema(expected: StructType, result: StructType): Unit = {
     assert(expected.treeString === result.treeString)
   }
+
+  def approxEquals(r1: Row, r2: Row, tol: Double): Boolean = {
+    DataFrameSuiteBase.approxEquals(r1, r2, tol)
+  }
+}
+
+object SQLContextProvider {
+  @transient var _sqlContext: HiveContext = _
 }
 
 object DataFrameSuiteBase {
+
   /** Approximate equality, based on equals from [[Row]] */
   def approxEquals(r1: Row, r2: Row, tol: Double): Boolean = {
     if (r1.length != r2.length) {

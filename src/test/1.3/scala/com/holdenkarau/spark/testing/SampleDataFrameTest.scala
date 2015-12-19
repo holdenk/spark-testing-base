@@ -16,15 +16,9 @@
  */
 package com.holdenkarau.spark.testing
 
-import org.apache.spark._
-import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.Row
-import org.apache.spark.SparkContext._
 
-import org.scalatest.FunSuite
-import org.scalatest.exceptions.TestFailedException
-
-class SampleDataFrameTest extends FunSuite with SharedSparkContext with DataFrameSuiteBase {
+class SampleDataFrameTest extends DataFrameSuiteBase {
   val byteArray = new Array[Byte](1)
   val diffByteArray = Array[Byte](192.toByte)
   val inputList = List(Magic("panda", 9001.0, byteArray),
@@ -70,17 +64,17 @@ class SampleDataFrameTest extends FunSuite with SharedSparkContext with DataFram
     val row6 = Row("1")
     val row6a = Row("2")
     val row7 = Row(1.toFloat)
-    assert(false === DataFrameSuiteBase.approxEquals(row, row2, 1E-7))
-    assert(true === DataFrameSuiteBase.approxEquals(row, row2, 1E-5))
-    assert(true === DataFrameSuiteBase.approxEquals(row3, row3, 1E-5))
-    assert(false === DataFrameSuiteBase.approxEquals(row, row3, 1E-5))
-    assert(false === DataFrameSuiteBase.approxEquals(row4, row5, 1E-5))
-    assert(true === DataFrameSuiteBase.approxEquals(row5, row5, 1E-5))
-    assert(false === DataFrameSuiteBase.approxEquals(row4, row6, 1E-5))
-    assert(false === DataFrameSuiteBase.approxEquals(row6, row4, 1E-5))
-    assert(false === DataFrameSuiteBase.approxEquals(row6, row7, 1E-5))
-    assert(false === DataFrameSuiteBase.approxEquals(row7, row6, 1E-5))
-    assert(false === DataFrameSuiteBase.approxEquals(row6, row6a, 1E-5))
+    assert(false === approxEquals(row, row2, 1E-7))
+    assert(true === approxEquals(row, row2, 1E-5))
+    assert(true === approxEquals(row3, row3, 1E-5))
+    assert(false === approxEquals(row, row3, 1E-5))
+    assert(false === approxEquals(row4, row5, 1E-5))
+    assert(true === approxEquals(row5, row5, 1E-5))
+    assert(false === approxEquals(row4, row6, 1E-5))
+    assert(false === approxEquals(row6, row4, 1E-5))
+    assert(false === approxEquals(row6, row7, 1E-5))
+    assert(false === approxEquals(row7, row6, 1E-5))
+    assert(false === approxEquals(row6, row6a, 1E-5))
   }
 
   test("unequal dataframes should not be equal when length differs") {
