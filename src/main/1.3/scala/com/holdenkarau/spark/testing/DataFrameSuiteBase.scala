@@ -44,27 +44,16 @@ trait DataFrameSuiteBase extends DataFrameSuiteBaseLike with SharedSparkContext 
 
 }
 
-class JavaDataFrameSuiteBase extends SharedJavaSparkContext with DataFrameSuiteBaseLike {
-
-  override def runBefore() {
-    super.runBefore()
-
-    if (!initialized)
-      super.beforeAllTestCases()
-  }
-}
-
 trait DataFrameSuiteBaseLike extends FunSuiteLike with SparkContextProvider with Serializable {
-  val maxCount = 10
 
-  def sqlContext: HiveContext = DataFrameSuiteBaseLike._sqlContext
+  def sqlContext: HiveContext = SQLContextProvider._sqlContext
 
   def beforeAllTestCases() {
-    DataFrameSuiteBaseLike._sqlContext = new HiveContext(sc)
+    SQLContextProvider._sqlContext = new HiveContext(sc)
   }
 
   def afterAllTestCases() {
-    DataFrameSuiteBaseLike._sqlContext = null
+    SQLContextProvider._sqlContext = null
   }
 
   /**
@@ -76,12 +65,18 @@ trait DataFrameSuiteBaseLike extends FunSuiteLike with SparkContextProvider with
     expected.rdd.cache()
     result.rdd.cache()
     val expectedRDD = zipWithIndex(expected.rdd)
+    println("ExpectedRDD")
+    expectedRDD.collect().foreach(x => println(x))
+
     val resultRDD = zipWithIndex(result.rdd)
+    println("ResultRDD")
+    resultRDD.foreach(x => println(x))
+
     assert(expectedRDD.count() == resultRDD.count())
     val unequal = expectedRDD.cogroup(resultRDD).filter{case (idx, (r1, r2)) =>
       !(r1.isEmpty || r2.isEmpty) &&
       !(r1.head.equals(r2.head) || DataFrameSuiteBase.approxEquals(r1.head, r2.head, 0.0))
-    }.take(maxCount)
+    }.take(1)
     assert(unequal === List())
     expected.rdd.unpersist()
     result.rdd.unpersist()
@@ -115,7 +110,7 @@ trait DataFrameSuiteBaseLike extends FunSuiteLike with SparkContextProvider with
     val unequal = cogrouped.filter{case (idx, (r1, r2)) =>
       (r1.isEmpty || r2.isEmpty) || (
         !DataFrameSuiteBase.approxEquals(r1.head, r2.head, tol))
-    }.take(maxCount)
+    }.take(1)
     expected.rdd.unpersist()
     result.rdd.unpersist()
     assert(unequal === List())
@@ -133,7 +128,7 @@ trait DataFrameSuiteBaseLike extends FunSuiteLike with SparkContextProvider with
   }
 }
 
-object DataFrameSuiteBaseLike {
+object SQLContextProvider {
   @transient var _sqlContext: HiveContext = _
 }
 
