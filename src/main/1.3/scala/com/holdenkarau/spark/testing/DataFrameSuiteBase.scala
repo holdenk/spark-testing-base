@@ -17,12 +17,18 @@
 
 package com.holdenkarau.spark.testing
 
-import scala.math.abs
+import java.io.File
 
+import scala.math.abs
+import scala.collection.mutable.HashMap
+
+import org.apache.spark.SparkContext
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql._
 import org.apache.spark.sql.hive._
 import org.apache.spark.sql.types.StructType
+import org.apache.hadoop.hive.conf.HiveConf
+import org.apache.hadoop.hive.conf.HiveConf.ConfVars
 
 import org.scalatest.{FunSuiteLike}
 
@@ -46,14 +52,55 @@ trait DataFrameSuiteBase extends DataFrameSuiteBaseLike with SharedSparkContext 
 
 trait DataFrameSuiteBaseLike extends FunSuiteLike with SparkContextProvider with Serializable {
 
-  def sqlContext: HiveContext = SQLContextProvider._sqlContext
+  @transient var _sqlContext: HiveContext = _
+
+  def sqlContext: HiveContext = _sqlContext
 
   def beforeAllTestCases() {
-    SQLContextProvider._sqlContext = new HiveContext(sc)
+    /** Constructs a configuration for hive, where the metastore is located in a temp directory. */
+    def newTemporaryConfiguration(): Map[String, String] = {
+      val tempDir = Utils.createTempDir()
+      val localMetastore = new File(tempDir, "metastore")
+      val propMap: HashMap[String, String] = HashMap()
+      // We have to mask all properties in hive-site.xml that relates to metastore data source
+      // as we used a local metastore here.
+      HiveConf.ConfVars.values().foreach { confvar =>
+        if (confvar.varname.contains("datanucleus") || confvar.varname.contains("jdo")
+          || confvar.varname.contains("hive.metastore.rawstore.impl")) {
+          propMap.put(confvar.varname, confvar.getDefaultExpr())
+        }
+      }
+      propMap.put(HiveConf.ConfVars.METASTOREWAREHOUSE.varname, localMetastore.toURI.toString)
+      propMap.put(HiveConf.ConfVars.METASTORECONNECTURLKEY.varname,
+        s"jdbc:derby:;databaseName=${localMetastore.getAbsolutePath};create=true")
+      propMap.put("datanucleus.rdbms.datastoreAdapterClassName",
+        "org.datanucleus.store.rdbms.adapter.DerbyAdapter")
+
+      // SPARK-11783: When "hive.metastore.uris" is set, the metastore connection mode will be
+      // remote (https://cwiki.apache.org/confluence/display/Hive/AdminManual+MetastoreAdmin
+      // mentions that "If hive.metastore.uris is empty local mode is assumed, remote otherwise").
+      // Remote means that the metastore server is running in its own process.
+      // When the mode is remote, configurations like "javax.jdo.option.ConnectionURL" will not be
+      // used (because they are used by remote metastore server that talks to the database).
+      // Because execution Hive should always connects to a embedded derby metastore.
+      // We have to remove the value of hive.metastore.uris. So, the execution Hive client connects
+      // to the actual embedded derby metastore instead of the remote metastore.
+      // You can search HiveConf.ConfVars.METASTOREURIS in the code of HiveConf (in Hive's repo).
+      // Then, you will find that the local metastore mode is only set to true when
+      // hive.metastore.uris is not set.
+      propMap.put(ConfVars.METASTOREURIS.varname, "")
+
+      propMap.toMap
+    }
+    val config = newTemporaryConfiguration()
+    class TestHiveContext(sc: SparkContext) extends HiveContext(sc) {
+      override def configure(): Map[String, String] = config
+    }
+    _sqlContext = new HiveContext(sc)
   }
 
   def afterAllTestCases() {
-    SQLContextProvider._sqlContext = null
+    _sqlContext = null
   }
 
   /**
@@ -126,10 +173,6 @@ trait DataFrameSuiteBaseLike extends FunSuiteLike with SparkContextProvider with
   def approxEquals(r1: Row, r2: Row, tol: Double): Boolean = {
     DataFrameSuiteBase.approxEquals(r1, r2, tol)
   }
-}
-
-object SQLContextProvider {
-  @transient var _sqlContext: HiveContext = _
 }
 
 object DataFrameSuiteBase {
