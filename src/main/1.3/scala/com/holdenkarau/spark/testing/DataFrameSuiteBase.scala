@@ -182,47 +182,35 @@ object DataFrameSuiteBase {
     if (r1.length != r2.length) {
       return false
     } else {
-      var i = 0
+      var idx = 0
       val length = r1.length
-      while (i < length) {
-        if (r1.isNullAt(i) != r2.isNullAt(i)) {
+      while (idx < length) {
+        if (r1.isNullAt(idx) != r2.isNullAt(idx))
           return false
-        }
-        if (!r1.isNullAt(i)) {
-          val o1 = r1.get(i)
-          val o2 = r2.get(i)
+
+        if (!r1.isNullAt(idx)) {
+          val o1 = r1.get(idx)
+          val o2 = r2.get(idx)
           o1 match {
             case b1: Array[Byte] =>
-              if (!o2.isInstanceOf[Array[Byte]] ||
-                !java.util.Arrays.equals(b1, o2.asInstanceOf[Array[Byte]])) {
-                return false
-              }
-            case f1: Float if java.lang.Float.isNaN(f1) =>
-              if (!o2.isInstanceOf[Float] || ! java.lang.Float.isNaN(o2.asInstanceOf[Float])) {
-                return false
-              }
-            case d1: Double if java.lang.Double.isNaN(d1) =>
-              if (!o2.isInstanceOf[Double] || ! java.lang.Double.isNaN(o2.asInstanceOf[Double])) {
-                return false
-              }
-            case d1: java.math.BigDecimal if o2.isInstanceOf[java.math.BigDecimal] =>
-              if (d1.compareTo(o2.asInstanceOf[java.math.BigDecimal]) != 0) {
-                return false
-              }
-            case f1: Float if o2.isInstanceOf[Float] =>
-              if (abs(f1-o2.asInstanceOf[Float]) > tol) {
-              return false
-            }
-            case d1: Double if o2.isInstanceOf[Double] =>
-              if (abs(d1-o2.asInstanceOf[Double]) > tol) {
-              return false
-            }
-            case _ => if (o1 != o2) {
-              return false
-            }
+              if (!java.util.Arrays.equals(b1, o2.asInstanceOf[Array[Byte]])) return false
+
+            case f1: Float =>
+              if (java.lang.Float.isNaN(f1) != java.lang.Float.isNaN(o2.asInstanceOf[Float])) return false
+              if (abs(f1 - o2.asInstanceOf[Float]) > tol) return false
+
+            case d1: Double =>
+              if (java.lang.Double.isNaN(d1) != java.lang.Double.isNaN(o2.asInstanceOf[Double])) return false
+              if (abs(d1 - o2.asInstanceOf[Double]) > tol) return false
+
+            case d1: java.math.BigDecimal =>
+              if (d1.compareTo(o2.asInstanceOf[java.math.BigDecimal]) != 0) return false
+
+            case _ =>
+              if (o1 != o2) return false
           }
         }
-        i += 1
+        idx += 1
       }
     }
     true

@@ -73,7 +73,6 @@ class SampleDataFrameTest extends DataFrameSuiteBase {
     assert(false === approxEquals(row4, row6, 1E-5))
     assert(false === approxEquals(row6, row4, 1E-5))
     assert(false === approxEquals(row6, row7, 1E-5))
-    assert(false === approxEquals(row7, row6, 1E-5))
     assert(false === approxEquals(row6, row6a, 1E-5))
   }
 
