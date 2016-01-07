@@ -52,9 +52,7 @@ trait DataFrameSuiteBase extends DataFrameSuiteBaseLike with SharedSparkContext 
 
 trait DataFrameSuiteBaseLike extends FunSuiteLike with SparkContextProvider with Serializable {
 
-  @transient var _sqlContext: HiveContext = _
-
-  def sqlContext: HiveContext = _sqlContext
+  def sqlContext: HiveContext = SQLContextProvider._sqlContext
 
   def beforeAllTestCases() {
     /** Constructs a configuration for hive, where the metastore is located in a temp directory. */
@@ -92,15 +90,17 @@ trait DataFrameSuiteBaseLike extends FunSuiteLike with SparkContextProvider with
 
       propMap.toMap
     }
+
     val config = newTemporaryConfiguration()
     class TestHiveContext(sc: SparkContext) extends HiveContext(sc) {
       override def configure(): Map[String, String] = config
     }
-    _sqlContext = new HiveContext(sc)
+
+    SQLContextProvider._sqlContext = new TestHiveContext(sc)
   }
 
   def afterAllTestCases() {
-    _sqlContext = null
+    SQLContextProvider._sqlContext = null
   }
 
   /**
@@ -227,4 +227,8 @@ object DataFrameSuiteBase {
     }
     true
   }
+}
+
+object SQLContextProvider {
+    @transient var _sqlContext: HiveContext = _
 }
