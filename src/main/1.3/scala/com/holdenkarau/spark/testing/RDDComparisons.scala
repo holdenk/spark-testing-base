@@ -25,7 +25,7 @@ import scala.reflect.{classTag, ClassTag}
 import org.apache.spark.rdd._
 
 
-object RDDComparisions {
+object RDDComparisons {
   // tag::PANDA_ORDERED[]
   /**
    * Compare two RDDs. If they are equal returns None, otherwise

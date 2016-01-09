@@ -116,7 +116,7 @@ trait DataFrameSuiteBaseLike extends FunSuiteLike with SparkContextProvider with
     try {
       expectedRDD.cache()
       resultRDD.cache()
-      assert(expectedRDD.count( ) == resultRDD.count())
+      assert(expectedRDD.count == resultRDD.count)
 
       val unequalRDD = expectedRDD.zip(resultRDD).filter{case (r1, r2) =>
         !(r1.equals(r2) || DataFrameSuiteBase.approxEquals(r1, r2, 0.0))}
@@ -142,7 +142,7 @@ trait DataFrameSuiteBaseLike extends FunSuiteLike with SparkContextProvider with
       expectedRDD.cache()
       resultRDD.cache()
 
-      assert(expectedRDD.count() == resultRDD.count())
+      assert(expectedRDD.count == resultRDD.count)
 
       val unequalRDD = expectedRDD.zip(resultRDD).filter{case (r1, r2) =>
         !DataFrameSuiteBase.approxEquals(r1, r2, tol)}
