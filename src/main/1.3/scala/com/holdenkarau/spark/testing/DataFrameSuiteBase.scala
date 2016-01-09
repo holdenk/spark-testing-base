@@ -109,38 +109,22 @@ trait DataFrameSuiteBaseLike extends FunSuiteLike with SparkContextProvider with
    */
   def equalDataFrames(expected: DataFrame, result: DataFrame) {
     equalSchema(expected.schema, result.schema)
-    expected.rdd.cache()
-    result.rdd.cache()
-    val expectedRDD = zipWithIndex(expected.rdd)
-    println("ExpectedRDD")
-    expectedRDD.collect().foreach(x => println(x))
 
-    val resultRDD = zipWithIndex(result.rdd)
-    println("ResultRDD")
-    resultRDD.foreach(x => println(x))
+    val expectedRDD: RDD[Row] = expected.rdd
+    expectedRDD.cache()
+
+    val resultRDD: RDD[Row] = result.rdd
+    resultRDD.cache()
 
     assert(expectedRDD.count() == resultRDD.count())
-    val unequal = expectedRDD.cogroup(resultRDD).filter{case (idx, (r1, r2)) =>
-      !(r1.isEmpty || r2.isEmpty) &&
-      !(r1.head.equals(r2.head) || DataFrameSuiteBase.approxEquals(r1.head, r2.head, 0.0))
-    }.take(1)
-    assert(unequal === List())
-    expected.rdd.unpersist()
-    result.rdd.unpersist()
-  }
 
+    val unequal = expectedRDD.zip(resultRDD).filter{case (r1, r2) =>
+      !(r1.equals(r2) || DataFrameSuiteBase.approxEquals(r1, r2, 0.0))}.take(1)
 
-  /**
-   * Zip RDD's with precise indexes. This is used so we can join two DataFrame's
-   * Rows together regardless of if the source is different but still compare based on
-   * the order.
-   */
-  private def zipWithIndex[T](input: RDD[T]): RDD[(Int, T)] = {
-    val counts = input.mapPartitions{itr => Iterator(itr.size)}.collect()
-    val countSums = counts.scanLeft(0)(_ + _).zipWithIndex.map{case (x, y) => (y, x)}.toMap
-    input.mapPartitionsWithIndex{case (idx, itr) => itr.zipWithIndex.map{case (y, i) =>
-      (i + countSums(idx), y)}
-    }
+    expectedRDD.unpersist()
+    resultRDD.unpersist()
+
+    assert(unequal.isEmpty)
   }
 
   /**
@@ -149,18 +133,22 @@ trait DataFrameSuiteBaseLike extends FunSuiteLike with SparkContextProvider with
    */
   def approxEqualDataFrames(expected: DataFrame, result: DataFrame, tol: Double) {
     equalSchema(expected.schema, result.schema)
-    expected.rdd.cache()
-    result.rdd.cache()
-    val expectedRDD = zipWithIndex(expected.rdd)
-    val resultRDD = zipWithIndex(result.rdd)
-    val cogrouped = expectedRDD.cogroup(resultRDD)
-    val unequal = cogrouped.filter{case (idx, (r1, r2)) =>
-      (r1.isEmpty || r2.isEmpty) || (
-        !DataFrameSuiteBase.approxEquals(r1.head, r2.head, tol))
-    }.take(1)
-    expected.rdd.unpersist()
-    result.rdd.unpersist()
-    assert(unequal === List())
+
+    val expectedRDD: RDD[Row] = expected.rdd
+    expectedRDD.cache()
+
+    val resultRDD: RDD[Row] = result.rdd
+    resultRDD.cache()
+
+    assert(expectedRDD.count() == resultRDD.count())
+
+    val unequal = expectedRDD.zip(resultRDD).filter{case (r1, r2) =>
+      !DataFrameSuiteBase.approxEquals(r1, r2, tol)}.take(1)
+
+    expectedRDD.unpersist()
+    resultRDD.unpersist()
+
+    assert(unequal.isEmpty)
   }
 
   /**
