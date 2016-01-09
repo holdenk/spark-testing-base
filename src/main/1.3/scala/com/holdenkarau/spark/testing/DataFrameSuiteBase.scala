@@ -110,15 +110,15 @@ trait DataFrameSuiteBaseLike extends FunSuiteLike with SparkContextProvider with
   def equalDataFrames(expected: DataFrame, result: DataFrame) {
     equalSchema(expected.schema, result.schema)
 
-    val expectedRDD: RDD[Row] = expected.rdd
-    val resultRDD: RDD[Row] = result.rdd
+    val expectedRDD = zipWithIndex(expected.rdd)
+    val resultRDD = zipWithIndex(result.rdd)
 
     try {
       expectedRDD.cache()
       resultRDD.cache()
       assert(expectedRDD.count == resultRDD.count)
 
-      val unequalRDD = expectedRDD.zip(resultRDD).filter{case (r1, r2) =>
+      val unequalRDD = expectedRDD.join(resultRDD).filter{case (idx, (r1, r2)) =>
         !(r1.equals(r2) || DataFrameSuiteBase.approxEquals(r1, r2, 0.0))}
 
       assert(unequalRDD.isEmpty)
@@ -135,8 +135,8 @@ trait DataFrameSuiteBaseLike extends FunSuiteLike with SparkContextProvider with
   def approxEqualDataFrames(expected: DataFrame, result: DataFrame, tol: Double) {
     equalSchema(expected.schema, result.schema)
 
-    val expectedRDD: RDD[Row] = expected.rdd
-    val resultRDD: RDD[Row] = result.rdd
+    val expectedRDD = zipWithIndex(expected.rdd)
+    val resultRDD = zipWithIndex(result.rdd)
 
     try {
       expectedRDD.cache()
@@ -144,7 +144,7 @@ trait DataFrameSuiteBaseLike extends FunSuiteLike with SparkContextProvider with
 
       assert(expectedRDD.count == resultRDD.count)
 
-      val unequalRDD = expectedRDD.zip(resultRDD).filter{case (r1, r2) =>
+      val unequalRDD = expectedRDD.join(resultRDD).filter{case (idx, (r1, r2)) =>
         !DataFrameSuiteBase.approxEquals(r1, r2, tol)}
 
       assert(unequalRDD.isEmpty)
@@ -153,6 +153,8 @@ trait DataFrameSuiteBaseLike extends FunSuiteLike with SparkContextProvider with
       resultRDD.unpersist()
     }
   }
+
+  private def zipWithIndex(rdd: RDD[Row]) = rdd.zipWithIndex().map{case (row, idx) => (idx, row)}
 
   /**
    * Compares the schema
