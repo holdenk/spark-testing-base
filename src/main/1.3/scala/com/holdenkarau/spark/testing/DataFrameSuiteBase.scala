@@ -32,6 +32,8 @@ import org.apache.hadoop.hive.conf.HiveConf.ConfVars
 
 import org.scalatest.{FunSuiteLike}
 
+import scala.reflect.ClassTag
+
 /**
  * :: Experimental ::
  * Base class for testing Spark DataFrames.
@@ -160,7 +162,7 @@ trait DataFrameSuiteBaseLike extends FunSuiteLike with SparkContextProvider with
     * Rows together regardless of if the source is different but still compare based on
     * the order.
     */
-  private def zipWithIndex(rdd: RDD[Row]) = rdd.zipWithIndex().map { case (row, idx) => (idx, row) }
+  def zipWithIndex[U](rdd: RDD[U]) = rdd.zipWithIndex().map{ case (row, idx) => (idx, row) }
 
   /**
    * Compares the schema
