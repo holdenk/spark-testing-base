@@ -32,8 +32,6 @@ import org.apache.hadoop.hive.conf.HiveConf.ConfVars
 
 import org.scalatest.{FunSuiteLike}
 
-import scala.reflect.ClassTag
-
 /**
  * :: Experimental ::
  * Base class for testing Spark DataFrames.

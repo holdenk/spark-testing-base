@@ -109,6 +109,67 @@ class SampleDatasetTest extends DatasetSuiteBase {
     }
   }
 
+  test("approximate equal empty dataset") {
+    val sqlCtx = sqlContext
+    import sqlCtx.implicits._
+
+    val emptyDS = sc.parallelize(List[Person]()).toDS
+
+    approxEqualDatasets(emptyDS, emptyDS, 0.1)
+  }
+
+  test("approximate equal same dataset") {
+    val sqlCtx = sqlContext
+    import sqlCtx.implicits._
+
+    val list = List(Person("Holden", 2000, 60.0), Person("Hanafy", 23, 80.0))
+    val persons = sc.parallelize(list).toDS
+
+    approxEqualDatasets(persons, persons, 0.0)
+  }
+
+  test("approximate not equal same schema, different types") {
+    val sqlCtx = sqlContext
+    import sqlCtx.implicits._
+
+    val list1 = List(Person("Holden", 2000, 60.0), Person("Hanafy", 23, 80.0))
+    val list2 = List(SamePerson("Holden", 2000, 60.0), SamePerson("Hanafy", 23, 80.0))
+
+    val persons1 = sc.parallelize(list1).toDS
+    val persons2 = sc.parallelize(list2).toDS
+
+    intercept[org.scalatest.exceptions.TestFailedException] {
+      approxEqualDatasets(persons1, persons2, 0.9)
+    }
+  }
+
+  test("approximate equal with acceptable tolerance") {
+    val sqlCtx = sqlContext
+    import sqlCtx.implicits._
+
+    val list1 = List(Person("Holden", 2000, 60.0), Person("Hanafy", 23, 79.8))
+    val list2 = List(Person("Holden", 2000, 60.2), Person("Hanafy", 23, 80.0))
+
+    val persons1 = sc.parallelize(list1).toDS
+    val persons2 = sc.parallelize(list2).toDS
+
+    approxEqualDatasets(persons1, persons2, 0.21)
+  }
+
+  test("approximate not equal with low tolerance") {
+    val sqlCtx = sqlContext
+    import sqlCtx.implicits._
+
+    val list1 = List(Person("Holden", 2000, 60.0), Person("Hanafy", 23, 79.8))
+    val list2 = List(Person("Holden", 2000, 60.3), Person("Hanafi", 23, 80.0))
+
+    val persons1 = sc.parallelize(list1).toDS
+    val persons2 = sc.parallelize(list2).toDS
+
+    intercept[org.scalatest.exceptions.TestFailedException] {
+      approxEqualDatasets(persons1, persons2, 0.2)
+    }
+  }
 }
 
 case class Person(name: String, age: Int, weight: Double)
