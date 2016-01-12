@@ -51,7 +51,7 @@ trait DataFrameSuiteBase extends DataFrameSuiteBaseLike with SharedSparkContext 
 }
 
 trait DataFrameSuiteBaseLike extends FunSuiteLike with SparkContextProvider with Serializable {
-
+  val maxUnequalRowsToShow = 10
   def sqlContext: HiveContext = SQLContextProvider._sqlContext
 
   def beforeAllTestCases() {
@@ -121,7 +121,7 @@ trait DataFrameSuiteBaseLike extends FunSuiteLike with SparkContextProvider with
       val unequalRDD = expectedRDD.join(resultRDD).filter{case (idx, (r1, r2)) =>
         !(r1.equals(r2) || DataFrameSuiteBase.approxEquals(r1, r2, 0.0))}
 
-      assert(unequalRDD.isEmpty)
+      assert(unequalRDD.take(maxUnequalRowsToShow).isEmpty)
     } finally {
       expectedRDD.unpersist()
       resultRDD.unpersist()
@@ -149,7 +149,7 @@ trait DataFrameSuiteBaseLike extends FunSuiteLike with SparkContextProvider with
       val unequalRDD = expectedRDD.join(resultRDD).filter{case (idx, (r1, r2)) =>
         !DataFrameSuiteBase.approxEquals(r1, r2, tol)}
 
-      assert(unequalRDD.isEmpty)
+      assert(unequalRDD.take(maxUnequalRowsToShow).isEmpty)
     } finally {
       expectedRDD.unpersist()
       resultRDD.unpersist()
