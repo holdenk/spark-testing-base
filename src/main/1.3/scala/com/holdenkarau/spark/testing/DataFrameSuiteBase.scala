@@ -110,21 +110,21 @@ trait DataFrameSuiteBaseLike extends FunSuiteLike with SparkContextProvider with
   def equalDataFrames(expected: DataFrame, result: DataFrame) {
     equalSchema(expected.schema, result.schema)
 
-    val expectedRDD = zipWithIndex(expected.rdd)
-    val resultRDD = zipWithIndex(result.rdd)
-
     try {
-      expectedRDD.cache()
-      resultRDD.cache()
-      assert(expectedRDD.count == resultRDD.count)
+      expected.rdd.cache
+      result.rdd.cache
+      assert(expected.rdd.count == result.rdd.count)
 
-      val unequalRDD = expectedRDD.join(resultRDD).filter{case (idx, (r1, r2)) =>
+      val expectedIndexValue = zipWithIndex(expected.rdd)
+      val resultIndexValue = zipWithIndex(result.rdd)
+
+      val unequalRDD = expectedIndexValue.join(resultIndexValue).filter{case (idx, (r1, r2)) =>
         !(r1.equals(r2) || DataFrameSuiteBase.approxEquals(r1, r2, 0.0))}
 
       assert(unequalRDD.take(maxUnequalRowsToShow).isEmpty)
     } finally {
-      expectedRDD.unpersist()
-      resultRDD.unpersist()
+      expected.rdd.unpersist()
+      result.rdd.unpersist()
     }
   }
 
@@ -137,22 +137,21 @@ trait DataFrameSuiteBaseLike extends FunSuiteLike with SparkContextProvider with
   def approxEqualDataFrames(expected: DataFrame, result: DataFrame, tol: Double) {
     equalSchema(expected.schema, result.schema)
 
-    val expectedRDD = zipWithIndex(expected.rdd)
-    val resultRDD = zipWithIndex(result.rdd)
-
     try {
-      expectedRDD.cache()
-      resultRDD.cache()
+      expected.rdd.cache
+      result.rdd.cache
+      assert(expected.rdd.count == result.rdd.count)
 
-      assert(expectedRDD.count == resultRDD.count)
+      val expectedIndexValue = zipWithIndex(expected.rdd)
+      val resultIndexValue = zipWithIndex(result.rdd)
 
-      val unequalRDD = expectedRDD.join(resultRDD).filter{case (idx, (r1, r2)) =>
+      val unequalRDD = expectedIndexValue.join(resultIndexValue).filter{case (idx, (r1, r2)) =>
         !DataFrameSuiteBase.approxEquals(r1, r2, tol)}
 
       assert(unequalRDD.take(maxUnequalRowsToShow).isEmpty)
     } finally {
-      expectedRDD.unpersist()
-      resultRDD.unpersist()
+      expected.rdd.unpersist()
+      result.rdd.unpersist()
     }
   }
 
