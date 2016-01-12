@@ -129,9 +129,11 @@ trait DataFrameSuiteBaseLike extends FunSuiteLike with SparkContextProvider with
   }
 
   /**
-   * Compares if two [[DataFrame]]s are equal, checks that the schemas are the same.
-   * When comparing inexact fields uses tol.
-   */
+    * Compares if two [[DataFrame]]s are equal, checks that the schemas are the same.
+    * When comparing inexact fields uses tol.
+    *
+    * @param tol max acceptable tolerance, should be less than 1.
+    */
   def approxEqualDataFrames(expected: DataFrame, result: DataFrame, tol: Double) {
     equalSchema(expected.schema, result.schema)
 
