@@ -13,20 +13,20 @@ class DatasetSuiteBase extends DataFrameSuiteBase {
   def equalDatasets[U: ClassTag, V: ClassTag](expected: Dataset[U], result: Dataset[V]) = {
     assert(implicitly[ClassTag[U]].runtimeClass == implicitly[ClassTag[V]].runtimeClass)
 
-    val expectedRDD = zipWithIndex(expected.rdd)
-    val resultRDD = zipWithIndex(result.rdd)
-
     try {
-      expectedRDD.cache()
-      resultRDD.cache()
-      assert(expectedRDD.count() == expectedRDD.count())
+      expected.rdd.cache
+      result.rdd.cache
+      assert(expected.rdd.count == result.rdd.count)
 
-      val unequalRDD = expectedRDD.join(resultRDD).filter { case (idx, (o1, o2)) => !o1.equals(o2) }
+      val expectedIndexValue = zipWithIndex(expected.rdd)
+      val resultIndexValue = zipWithIndex(result.rdd)
+      val unequalRDD = expectedIndexValue.join(resultIndexValue).filter
+      { case (idx, (o1, o2)) => !o1.equals(o2) }
 
       assert(unequalRDD.take(maxUnequalRowsToShow).isEmpty)
     } finally {
-      expectedRDD.unpersist()
-      resultRDD.unpersist()
+      expected.rdd.unpersist()
+      result.rdd.unpersist()
     }
   }
 

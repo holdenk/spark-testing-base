@@ -160,7 +160,7 @@ trait DataFrameSuiteBaseLike extends FunSuiteLike with SparkContextProvider with
     * Rows together regardless of if the source is different but still compare based on
     * the order.
     */
-  def zipWithIndex[U](rdd: RDD[U]) = rdd.zipWithIndex().map{ case (row, idx) => (idx, row) }
+  private[testing] def zipWithIndex[U](rdd: RDD[U]) = rdd.zipWithIndex().map{ case (row, idx) => (idx, row) }
 
   /**
    * Compares the schema
