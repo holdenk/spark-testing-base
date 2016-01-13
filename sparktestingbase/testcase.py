@@ -37,7 +37,8 @@ class SparkTestingBaseTestCase(unittest2.TestCase):
     def setUp(self):
         """Setup a basic Spark context for testing"""
         self.sc = SparkContext(self.getMaster())
-
+        quiet_py4j()
+        
     def tearDown(self):
         """
         Tear down the basic panda spark test case. This stops the running
@@ -64,7 +65,8 @@ class SparkTestingBaseReuse(unittest2.TestCase):
         """Setup a basic Spark context for testing"""
         class_name = cls.__name__
         cls.sc = SparkContext(cls.getMaster(), appName=class_name)
-
+        quiet_py4j()
+        
     @classmethod
     def tearDownClass(cls):
         """
