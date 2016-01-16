@@ -155,7 +155,12 @@ trait DataFrameSuiteBaseLike extends FunSuiteLike with SparkContextProvider with
     }
   }
 
-  private def zipWithIndex(rdd: RDD[Row]) = rdd.zipWithIndex().map{case (row, idx) => (idx, row)}
+  /**
+    * Zip RDD's with precise indexes. This is used so we can join two DataFrame's
+    * Rows together regardless of if the source is different but still compare based on
+    * the order.
+    */
+  private def zipWithIndex(rdd: RDD[Row]) = rdd.zipWithIndex().map { case (row, idx) => (idx, row) }
 
   /**
    * Compares the schema
