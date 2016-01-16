@@ -51,7 +51,7 @@ trait DataFrameSuiteBase extends DataFrameSuiteBaseLike with SharedSparkContext 
 }
 
 trait DataFrameSuiteBaseLike extends FunSuiteLike with SparkContextProvider with Serializable {
-
+  val maxUnequalRowsToShow = 10
   def sqlContext: HiveContext = SQLContextProvider._sqlContext
 
   def beforeAllTestCases() {
@@ -109,59 +109,58 @@ trait DataFrameSuiteBaseLike extends FunSuiteLike with SparkContextProvider with
    */
   def equalDataFrames(expected: DataFrame, result: DataFrame) {
     equalSchema(expected.schema, result.schema)
-    expected.rdd.cache()
-    result.rdd.cache()
-    val expectedRDD = zipWithIndex(expected.rdd)
-    println("ExpectedRDD")
-    expectedRDD.collect().foreach(x => println(x))
 
-    val resultRDD = zipWithIndex(result.rdd)
-    println("ResultRDD")
-    resultRDD.foreach(x => println(x))
+    try {
+      expected.rdd.cache
+      result.rdd.cache
+      assert(expected.rdd.count == result.rdd.count)
 
-    assert(expectedRDD.count() == resultRDD.count())
-    val unequal = expectedRDD.cogroup(resultRDD).filter{case (idx, (r1, r2)) =>
-      !(r1.isEmpty || r2.isEmpty) &&
-      !(r1.head.equals(r2.head) || DataFrameSuiteBase.approxEquals(r1.head, r2.head, 0.0))
-    }.take(1)
-    assert(unequal === List())
-    expected.rdd.unpersist()
-    result.rdd.unpersist()
-  }
+      val expectedIndexValue = zipWithIndex(expected.rdd)
+      val resultIndexValue = zipWithIndex(result.rdd)
 
+      val unequalRDD = expectedIndexValue.join(resultIndexValue).filter{case (idx, (r1, r2)) =>
+        !(r1.equals(r2) || DataFrameSuiteBase.approxEquals(r1, r2, 0.0))}
 
-  /**
-   * Zip RDD's with precise indexes. This is used so we can join two DataFrame's
-   * Rows together regardless of if the source is different but still compare based on
-   * the order.
-   */
-  private def zipWithIndex[T](input: RDD[T]): RDD[(Int, T)] = {
-    val counts = input.mapPartitions{itr => Iterator(itr.size)}.collect()
-    val countSums = counts.scanLeft(0)(_ + _).zipWithIndex.map{case (x, y) => (y, x)}.toMap
-    input.mapPartitionsWithIndex{case (idx, itr) => itr.zipWithIndex.map{case (y, i) =>
-      (i + countSums(idx), y)}
+      assert(unequalRDD.take(maxUnequalRowsToShow).isEmpty)
+    } finally {
+      expected.rdd.unpersist()
+      result.rdd.unpersist()
     }
   }
 
   /**
-   * Compares if two [[DataFrame]]s are equal, checks that the schemas are the same.
-   * When comparing inexact fields uses tol.
-   */
+    * Compares if two [[DataFrame]]s are equal, checks that the schemas are the same.
+    * When comparing inexact fields uses tol.
+    *
+    * @param tol max acceptable tolerance, should be less than 1.
+    */
   def approxEqualDataFrames(expected: DataFrame, result: DataFrame, tol: Double) {
     equalSchema(expected.schema, result.schema)
-    expected.rdd.cache()
-    result.rdd.cache()
-    val expectedRDD = zipWithIndex(expected.rdd)
-    val resultRDD = zipWithIndex(result.rdd)
-    val cogrouped = expectedRDD.cogroup(resultRDD)
-    val unequal = cogrouped.filter{case (idx, (r1, r2)) =>
-      (r1.isEmpty || r2.isEmpty) || (
-        !DataFrameSuiteBase.approxEquals(r1.head, r2.head, tol))
-    }.take(1)
-    expected.rdd.unpersist()
-    result.rdd.unpersist()
-    assert(unequal === List())
+
+    try {
+      expected.rdd.cache
+      result.rdd.cache
+      assert(expected.rdd.count == result.rdd.count)
+
+      val expectedIndexValue = zipWithIndex(expected.rdd)
+      val resultIndexValue = zipWithIndex(result.rdd)
+
+      val unequalRDD = expectedIndexValue.join(resultIndexValue).filter{case (idx, (r1, r2)) =>
+        !DataFrameSuiteBase.approxEquals(r1, r2, tol)}
+
+      assert(unequalRDD.take(maxUnequalRowsToShow).isEmpty)
+    } finally {
+      expected.rdd.unpersist()
+      result.rdd.unpersist()
+    }
   }
+
+  /**
+    * Zip RDD's with precise indexes. This is used so we can join two DataFrame's
+    * Rows together regardless of if the source is different but still compare based on
+    * the order.
+    */
+  private def zipWithIndex(rdd: RDD[Row]) = rdd.zipWithIndex().map { case (row, idx) => (idx, row) }
 
   /**
    * Compares the schema
@@ -182,47 +181,35 @@ object DataFrameSuiteBase {
     if (r1.length != r2.length) {
       return false
     } else {
-      var i = 0
+      var idx = 0
       val length = r1.length
-      while (i < length) {
-        if (r1.isNullAt(i) != r2.isNullAt(i)) {
+      while (idx < length) {
+        if (r1.isNullAt(idx) != r2.isNullAt(idx))
           return false
-        }
-        if (!r1.isNullAt(i)) {
-          val o1 = r1.get(i)
-          val o2 = r2.get(i)
+
+        if (!r1.isNullAt(idx)) {
+          val o1 = r1.get(idx)
+          val o2 = r2.get(idx)
           o1 match {
             case b1: Array[Byte] =>
-              if (!o2.isInstanceOf[Array[Byte]] ||
-                !java.util.Arrays.equals(b1, o2.asInstanceOf[Array[Byte]])) {
-                return false
-              }
-            case f1: Float if java.lang.Float.isNaN(f1) =>
-              if (!o2.isInstanceOf[Float] || ! java.lang.Float.isNaN(o2.asInstanceOf[Float])) {
-                return false
-              }
-            case d1: Double if java.lang.Double.isNaN(d1) =>
-              if (!o2.isInstanceOf[Double] || ! java.lang.Double.isNaN(o2.asInstanceOf[Double])) {
-                return false
-              }
-            case d1: java.math.BigDecimal if o2.isInstanceOf[java.math.BigDecimal] =>
-              if (d1.compareTo(o2.asInstanceOf[java.math.BigDecimal]) != 0) {
-                return false
-              }
-            case f1: Float if o2.isInstanceOf[Float] =>
-              if (abs(f1-o2.asInstanceOf[Float]) > tol) {
-              return false
-            }
-            case d1: Double if o2.isInstanceOf[Double] =>
-              if (abs(d1-o2.asInstanceOf[Double]) > tol) {
-              return false
-            }
-            case _ => if (o1 != o2) {
-              return false
-            }
+              if (!java.util.Arrays.equals(b1, o2.asInstanceOf[Array[Byte]])) return false
+
+            case f1: Float =>
+              if (java.lang.Float.isNaN(f1) != java.lang.Float.isNaN(o2.asInstanceOf[Float])) return false
+              if (abs(f1 - o2.asInstanceOf[Float]) > tol) return false
+
+            case d1: Double =>
+              if (java.lang.Double.isNaN(d1) != java.lang.Double.isNaN(o2.asInstanceOf[Double])) return false
+              if (abs(d1 - o2.asInstanceOf[Double]) > tol) return false
+
+            case d1: java.math.BigDecimal =>
+              if (d1.compareTo(o2.asInstanceOf[java.math.BigDecimal]) != 0) return false
+
+            case _ =>
+              if (o1 != o2) return false
           }
         }
-        i += 1
+        idx += 1
       }
     }
     true

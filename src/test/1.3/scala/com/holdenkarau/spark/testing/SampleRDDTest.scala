@@ -43,14 +43,14 @@ class SampleRDDTest extends FunSuite with SharedSparkContext {
     val expectedList = List(List("hi"), List("hi", "holden"), List("bye"))
     val expectedRDD = sc.parallelize(expectedList)
 
-    assert(None === RDDComparisions.compare(expectedRDD, inputRDD))
+    assert(None === RDDComparisons.compare(expectedRDD, inputRDD))
   }
 
   test("empty RDD compare") {
     val inputList = List[String]()
     val inputRDD = sc.parallelize(inputList)
 
-    assert(None === RDDComparisions.compare(inputRDD, inputRDD))
+    assert(None === RDDComparisons.compare(inputRDD, inputRDD))
   }
 
   test("simple equal compare") {
@@ -61,7 +61,7 @@ class SampleRDDTest extends FunSuite with SharedSparkContext {
     val expectedRDD = sc.parallelize(expected)
     println(expected)
 
-    assert(None === RDDComparisions.compare(expectedRDD, inputRDD))
+    assert(None === RDDComparisons.compare(expectedRDD, inputRDD))
   }
 
   test("complex equal compare") {
@@ -71,7 +71,7 @@ class SampleRDDTest extends FunSuite with SharedSparkContext {
     val expected = Random.shuffle(inputList)
     val expectedRDD = sc.parallelize(expected)
 
-    assert(None === RDDComparisions.compare(expectedRDD, inputRDD))
+    assert(None === RDDComparisons.compare(expectedRDD, inputRDD))
   }
 
   test("not equal compare") {
@@ -81,14 +81,14 @@ class SampleRDDTest extends FunSuite with SharedSparkContext {
     val expectedList = List("ab", -1)
     val expectedRDD = sc.parallelize(expectedList)
 
-    assert(None !== RDDComparisions.compare(expectedRDD, inputRDD))
+    assert(None !== RDDComparisons.compare(expectedRDD, inputRDD))
   }
 
   test("empty RDD compareWithOrder") {
     val inputList = List[String]()
     val inputRDD = sc.parallelize(inputList)
 
-    assert(None === RDDComparisions.compareWithOrder(inputRDD, inputRDD))
+    assert(None === RDDComparisons.compareWithOrder(inputRDD, inputRDD))
   }
 
   test("equal compareWithOrder") {
@@ -97,7 +97,7 @@ class SampleRDDTest extends FunSuite with SharedSparkContext {
 
     val expectedRDD = sc.parallelize(inputList)
 
-    assert(None === RDDComparisions.compareWithOrder(inputRDD, expectedRDD))
+    assert(None === RDDComparisons.compareWithOrder(inputRDD, expectedRDD))
   }
 
   test("not equal compareWithOrder") {
@@ -107,6 +107,6 @@ class SampleRDDTest extends FunSuite with SharedSparkContext {
     val expectedList = List(2, 1, 3, 4)
     val expectedRDD = sc.parallelize(expectedList)
 
-    assert(None !== RDDComparisions.compareWithOrder(inputRDD, expectedRDD))
+    assert(None !== RDDComparisons.compareWithOrder(inputRDD, expectedRDD))
   }
 }
