@@ -14,7 +14,7 @@ javacOptions ++= Seq("-source", "1.7", "-target", "1.7")
 
 spName := "holdenk/spark-testing-base"
 
-sparkVersion := "1.5.0"
+sparkVersion := "1.6.0"
 
 sparkComponents ++= Seq("core", "streaming", "sql", "catalyst", "hive", "streaming-kafka", "yarn")
 
