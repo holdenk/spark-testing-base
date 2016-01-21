@@ -16,13 +16,9 @@
  */
 package com.holdenkarau.spark.testing
 
-import org.apache.spark.streaming._
-import org.apache.spark.streaming.dstream._
-import org.apache.spark._
 import org.apache.spark.rdd.RDD
-import org.apache.spark.SparkContext._
-
-import org.scalatest.FunSuite
+import org.apache.spark.streaming.dstream._
+import org.scalactic.Equality
 import org.scalatest.exceptions.TestFailedException
 
 class SampleStreamingTest extends StreamingSuiteBase {
@@ -31,7 +27,7 @@ class SampleStreamingTest extends StreamingSuiteBase {
   test("really simple transformation") {
     val input = List(List("hi"), List("hi holden"), List("bye"))
     val expected = List(List("hi"), List("hi", "holden"), List("bye"))
-    testOperation[String, String](input, tokenize _, expected, useSet = true)
+    testOperation[String, String](input, tokenize _, expected, ordered = false)
   }
 
   // This is the sample function we are testing
@@ -44,7 +40,7 @@ class SampleStreamingTest extends StreamingSuiteBase {
     val input = List(List("hi", "pandas"), List("hi holden"), List("bye"))
     val input2 = List(List("hi"), List("pandas"), List("byes"))
     val expected = List(List("pandas"), List("hi holden"), List("bye"))
-    testOperation[String, String, String](input, input2, subtract _, expected, useSet = true)
+    testOperation[String, String, String](input, input2, subtract _, expected, ordered = false)
   }
 
   def subtract(f1: DStream[String], f2: DStream[String]): DStream[String] = {
@@ -54,16 +50,53 @@ class SampleStreamingTest extends StreamingSuiteBase {
   test("noop simple transformation") {
     def noop(s: DStream[String]) = s
     val input = List(List("hi"), List("hi holden"), List("bye"))
-    testOperation[String, String](input, noop _, input, useSet = true)
+    testOperation[String, String](input, noop _, input, ordered = false)
   }
 
   test("a wrong expected multiset for a micro batch leads to a test fail") {
     val input = List(List("hi"), List("hi holden"), List("bye"))
     val badMultisetExpected = List(List("hi"), List("hi", "holden", "hi"), List("bye"))
     val thrown = intercept[TestFailedException] {
-        testOperation[String, String](input, tokenize _, badMultisetExpected, useSet = true)
+        testOperation[String, String](input, tokenize _, badMultisetExpected, ordered = false)
     }
   }
+
+  test("custom equality object (String)") {
+    val input = List(List("hi"), List("hi holden"), List("bye"))
+    val expected = List(List("Hi"), List("hI", "HoLdeN"), List("bYe"))
+
+    implicit val stringCustomEquality =
+      new Equality[String] {
+        override def areEqual(a: String, b: Any): Boolean =
+          b match {
+            case s: String => a.equalsIgnoreCase(s)
+            case _ => false
+          }
+      }
+
+    testOperation[String, String](input, tokenize _, expected, ordered = true)
+    testOperation[String, String](input, tokenize _, expected, ordered = false)
+  }
+
+  test("custom equality object (Integer)") {
+    val input = List(List(-1), List(-2, 3, -4), List(5, -6))
+    val expected = List(List(1), List(2, 3, 4), List(5, 6))
+
+    implicit val integerCustomEquality =
+      new Equality[Int] {
+        override def areEqual(a: Int, b: Any): Boolean =
+          b match {
+            case n: Int => Math.abs(a) == Math.abs(n)
+            case _ => false
+          }
+      }
+
+    def doNothing(ds: DStream[Int]) = ds
+
+    testOperation[Int, Int](input, doNothing _, expected, ordered = false)
+    testOperation[Int, Int](input, doNothing _, expected, ordered = true)
+  }
+
 }
 
 object SampleStreamingTest {
