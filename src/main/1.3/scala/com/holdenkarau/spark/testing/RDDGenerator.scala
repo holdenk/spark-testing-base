@@ -25,31 +25,60 @@ import scala.reflect.{ClassTag, classTag}
 import org.apache.spark.rdd.RDD
 import org.apache.spark.SparkContext
 import org.apache.spark.annotation.Experimental
+import org.apache.spark.mllib.random._
+import org.apache.spark.util.random.XORShiftRandom
+
 import org.scalacheck._
 
 @Experimental
 object RDDGenerator {
+
   // Generate an RDD of the desired type. Attempt to try different number of partitions
   // so as to catch problems with empty partitions, etc.
-  def genRDD[T: ClassTag](sc: SparkContext)(implicit a: Arbitrary[T]): Gen[RDD[T]] = {
-    arbitraryRDD(sc).arbitrary
+  // minPartitions defaults to 1, but when generating data too large for a single machine choose a larger value.
+  def genRDD[T: ClassTag](sc: SparkContext, minPartitions: Int = 1)(implicit a: Arbitrary[T]): Gen[RDD[T]] = {
+    arbitraryRDD(sc, minPartitions).arbitrary
   }
 
-  def arbitraryRDD[T: ClassTag](sc: SparkContext)(implicit a: Arbitrary[T]): Arbitrary[RDD[T]] = {
+  def arbitraryRDD[T: ClassTag](sc: SparkContext, minPartitions: Int = 1)(implicit a: Arbitrary[T]): Arbitrary[RDD[T]] = {
     Arbitrary {
       val genElem = for (e <- Arbitrary.arbitrary[T]) yield e
       Gen.sized(sz =>
         sz match {
           case 0 => sc.emptyRDD[T]
           case size => {
-            val specialPartitionSizes = List(size, (size/2).toInt, 1, 2, 3)
-            val myGen = for {
-              partitionCount <- Gen.chooseNum(1, 2*size, specialPartitionSizes: _*)
-              data <- Gen.listOfN(size, genElem)
-            } yield (partitionCount, data)
-            myGen.map{case (numPartitions, data) => sc.parallelize(data, numPartitions)}
+            // Generate different partition sizes
+            val mp = minPartitions
+            val specialPartitionSizes = List(size, (size/2).toInt, mp, mp + 1, mp + 3).filter(_ > mp)
+            val partitionsGen = for {
+              partitionCount <- Gen.chooseNum(1, 2 * size, specialPartitionSizes: _*)
+            } yield (partitionCount)
+            // Wrap the scalacheck generator in a Spark generator
+            val sparkElemGenerator = new WrappedGenerator(genElem)
+            val rdds = partitionsGen.map{numPartitions =>
+              RandomRDDs.randomRDD(sc, sparkElemGenerator, size, numPartitions)
+            }
+            rdds
           }
         })
     }
   }
+}
+
+/**
+ * A WrappedGenerator wraps a ScalaCheck generator to allow Spark's RandomRDD to use it
+ */
+private[testing] class WrappedGenerator[T](generator: Gen[T]) extends RandomDataGenerator[T] {
+  val random = new scala.util.Random()
+  val params = Gen.Parameters.default.withRng(random)
+
+  def nextValue(): T = {
+    generator(params).get
+  }
+
+  def copy() = {
+    new WrappedGenerator(generator)
+  }
+
+  override def setSeed(seed: Long): Unit = random.setSeed(seed)
 }
