@@ -56,47 +56,28 @@ trait DataFrameSuiteBaseLike extends FunSuiteLike with SparkContextProvider with
 
   def beforeAllTestCases() {
     /** Constructs a configuration for hive, where the metastore is located in a temp directory. */
+    val tempDir = Utils.createTempDir()
+    val localMetastorePath = new File(tempDir, "metastore").getCanonicalPath
+    val localWarehousePath = new File(tempDir, "wharehouse").getCanonicalPath
     def newTemporaryConfiguration(): Map[String, String] = {
-      val tempDir = Utils.createTempDir()
-      val localMetastore = new File(tempDir, "metastore")
       val propMap: HashMap[String, String] = HashMap()
       // We have to mask all properties in hive-site.xml that relates to metastore data source
       // as we used a local metastore here.
       HiveConf.ConfVars.values().foreach { confvar =>
-        if (confvar.varname.contains("datanucleus") || confvar.varname.contains("jdo")
-          || confvar.varname.contains("hive.metastore.rawstore.impl")) {
-          propMap.put(confvar.varname, confvar.getDefaultExpr())
+        if (confvar.varname.contains("datanucleus") || confvar.varname.contains("jdo")) {
+          propMap.put(confvar.varname, confvar.defaultVal)
         }
       }
-      propMap.put(HiveConf.ConfVars.METASTOREWAREHOUSE.varname, localMetastore.toURI.toString)
-      propMap.put(HiveConf.ConfVars.METASTORECONNECTURLKEY.varname,
-        s"jdbc:derby:;databaseName=${localMetastore.getAbsolutePath};create=true")
+      propMap.put("javax.jdo.option.ConnectionURL",
+        s"jdbc:derby:;databaseName=$localMetastorePath;create=true")
       propMap.put("datanucleus.rdbms.datastoreAdapterClassName",
         "org.datanucleus.store.rdbms.adapter.DerbyAdapter")
-
-      // SPARK-11783: When "hive.metastore.uris" is set, the metastore connection mode will be
-      // remote (https://cwiki.apache.org/confluence/display/Hive/AdminManual+MetastoreAdmin
-      // mentions that "If hive.metastore.uris is empty local mode is assumed, remote otherwise").
-      // Remote means that the metastore server is running in its own process.
-      // When the mode is remote, configurations like "javax.jdo.option.ConnectionURL" will not be
-      // used (because they are used by remote metastore server that talks to the database).
-      // Because execution Hive should always connects to a embedded derby metastore.
-      // We have to remove the value of hive.metastore.uris. So, the execution Hive client connects
-      // to the actual embedded derby metastore instead of the remote metastore.
-      // You can search HiveConf.ConfVars.METASTOREURIS in the code of HiveConf (in Hive's repo).
-      // Then, you will find that the local metastore mode is only set to true when
-      // hive.metastore.uris is not set.
       propMap.put(ConfVars.METASTOREURIS.varname, "")
-
       propMap.toMap
     }
-
     val config = newTemporaryConfiguration()
-    class TestHiveContext(sc: SparkContext) extends HiveContext(sc) {
-      override def configure(): Map[String, String] = config
-    }
 
-    SQLContextProvider._sqlContext = new TestHiveContext(sc)
+    SQLContextProvider._sqlContext = new TestHiveContext(sc, config, localMetastorePath, localWarehousePath)
   }
 
   def afterAllTestCases() {
