@@ -28,7 +28,14 @@ coverageHighlighting := {
 
 // Allow kafka (and other) utils to have version specific files
 unmanagedSourceDirectories in Compile  := {
-  if (sparkVersion.value >= "1.4") Seq(
+  if (sparkVersion.value >= "1.6") Seq(
+    (sourceDirectory in Compile)(_ / "1.6/scala"),
+    (sourceDirectory in Compile)(_ / "1.4/scala"),
+    (sourceDirectory in Compile)(_ / "1.4/java"),
+    (sourceDirectory in Compile)(_ / "1.3/scala"),
+    (sourceDirectory in Compile)(_ / "1.3/java")
+  ).join.value
+  else if (sparkVersion.value >= "1.4") Seq(
     (sourceDirectory in Compile)(_ / "1.4/scala"),
     (sourceDirectory in Compile)(_ / "1.4/java"),
     (sourceDirectory in Compile)(_ / "1.3/scala"),
@@ -42,7 +49,14 @@ unmanagedSourceDirectories in Compile  := {
 }
 
 unmanagedSourceDirectories in Test  := {
-  if (sparkVersion.value >= "1.4") Seq(
+  if (sparkVersion.value >= "1.6") Seq(
+    (sourceDirectory in Test)(_ / "1.6/scala"),
+    (sourceDirectory in Test)(_ / "1.4/scala"),
+    (sourceDirectory in Test)(_ / "1.4/java"),
+    (sourceDirectory in Test)(_ / "1.3/scala"),
+    (sourceDirectory in Test)(_ / "1.3/java")
+  ).join.value
+  else if (sparkVersion.value >= "1.4") Seq(
     (sourceDirectory in Test)(_ / "1.4/scala"),
     (sourceDirectory in Test)(_ / "1.4/java"),
     (sourceDirectory in Test)(_ / "1.3/scala"),
