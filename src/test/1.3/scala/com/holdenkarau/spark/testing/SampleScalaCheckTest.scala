@@ -19,6 +19,7 @@ package com.holdenkarau.spark.testing
 import org.apache.spark.streaming._
 import org.apache.spark.streaming.dstream._
 import org.apache.spark._
+import org.apache.spark.rdd.RDD
 import org.apache.spark.SparkContext._
 import org.scalacheck.Prop.{forAll, BooleanOperators}
 
@@ -34,4 +35,20 @@ class SampleScalaCheckTest extends FunSuite with SharedSparkContext {
     }
   }
   // end::propertySample[]
+  // A slightly more complex property check using RDDComparisions
+  // tag::propertySample2[]
+  test("assert that two methods on the RDD have the same results") {
+    forAll(RDDGenerator.genRDD[String](sc)){
+      rdd => RDDComparisons.compare(filterOne(rdd),
+        filterOther(rdd)).isEmpty
+    }
+  }
+  // end::propertySample2[]
+
+  def filterOne(rdd: RDD[String]): RDD[Int] = {
+    rdd.filter(_.size > 2).map(_.size)
+  }
+  def filterOther(rdd: RDD[String]): RDD[Int] = {
+    rdd.map(_.size).filter(_ > 2)
+  }
 }
