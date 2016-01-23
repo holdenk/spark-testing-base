@@ -1,25 +1,39 @@
 package com.holdenkarau.spark.testing
 
-import org.apache.spark.sql.{Dataset}
+import org.apache.spark.rdd.RDD
 
 import scala.reflect.ClassTag
 
-class DatasetSuiteBase extends DataFrameSuiteBase {
+import org.apache.spark.sql.Dataset
+
+class DatasetSuiteBase extends DataFrameSuiteBase with DatasetSuiteBaseLike {
+
+}
+
+class JavaDatasetSuiteBase extends JavaDataFrameSuiteBase with DatasetSuiteBaseLike with Serializable {
+  def fakeClassTag[T]: ClassTag[T] = ClassTag.AnyRef.asInstanceOf[ClassTag[T]]
+
+  def equalDatasets[U, V](expected: Dataset[U], result: Dataset[V]) = {
+    super.equalDatasets(expected, result)(fakeClassTag[U], fakeClassTag[V])
+  }
+}
+
+trait DatasetSuiteBaseLike extends DataFrameSuiteBaseLike {
 
   /**
     * Check if two Datasets are equals, Datasets should have the same type.
     * This method could be customized by overriding equals method for the given class type.
     */
-  def equalDatasets[U: ClassTag, V: ClassTag](expected: Dataset[U], result: Dataset[V]) = {
-    assert(implicitly[ClassTag[U]].runtimeClass == implicitly[ClassTag[V]].runtimeClass)
+  def equalDatasets[U, V](expected: Dataset[U], result: Dataset[V])
+                          (implicit ctU: ClassTag[U], ctV: ClassTag[V]) = {
 
     try {
       expected.rdd.cache
       result.rdd.cache
       assert(expected.rdd.count == result.rdd.count)
 
-      val expectedIndexValue = zipWithIndex(expected.rdd)
-      val resultIndexValue = zipWithIndex(result.rdd)
+      val expectedIndexValue: RDD[(Long, U)] = zipWithIndex(expected.rdd)
+      val resultIndexValue: RDD[(Long, V)] = zipWithIndex(result.rdd)
       val unequalRDD = expectedIndexValue.join(resultIndexValue).filter
       { case (idx, (o1, o2)) => !o1.equals(o2) }
 
