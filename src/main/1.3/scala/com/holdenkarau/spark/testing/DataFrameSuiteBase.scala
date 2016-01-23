@@ -63,9 +63,9 @@ trait DataFrameSuiteBaseLike extends FunSuiteLike with SparkContextProvider with
       val propMap: HashMap[String, String] = HashMap()
       // We have to mask all properties in hive-site.xml that relates to metastore data source
       // as we used a local metastore here.
-      HiveConf.ConfVars.values().foreach { confvar =>
+      HiveConf.ConfVars.values().map(WrappedConfVar(_)).foreach { confvar =>
         if (confvar.varname.contains("datanucleus") || confvar.varname.contains("jdo")) {
-          propMap.put(confvar.varname, confvar.defaultVal)
+          propMap.put(confvar.varname, confvar.getDefaultExpr())
         }
       }
       propMap.put("javax.jdo.option.ConnectionURL",
