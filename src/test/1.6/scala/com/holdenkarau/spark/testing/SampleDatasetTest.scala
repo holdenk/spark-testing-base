@@ -31,7 +31,7 @@ class SampleDatasetTest extends DatasetSuiteBase {
     val persons1 = sc.parallelize(list1).toDS
     val persons2 = sc.parallelize(list2).toDS
 
-    intercept[org.scalatest.exceptions.TestFailedException] {
+    intercept[java.lang.AssertionError] {
       equalDatasets(persons1, persons2)
     }
   }
@@ -46,7 +46,7 @@ class SampleDatasetTest extends DatasetSuiteBase {
     val persons1 = sc.parallelize(list1).toDS
     val persons2 = sc.parallelize(list2).toDS
 
-    intercept[org.scalatest.exceptions.TestFailedException] {
+    intercept[java.lang.AssertionError] {
       equalDatasets(persons1, persons2)
     }
   }
@@ -61,7 +61,7 @@ class SampleDatasetTest extends DatasetSuiteBase {
     val persons1 = sc.parallelize(list1).toDS
     val persons2 = sc.parallelize(list2).toDS
 
-    intercept[org.scalatest.exceptions.TestFailedException] {
+    intercept[java.lang.AssertionError] {
       equalDatasets(persons1, persons2)
     }
   }
@@ -89,7 +89,7 @@ class SampleDatasetTest extends DatasetSuiteBase {
     val persons1 = sc.parallelize(list1).toDS
     val persons2 = sc.parallelize(list2).toDS
 
-    intercept[org.scalatest.exceptions.TestFailedException] {
+    intercept[java.lang.AssertionError] {
       equalDatasets(persons1, persons2)
     }
   }
@@ -136,7 +136,7 @@ class SampleDatasetTest extends DatasetSuiteBase {
     val persons1 = sc.parallelize(list1).toDS
     val persons2 = sc.parallelize(list2).toDS
 
-    intercept[org.scalatest.exceptions.TestFailedException] {
+    intercept[java.lang.AssertionError] {
       approxEqualDatasets(persons1, persons2, 0.2)
     }
   }
