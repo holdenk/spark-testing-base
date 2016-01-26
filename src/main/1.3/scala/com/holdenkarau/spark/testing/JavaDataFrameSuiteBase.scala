@@ -1,11 +1,17 @@
 package com.holdenkarau.spark.testing
 
-class JavaDataFrameSuiteBase extends SharedJavaSparkContext with DataFrameSuiteBaseLike {
+import org.apache.spark.sql.types.StructType
 
-  override def runBefore() {
-    super.runBefore()
+import org.junit._
+import org.junit.Assert.assertEquals
 
-    if (!initialized)
-      super.beforeAllTestCases()
+class JavaDataFrameSuiteBase extends JavaSuiteBase with DataFrameSuiteBaseLike {
+  // Version of equalSchema using JUNit assertEquals
+  override def equalSchema(expected: StructType, result: StructType): Unit = {
+    assertEquals(expected.treeString, result.treeString)
+  }
+
+  override def beforeAllTestCasesHook() {
+    sqlBeforeAllTestCases()
   }
 }

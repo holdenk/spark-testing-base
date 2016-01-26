@@ -39,6 +39,15 @@ public class SharedJavaSparkContext implements SparkContextProvider {
     return _jsc;
   }
 
+  /**
+   * Hooks for setup code that needs to be executed/torn down in order with SparkContexts
+   */
+  void beforeAllTestCasesHook() {
+  }
+
+  static void afterAllTestCasesHook() {
+  }
+
   @Before
   public void runBefore() {
     initialized = (_sc != null);
@@ -46,6 +55,7 @@ public class SharedJavaSparkContext implements SparkContextProvider {
     if (!initialized) {
       _sc = new SparkContext(conf());
       _jsc = new JavaSparkContext(_sc);
+      beforeAllTestCasesHook();
     }
   }
 
@@ -54,5 +64,6 @@ public class SharedJavaSparkContext implements SparkContextProvider {
     LocalSparkContext$.MODULE$.stop(_sc);
     _sc = null;
     _jsc = null;
+    afterAllTestCasesHook();
   }
 }
