@@ -36,8 +36,6 @@ public class SampleJavaDatasetTest extends JavaDataFrameSuiteBase implements Ser
         }, Encoders.bean(Human.class));
 
         mapped.show(); // this gives exception
-
-        throw new RuntimeException("failed");
     }
 
     public class Human implements Serializable {

@@ -37,24 +37,27 @@ import org.scalatest.{FunSuiteLike}
  * Base class for testing Spark DataFrames.
  */
 
-trait DataFrameSuiteBase extends DataFrameSuiteBaseLike with SharedSparkContext {
+trait DataFrameSuiteBase extends FunSuiteLike with DataFrameSuiteBaseLike with SharedSparkContext {
   override def beforeAll() {
     super.beforeAll()
-    super.beforeAllTestCases()
+    super.sqlBeforeAllTestCases()
   }
 
   override def afterAll() {
-    super.afterAllTestCases()
     super.afterAll()
+    SQLContextProvider._sqlContext = null
   }
-
+  // Scala test equalSchema
+  override def equalSchema(expected: StructType, result: StructType): Unit = {
+    assert(expected.treeString === result.treeString)
+  }
 }
 
-trait DataFrameSuiteBaseLike extends FunSuiteLike with SparkContextProvider with Serializable {
+trait DataFrameSuiteBaseLike extends SparkContextProvider with Serializable {
   val maxUnequalRowsToShow = 10
   def sqlContext: HiveContext = SQLContextProvider._sqlContext
 
-  def beforeAllTestCases() {
+  def sqlBeforeAllTestCases() {
     /** Constructs a configuration for hive, where the metastore is located in a temp directory. */
     val tempDir = Utils.createTempDir()
     val localMetastorePath = new File(tempDir, "metastore").getCanonicalPath
@@ -78,10 +81,6 @@ trait DataFrameSuiteBaseLike extends FunSuiteLike with SparkContextProvider with
     val config = newTemporaryConfiguration()
 
     SQLContextProvider._sqlContext = new TestHiveContext(sc, config, localMetastorePath, localWarehousePath)
-  }
-
-  def afterAllTestCases() {
-    SQLContextProvider._sqlContext = null
   }
 
   /**
@@ -146,9 +145,7 @@ trait DataFrameSuiteBaseLike extends FunSuiteLike with SparkContextProvider with
   /**
    * Compares the schema
    */
-  def equalSchema(expected: StructType, result: StructType): Unit = {
-    assert(expected.treeString === result.treeString)
-  }
+  def equalSchema(expected: StructType, result: StructType): Unit
 
   def approxEquals(r1: Row, r2: Row, tol: Double): Boolean = {
     DataFrameSuiteBase.approxEquals(r1, r2, tol)

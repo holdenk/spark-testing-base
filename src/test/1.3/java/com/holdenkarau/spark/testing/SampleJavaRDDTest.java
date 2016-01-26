@@ -39,5 +39,5 @@ public class SampleJavaRDDTest extends SharedJavaSparkContext implements Seriali
     JavaRDD<Integer> result = inputRDD.map(
       new Function<Integer, Integer>() { public Integer call(Integer x) { return x*x;}});
     assertEquals(input.size(), result.count());
-    }
+  }
 }

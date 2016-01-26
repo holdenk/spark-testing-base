@@ -87,9 +87,14 @@ libraryDependencies ++= Seq(
   "org.scalatest" %% "scalatest" % "2.2.1",
   "io.github.nicolasstucki" %% "multisets" % "0.3",
   "org.scalacheck" %% "scalacheck" % "1.12.4",
-  "junit" % "junit" % "4.10",
+  "junit" % "junit" % "4.11",
   "org.eclipse.jetty" % "jetty-util" % "9.3.2.v20150730",
-  "com.novocode" % "junit-interface" % "0.10" % "test->default")
+  "com.novocode" % "junit-interface" % "0.11" % "test->default")
+
+// sbt + JUnit test issue (see http://stackoverflow.com/questions/28174243/run-junit-tests-with-sbt )
+testOptions in Test := Seq(Tests.Argument(TestFrameworks.JUnit, "-a", // Show stack traces
+  "-v" // test start/stop info
+))
 
 // Based on Hadoop Mini Cluster tests from Alpine's PluginSDK (Apache licensed)
 // javax.servlet signing issues can be tricky, we can just exclude the dep
