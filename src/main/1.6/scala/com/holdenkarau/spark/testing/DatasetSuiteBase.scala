@@ -7,14 +7,42 @@ import scala.reflect.ClassTag
 import org.apache.spark.sql.Dataset
 
 class DatasetSuiteBase extends DataFrameSuiteBase with DatasetSuiteBaseLike {
+  override def equalDatasets[U, V](expected: Dataset[U], result: Dataset[V])
+                                  (implicit UCT: ClassTag[U], VCT: ClassTag[V]) = {
+    assert(UCT.runtimeClass == VCT.runtimeClass) // check types are the same
 
+    super.equalDatasets(expected, result)
+  }
+
+
+  override def approxEqualDatasets[U, V](expected: Dataset[U], result: Dataset[V], tol: Double)
+                                        (implicit UCT: ClassTag[U], VCT: ClassTag[V]) = {
+    assert(UCT.runtimeClass == VCT.runtimeClass) // check types are the same
+
+    super.approxEqualDatasets(expected, result, tol)
+  }
 }
 
 class JavaDatasetSuiteBase extends JavaDataFrameSuiteBase with DatasetSuiteBaseLike with Serializable {
   def fakeClassTag[T]: ClassTag[T] = ClassTag.AnyRef.asInstanceOf[ClassTag[T]]
 
+
+  /**
+    * Check if two Datasets are equals, Datasets should have the same type.
+    * This method could be customized by overriding equals method for the given class type.
+    */
   def equalDatasets[U, V](expected: Dataset[U], result: Dataset[V]) = {
     super.equalDatasets(expected, result)(fakeClassTag[U], fakeClassTag[V])
+  }
+
+  /**
+    * Compares if two Datasets are equal, Datasets should have the same type.
+    * When comparing inexact fields uses tol.
+    *
+    * @param tol max acceptable tolerance, should be less than 1.
+    */
+  def approxEqualDatasets[U, V](expected: Dataset[U], result: Dataset[V], tol: Double) = {
+    super.approxEqualDatasets(expected, result, tol)(fakeClassTag[U], fakeClassTag[V])
   }
 }
 
@@ -25,7 +53,7 @@ trait DatasetSuiteBaseLike extends DataFrameSuiteBaseLike {
     * This method could be customized by overriding equals method for the given class type.
     */
   def equalDatasets[U, V](expected: Dataset[U], result: Dataset[V])
-                          (implicit ctU: ClassTag[U], ctV: ClassTag[V]) = {
+                         (implicit UCT: ClassTag[U], VCT: ClassTag[V]) = {
 
     try {
       expected.rdd.cache
@@ -50,8 +78,8 @@ trait DatasetSuiteBaseLike extends DataFrameSuiteBaseLike {
     *
     * @param tol max acceptable tolerance, should be less than 1.
     */
-  def approxEqualDatasets[U: ClassTag, V: ClassTag](expected: Dataset[U], result: Dataset[V], tol: Double) = {
-    assert(implicitly[ClassTag[U]].runtimeClass == implicitly[ClassTag[V]].runtimeClass)
+  def approxEqualDatasets[U, V](expected: Dataset[U], result: Dataset[V], tol: Double)
+                               (implicit UCT: ClassTag[U], VCT: ClassTag[V]) = {
 
     approxEqualDataFrames(expected.toDF, result.toDF, tol)
   }
