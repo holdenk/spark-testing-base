@@ -1,44 +1,112 @@
 package com.holdenkarau.spark.testing;
 
-import org.apache.spark.api.java.function.MapFunction;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Encoders;
 import org.apache.spark.sql.catalyst.encoders.OuterScopes;
 import org.junit.Test;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-// extending JavaDataFrameSuiteBase !!
-// which is already running in test "SampleJavaDataFrameTest"
-public class SampleJavaDatasetTest extends JavaDataFrameSuiteBase implements Serializable {
+public class SampleJavaDatasetTest extends JavaDatasetSuiteBase implements Serializable {
 
     @Test
-    public void equalDataset() {
+    public void equalEmptyDataset() {
         OuterScopes.addOuterScope(this);
+        List<Person> list = new ArrayList<>();
+        Dataset<Person> dataset = sqlContext().createDataset(list, Encoders.bean(Person.class));
 
-        Human human = new Human();
-        human.setName("Hanafy");
-        human.setAge(10);
-        human.setWeight(100);
-        List<Human> list = Arrays.asList(human);
-
-        Dataset<Human> dataset = sqlContext().createDataset(list, Encoders.bean(Human.class));
-        dataset.show(); // this works
-
-        Dataset<Human> mapped = dataset.map(new MapFunction<Human, Human>() {
-            @Override
-            public Human call(Human v) throws Exception {
-                v.setName("hello");
-                return v;
-            }
-        }, Encoders.bean(Human.class));
-
-        mapped.show(); // this gives exception
+        equalDatasets(dataset, dataset);
     }
 
-    public class Human implements Serializable {
+    @Test
+    public void datasetEqualItself() {
+        OuterScopes.addOuterScope(this);
+
+        Person person = createPerson("Hanafy", 23, 80.0);
+        List<Person> list = Arrays.asList(person);
+        Dataset<Person> dataset = sqlContext().createDataset(list, Encoders.bean(Person.class));
+
+        equalDatasets(dataset, dataset);
+    }
+
+    @Test (expected = AssertionError.class)
+    public void notEqualDataset() {
+        OuterScopes.addOuterScope(this);
+
+        Person person1 = createPerson("Hanafy", 23, 80.0);
+        List<Person> list1 = Arrays.asList(person1);
+        Dataset<Person> dataset1 = sqlContext().createDataset(list1, Encoders.bean(Person.class));
+
+        Person person2 = createPerson("Hanofy", 23, 80.0);
+        List<Person> list2 = Arrays.asList(person2);
+        Dataset<Person> dataset2 = sqlContext().createDataset(list2, Encoders.bean(Person.class));
+
+        equalDatasets(dataset1, dataset2);
+    }
+
+    @Test
+    public void approximateEqualEmptyDataset() {
+        OuterScopes.addOuterScope(this);
+        List<Person> list = new ArrayList<>();
+        Dataset<Person> dataset = sqlContext().createDataset(list, Encoders.bean(Person.class));
+
+        approxEqualDatasets(dataset, dataset, 0.0);
+    }
+
+    @Test
+    public void approximateEqualDatasetItself() {
+        OuterScopes.addOuterScope(this);
+
+        Person person = createPerson("Hanafy", 23, 80.0);
+        List<Person> list = Arrays.asList(person);
+        Dataset<Person> dataset = sqlContext().createDataset(list, Encoders.bean(Person.class));
+
+        approxEqualDatasets(dataset, dataset, 0.0);
+    }
+
+    @Test
+    public void approximateEqualAcceptableTolerance() {
+        OuterScopes.addOuterScope(this);
+
+        Person person1 = createPerson("Hanafy", 23, 80.0);
+        List<Person> list1 = Arrays.asList(person1);
+        Dataset<Person> dataset1 = sqlContext().createDataset(list1, Encoders.bean(Person.class));
+
+        Person person2 = createPerson("Hanafy", 23, 80.2);
+        List<Person> list2 = Arrays.asList(person2);
+        Dataset<Person> dataset2 = sqlContext().createDataset(list2, Encoders.bean(Person.class));
+
+        approxEqualDatasets(dataset1, dataset2, 0.201);
+    }
+
+    @Test (expected = AssertionError.class)
+    public void approximateEqualLowTolerance() {
+        OuterScopes.addOuterScope(this);
+
+        Person person1 = createPerson("Hanafy", 23, 80.0);
+        List<Person> list1 = Arrays.asList(person1);
+        Dataset<Person> dataset1 = sqlContext().createDataset(list1, Encoders.bean(Person.class));
+
+        Person person2 = createPerson("Hanafy", 23, 80.5);
+        List<Person> list2 = Arrays.asList(person2);
+        Dataset<Person> dataset2 = sqlContext().createDataset(list2, Encoders.bean(Person.class));
+
+        approxEqualDatasets(dataset1, dataset2, 0.2);
+    }
+
+    private Person createPerson(String name, int age, double weight) {
+        Person person = new Person();
+        person.setName(name);
+        person.setAge(age);
+        person.setWeight(weight);
+
+        return person;
+    }
+
+    public class Person implements Serializable {
         private String name;
         private int age;
         private double weight;
@@ -69,7 +137,12 @@ public class SampleJavaDatasetTest extends JavaDataFrameSuiteBase implements Ser
 
         @Override
         public boolean equals(Object obj) {
-            return name.equals(name) && age == age && weight == weight;
+            if (obj instanceof Person) {
+                Person person = (Person) obj;
+                return name.equals(person.name) && age == person.age && weight == person.weight;
+            }
+
+            return false;
         }
 
         @Override
@@ -77,4 +150,5 @@ public class SampleJavaDatasetTest extends JavaDataFrameSuiteBase implements Ser
             return name.hashCode() + age + (int)(weight);
         }
     }
+
 }

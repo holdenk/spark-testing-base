@@ -1,8 +1,6 @@
 package com.holdenkarau.spark.testing
 
 import org.apache.spark.sql.types.StructType
-
-import org.junit._
 import org.junit.Assert.assertEquals
 
 class JavaDataFrameSuiteBase extends JavaSuiteBase with DataFrameSuiteBaseLike {
