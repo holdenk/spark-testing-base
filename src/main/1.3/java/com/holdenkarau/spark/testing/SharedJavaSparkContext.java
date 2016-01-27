@@ -55,6 +55,8 @@ public class SharedJavaSparkContext implements SparkContextProvider {
     if (!initialized) {
       _sc = new SparkContext(conf());
       _jsc = new JavaSparkContext(_sc);
+      _jsc.setLogLevel(org.apache.log4j.Level.WARN.toString());
+
       beforeAllTestCasesHook();
     }
   }
