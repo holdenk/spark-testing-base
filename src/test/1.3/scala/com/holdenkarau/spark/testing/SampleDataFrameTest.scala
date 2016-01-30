@@ -37,7 +37,7 @@ class SampleDataFrameTest extends DataFrameSuiteBase {
     import sqlCtx.implicits._
     val input = sc.parallelize(inputList).toDF
     val input2 = sc.parallelize(inputList2).toDF
-    intercept[java.lang.AssertionError] {
+    intercept[org.scalatest.exceptions.TestFailedException] {
       equalDataFrames(input, input2)
     }
   }
@@ -48,7 +48,7 @@ class SampleDataFrameTest extends DataFrameSuiteBase {
     val input = sc.parallelize(inputList).toDF
     val input2 = sc.parallelize(inputList2).toDF
     approxEqualDataFrames(input, input2, 1E-5)
-    intercept[java.lang.AssertionError] {
+    intercept[org.scalatest.exceptions.TestFailedException] {
       approxEqualDataFrames(input, input2, 1E-7)
     }
   }
@@ -81,10 +81,10 @@ class SampleDataFrameTest extends DataFrameSuiteBase {
     import sqlCtx.implicits._
     val input = sc.parallelize(inputList).toDF
     val input2 = sc.parallelize(inputList.headOption.toSeq).toDF
-    intercept[java.lang.AssertionError] {
+    intercept[org.scalatest.exceptions.TestFailedException] {
       equalDataFrames(input, input2)
     }
-    intercept[java.lang.AssertionError] {
+    intercept[org.scalatest.exceptions.TestFailedException] {
       approxEqualDataFrames(input, input2, 1E-5)
     }
   }
@@ -96,10 +96,10 @@ class SampleDataFrameTest extends DataFrameSuiteBase {
     val diffInputList = List(Magic("panda", 9001.0, byteArray),
       Magic("coffee", 9002.0, diffByteArray))
     val input2 = sc.parallelize(diffInputList).toDF
-    intercept[java.lang.AssertionError] {
+    intercept[org.scalatest.exceptions.TestFailedException] {
       equalDataFrames(input, input2)
     }
-    intercept[java.lang.AssertionError] {
+    intercept[org.scalatest.exceptions.TestFailedException] {
       approxEqualDataFrames(input, input2, 1E-5)
     }
   }

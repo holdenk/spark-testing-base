@@ -16,8 +16,6 @@
  */
 package com.holdenkarau.spark.testing;
 
-import junit.framework.TestSuite;
-
 import org.junit.Assert._
 
 class JavaSuiteBase extends SharedJavaSparkContext {

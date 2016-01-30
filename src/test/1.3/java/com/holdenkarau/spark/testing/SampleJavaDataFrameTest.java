@@ -11,13 +11,13 @@ import org.junit.Test;
 import java.io.Serializable;
 import java.util.Arrays;
 import java.util.List;
-import java.lang.AssertionError;
 
 public class SampleJavaDataFrameTest extends JavaDataFrameSuiteBase implements Serializable {
     private static byte[] byteArray1 = {1, 2};
     private static byte[] byteArray2 = {100, 120};
 
-    @Test public void testEqualDataFrameWithItSelf() {
+    @Test
+    public void testEqualDataFrameWithItSelf() {
         List<Magic> list = Arrays.asList(new Magic("holden", 30, byteArray1),
                                          new Magic("mahmoud", 23, byteArray1));
 
@@ -40,7 +40,7 @@ public class SampleJavaDataFrameTest extends JavaDataFrameSuiteBase implements S
         equalDataFrames(toDF(magics1), toDF(magics2));
     }
 
-    @Test (expected = AssertionError.class)
+    @Test (expected = java.lang.AssertionError.class)
     public void testNotEqualInteger() {
         List<Magic> magics1 = Arrays.asList(new Magic("mahmoud", 20, byteArray1),
                                             new Magic("Holden", 25, byteArray1));
@@ -51,7 +51,7 @@ public class SampleJavaDataFrameTest extends JavaDataFrameSuiteBase implements S
         equalDataFrames(toDF(magics1), toDF(magics2));
     }
 
-    @Test (expected = AssertionError.class)
+    @Test (expected = java.lang.AssertionError.class)
     public void testNotEqualByteArray() {
         List<Magic> magics1 = Arrays.asList(new Magic("Holden", 20, byteArray1));
         List<Magic> magics2 = Arrays.asList(new Magic("Holden", 20, byteArray2));
@@ -70,7 +70,7 @@ public class SampleJavaDataFrameTest extends JavaDataFrameSuiteBase implements S
         approxEqualDataFrames(toDF(magics1), toDF(magics2), 0.1);
     }
 
-    @Test (expected = AssertionError.class)
+    @Test (expected = java.lang.AssertionError.class)
     public void testApproximateNotEqual() {
         List<Magic> magics1 = Arrays.asList(new Magic("Holden", 10.0, byteArray1),
                                             new Magic("Mahmoud", 9.9, byteArray1));

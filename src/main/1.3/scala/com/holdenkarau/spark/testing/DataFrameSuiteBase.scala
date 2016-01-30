@@ -22,22 +22,18 @@ import java.io.File
 import scala.math.abs
 import scala.collection.mutable.HashMap
 
-import org.apache.spark.SparkContext
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql._
 import org.apache.spark.sql.hive._
-import org.apache.spark.sql.types.StructType
 import org.apache.hadoop.hive.conf.HiveConf
 import org.apache.hadoop.hive.conf.HiveConf.ConfVars
-
-import org.scalatest.{FunSuiteLike}
 
 /**
  * :: Experimental ::
  * Base class for testing Spark DataFrames.
  */
 
-trait DataFrameSuiteBase extends FunSuiteLike with DataFrameSuiteBaseLike with SharedSparkContext {
+trait DataFrameSuiteBase extends TestSuite with SharedSparkContext with DataFrameSuiteBaseLike {
   override def beforeAll() {
     super.beforeAll()
     super.sqlBeforeAllTestCases()
@@ -47,13 +43,9 @@ trait DataFrameSuiteBase extends FunSuiteLike with DataFrameSuiteBaseLike with S
     super.afterAll()
     SQLContextProvider._sqlContext = null
   }
-  // Scala test equalSchema
-  override def equalSchema(expected: StructType, result: StructType): Unit = {
-    assert(expected.treeString === result.treeString)
-  }
 }
 
-trait DataFrameSuiteBaseLike extends SparkContextProvider with Serializable {
+trait DataFrameSuiteBaseLike extends SparkContextProvider with TestSuiteLike with Serializable {
   val maxUnequalRowsToShow = 10
   def sqlContext: HiveContext = SQLContextProvider._sqlContext
 
@@ -88,12 +80,12 @@ trait DataFrameSuiteBaseLike extends SparkContextProvider with Serializable {
    * checks if the rows are equal.
    */
   def equalDataFrames(expected: DataFrame, result: DataFrame) {
-    equalSchema(expected.schema, result.schema)
+    assert(expected.schema, result.schema)
 
     try {
       expected.rdd.cache
       result.rdd.cache
-      assert(expected.rdd.count == result.rdd.count)
+      assert("Length not Equal", expected.rdd.count, result.rdd.count)
 
       val expectedIndexValue = zipWithIndex(expected.rdd)
       val resultIndexValue = zipWithIndex(result.rdd)
@@ -101,7 +93,7 @@ trait DataFrameSuiteBaseLike extends SparkContextProvider with Serializable {
       val unequalRDD = expectedIndexValue.join(resultIndexValue).filter{case (idx, (r1, r2)) =>
         !(r1.equals(r2) || DataFrameSuiteBase.approxEquals(r1, r2, 0.0))}
 
-      assert(unequalRDD.take(maxUnequalRowsToShow).isEmpty)
+      assertEmpty(unequalRDD.take(maxUnequalRowsToShow))
     } finally {
       expected.rdd.unpersist()
       result.rdd.unpersist()
@@ -115,12 +107,12 @@ trait DataFrameSuiteBaseLike extends SparkContextProvider with Serializable {
     * @param tol max acceptable tolerance, should be less than 1.
     */
   def approxEqualDataFrames(expected: DataFrame, result: DataFrame, tol: Double) {
-    equalSchema(expected.schema, result.schema)
+    assert(expected.schema, result.schema)
 
     try {
       expected.rdd.cache
       result.rdd.cache
-      assert(expected.rdd.count == result.rdd.count)
+      assert("Length not Equal", expected.rdd.count, result.rdd.count)
 
       val expectedIndexValue = zipWithIndex(expected.rdd)
       val resultIndexValue = zipWithIndex(result.rdd)
@@ -128,7 +120,7 @@ trait DataFrameSuiteBaseLike extends SparkContextProvider with Serializable {
       val unequalRDD = expectedIndexValue.join(resultIndexValue).filter{case (idx, (r1, r2)) =>
         !DataFrameSuiteBase.approxEquals(r1, r2, tol)}
 
-      assert(unequalRDD.take(maxUnequalRowsToShow).isEmpty)
+      assertEmpty(unequalRDD.take(maxUnequalRowsToShow))
     } finally {
       expected.rdd.unpersist()
       result.rdd.unpersist()
@@ -141,11 +133,6 @@ trait DataFrameSuiteBaseLike extends SparkContextProvider with Serializable {
     * the order.
     */
   private[testing] def zipWithIndex[U](rdd: RDD[U]) = rdd.zipWithIndex().map{ case (row, idx) => (idx, row) }
-
-  /**
-   * Compares the schema
-   */
-  def equalSchema(expected: StructType, result: StructType): Unit
 
   def approxEquals(r1: Row, r2: Row, tol: Double): Boolean = {
     DataFrameSuiteBase.approxEquals(r1, r2, tol)
