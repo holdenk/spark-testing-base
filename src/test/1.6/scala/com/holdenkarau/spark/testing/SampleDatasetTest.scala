@@ -31,7 +31,7 @@ class SampleDatasetTest extends DatasetSuiteBase {
     val persons1 = sc.parallelize(list1).toDS
     val persons2 = sc.parallelize(list2).toDS
 
-    intercept[java.lang.AssertionError] {
+    intercept[org.scalatest.exceptions.TestFailedException] {
       equalDatasets(persons1, persons2)
     }
   }
@@ -46,7 +46,7 @@ class SampleDatasetTest extends DatasetSuiteBase {
     val persons1 = sc.parallelize(list1).toDS
     val persons2 = sc.parallelize(list2).toDS
 
-    intercept[java.lang.AssertionError] {
+    intercept[org.scalatest.exceptions.TestFailedException] {
       equalDatasets(persons1, persons2)
     }
   }
@@ -61,7 +61,7 @@ class SampleDatasetTest extends DatasetSuiteBase {
     val persons1 = sc.parallelize(list1).toDS
     val persons2 = sc.parallelize(list2).toDS
 
-    intercept[java.lang.AssertionError] {
+    intercept[org.scalatest.exceptions.TestFailedException] {
       equalDatasets(persons1, persons2)
     }
   }
@@ -85,21 +85,6 @@ class SampleDatasetTest extends DatasetSuiteBase {
 
     val list1 = List(CustomPerson("HoLdEN", 2000, 60.0), CustomPerson("HaNaFy", 23, 80.1))
     val list2 = List(CustomPerson("hOlDeN", 2000, 60.0), CustomPerson("hAnAfY", 23, 80.0))
-
-    val persons1 = sc.parallelize(list1).toDS
-    val persons2 = sc.parallelize(list2).toDS
-
-    intercept[java.lang.AssertionError] {
-      equalDatasets(persons1, persons2)
-    }
-  }
-
-  test("unequal same schema, different classes") {
-    val sqlCtx = sqlContext
-    import sqlCtx.implicits._
-
-    val list1 = List(Person("Holden", 2000, 60.0), Person("Hanafy", 23, 80.0))
-    val list2 = List(SamePerson("Holden", 2000, 60.0), SamePerson("Hanafy", 23, 80.0))
 
     val persons1 = sc.parallelize(list1).toDS
     val persons2 = sc.parallelize(list2).toDS
@@ -151,30 +136,13 @@ class SampleDatasetTest extends DatasetSuiteBase {
     val persons1 = sc.parallelize(list1).toDS
     val persons2 = sc.parallelize(list2).toDS
 
-    intercept[java.lang.AssertionError] {
-      approxEqualDatasets(persons1, persons2, 0.2)
-    }
-  }
-
-  test("approximate not equal same schema, different types") {
-    val sqlCtx = sqlContext
-    import sqlCtx.implicits._
-
-    val list1 = List(Person("Holden", 2000, 60.0), Person("Hanafy", 23, 80.0))
-    val list2 = List(SamePerson("Holden", 2000, 60.0), SamePerson("Hanafy", 23, 80.0))
-
-    val persons1 = sc.parallelize(list1).toDS
-    val persons2 = sc.parallelize(list2).toDS
-
     intercept[org.scalatest.exceptions.TestFailedException] {
-      approxEqualDatasets(persons1, persons2, 0.9)
+      approxEqualDatasets(persons1, persons2, 0.2)
     }
   }
 }
 
 case class Person(name: String, age: Int, weight: Double)
-
-case class SamePerson(name: String, age: Int, weight: Double)
 
 case class CustomPerson(name: String, age: Int, weight: Double) {
   override def equals(obj: Any) = obj match {
