@@ -49,10 +49,10 @@ object RDDGenerator {
           case size => {
             // Generate different partition sizes
             val mp = minPartitions
-            val specialPartitionSizes = List(size, (size/2).toInt, mp, mp + 1, mp + 3).filter(_ > mp)
+            val specialPartitionSizes = List(size, (size/2), mp, mp + 1, mp + 3).filter(_ > mp)
             val partitionsGen = for {
               partitionCount <- Gen.chooseNum(1, 2 * size, specialPartitionSizes: _*)
-            } yield (partitionCount)
+            } yield partitionCount
             // Wrap the scalacheck generator in a Spark generator
             val sparkElemGenerator = new WrappedGenerator(genElem)
             val rdds = partitionsGen.map{numPartitions =>

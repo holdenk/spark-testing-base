@@ -51,14 +51,15 @@ class PerfListener extends SparkListener {
     jvmGCTime += metrics.jvmGCTime
     resultSerializationTime += metrics.resultSerializationTime
     metrics.inputMetrics match {
-      case Some(inputMetrics) => {
+      case Some(inputMetrics) =>
         recordsRead += inputMetrics.recordsRead
-      }
+      case _ =>
     }
+
     metrics.outputMetrics match {
-      case Some(outputMetrics) => {
+      case Some(outputMetrics) =>
         recordsWritten += outputMetrics.recordsWritten
-      }
+      case _ =>
     }
   }
 }

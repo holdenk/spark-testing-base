@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package org.apache.spark.streaming.dstream;
+package org.apache.spark.streaming.dstream
 
 import scala.language.implicitConversions
 import scala.reflect.ClassTag

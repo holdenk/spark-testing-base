@@ -16,14 +16,10 @@
  */
 package com.holdenkarau.spark.testing
 
+import java.nio.file.Files
+
 import org.apache.spark._
-import org.apache.spark.rdd.RDD
-import org.apache.spark.SparkContext._
-
 import org.scalatest.FunSuite
-import org.scalatest.exceptions.TestFailedException
-
-import java.nio.file.Files;
 
 /**
  * Illustrate using per-test sample test. This is the one to use

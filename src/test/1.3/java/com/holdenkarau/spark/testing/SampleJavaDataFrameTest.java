@@ -13,8 +13,8 @@ import java.util.Arrays;
 import java.util.List;
 
 public class SampleJavaDataFrameTest extends JavaDataFrameSuiteBase implements Serializable {
-    private static byte[] byteArray1 = {1, 2};
-    private static byte[] byteArray2 = {100, 120};
+    private static final byte[] byteArray1 = {1, 2};
+    private static final byte[] byteArray2 = {100, 120};
 
     @Test
     public void testEqualDataFrameWithItSelf() {
@@ -95,8 +95,7 @@ public class SampleJavaDataFrameTest extends JavaDataFrameSuiteBase implements S
 
     private DataFrame toDF(List<Magic> list) {
         JavaRDD<Magic> rdd = jsc().parallelize(list);
-        DataFrame result = sqlContext().createDataFrame(rdd, Magic.class);
-        return result;
+        return sqlContext().createDataFrame(rdd, Magic.class);
     }
 
     public static class Magic implements Serializable {

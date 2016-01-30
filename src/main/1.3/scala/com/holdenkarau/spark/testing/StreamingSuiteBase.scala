@@ -84,11 +84,11 @@ trait StreamingSuiteBase extends FunSuite with BeforeAndAfterAll with Logging
     // Match the output with the expected output
     assert(output.size === expectedOutput.size, "Number of outputs do not match")
     if (ordered) {
-      for (i <- 0 until output.size)
+      for (i <- output.indices)
         equalsOrdered(output(i), expectedOutput(i))
 
     } else {
-      for (i <- 0 until output.size)
+      for (i <- output.indices)
         equalsUnordered(output(i), expectedOutput(i))
     }
 
@@ -113,7 +113,7 @@ trait StreamingSuiteBase extends FunSuite with BeforeAndAfterAll with Logging
 
   private def equalsOrdered[V](output: Seq[V], expected: Seq[V]) (implicit equality: Equality[V])  = {
     assert(output.length === expected.length)
-    for (i <- 0 until output.length)
+    for (i <- output.indices)
       assert(output(i) === expected(i))
   }
 

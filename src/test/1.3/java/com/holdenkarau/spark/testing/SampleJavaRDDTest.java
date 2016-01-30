@@ -16,21 +16,15 @@
  */
 package com.holdenkarau.spark.testing;
 
-import java.io.*;
-import java.util.List;
-import java.util.Arrays;
-
-import org.apache.spark.api.java.*;
+import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.function.Function;
-import org.apache.spark.SparkContext.*;
-
-import org.scalatest.exceptions.TestFailedException;
-
 import org.junit.Test;
-import org.junit.Ignore;
-import static org.junit.Assert.*;
-import org.junit.runner.*;
-import org.junit.runners.JUnit4;
+
+import java.io.Serializable;
+import java.util.Arrays;
+import java.util.List;
+
+import static org.junit.Assert.assertEquals;
 
 public class SampleJavaRDDTest extends SharedJavaSparkContext implements Serializable {
   @Test public void verifyMapTest() {

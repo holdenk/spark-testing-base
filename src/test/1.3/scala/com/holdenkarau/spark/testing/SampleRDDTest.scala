@@ -16,14 +16,10 @@
  */
 package com.holdenkarau.spark.testing
 
-import org.apache.spark._
-import org.apache.spark.rdd.RDD
-import org.apache.spark.SparkContext._
-
-import org.scalatest.FunSuite
-import org.scalatest.exceptions.TestFailedException
-
 import scala.util.Random
+
+import org.apache.spark.rdd.RDD
+import org.scalatest.FunSuite
 
 class SampleRDDTest extends FunSuite with SharedSparkContext {
   test("really simple transformation") {

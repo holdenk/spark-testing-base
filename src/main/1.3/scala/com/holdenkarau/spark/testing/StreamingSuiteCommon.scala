@@ -217,7 +217,7 @@ private[holdenkarau] trait StreamingSuiteCommon extends Logging with SparkContex
       while (output.size < numExpectedOutput &&
         System.currentTimeMillis() - startTime < maxWaitTimeMillis) {
         logInfo("output.size = " + output.size + ", numExpectedOutput = " + numExpectedOutput)
-        ssc.awaitTermination(50)
+        ssc.awaitTerminationOrTimeout(50)
       }
       val timeTaken = System.currentTimeMillis() - startTime
       logInfo("Output generated in " + timeTaken + " milliseconds")

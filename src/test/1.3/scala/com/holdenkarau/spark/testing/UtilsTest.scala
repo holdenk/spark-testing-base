@@ -26,7 +26,7 @@ class UtilsTest extends FunSuite {
     val tempDir = Utils.createTempDir()
     val tempPath = tempDir.toPath().toAbsolutePath().toString()
     Utils.shutDownCleanUp()
-    assert(!(new File(tempPath)).exists())
+    assert(!(new File(tempPath).exists()))
   }
 
   test("test utils cleanup with sub items") {
@@ -35,10 +35,10 @@ class UtilsTest extends FunSuite {
     val f = new File(tempPath + "/magicpanda")
     val pw = new PrintWriter(f)
     pw.write("junk")
-    pw.close
+    pw.close()
     Files.createSymbolicLink(new File(tempPath +"/murh2").toPath, f.toPath)
     Utils.shutDownCleanUp()
-    assert(!(new File(tempPath)).exists())
-    assert(!(new File(f.toPath().toAbsolutePath().toString())).exists())
+    assert(!(new File(tempPath).exists()))
+    assert(!(new File(f.toPath().toAbsolutePath().toString()).exists()))
   }
 }

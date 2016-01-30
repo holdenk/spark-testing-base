@@ -16,30 +16,21 @@
  */
 package com.holdenkarau.spark.testing;
 
-import java.io.*;
-import java.util.List;
-import java.util.Arrays;
-
-import org.apache.spark.api.java.*;
-import org.apache.spark.streaming.api.java.*;
 import org.apache.spark.api.java.function.Function;
-import org.apache.spark.SparkContext.*;
-
-import org.scalatest.exceptions.TestFailedException;
-
+import org.apache.spark.streaming.api.java.JavaDStream;
 import org.junit.Test;
-import org.junit.Ignore;
-import static org.junit.Assert.*;
-import org.junit.runner.*;
-import org.junit.runners.JUnit4;
+
+import java.io.Serializable;
+import java.util.Arrays;
+import java.util.List;
 
 public class SampleJavaStreamingTest extends JavaStreamingSuiteBase implements Serializable {
-  static List<List<Integer>> input =  Arrays.asList(
+  private static final List<List<Integer>> input =  Arrays.asList(
     Arrays.asList(1,2), Arrays.asList(3,4,5));
-  static List<List<Integer>> expectedOutput =  Arrays.asList(
+  private static final List<List<Integer>> expectedOutput =  Arrays.asList(
     Arrays.asList(2), Arrays.asList(4));
 
-  Function<JavaDStream<Integer>, JavaDStream<Integer>> filter =
+  private final Function<JavaDStream<Integer>, JavaDStream<Integer>> filter =
     new Function<JavaDStream<Integer>, JavaDStream<Integer>>() {
       public JavaDStream<Integer> call(JavaDStream<Integer> myInput) {
         return myInput.filter(new Function<Integer, Boolean>() {
