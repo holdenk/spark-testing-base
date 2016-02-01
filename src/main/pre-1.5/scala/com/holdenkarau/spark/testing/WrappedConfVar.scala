@@ -21,5 +21,6 @@ import org.apache.hadoop.hive.conf.HiveConf.ConfVars
 
 private[testing] case class WrappedConfVar(cv: ConfVars) {
   val varname = cv.varname
-  def getDefaultExpr() = cv.getDefaultExpr
+  // Despite what warnings we may get here, this is the one we want for pre-1.5 versions.
+  def getDefaultExpr() = cv.defaultVal
 }
