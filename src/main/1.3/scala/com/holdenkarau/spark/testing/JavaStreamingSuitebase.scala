@@ -84,7 +84,7 @@ class JavaStreamingSuiteBase extends JavaSuiteBase with StreamingSuiteCommon {
 
     // Match the output with the expected output
     assertEquals("Number of outputs do not match", expectedOutput.size, output.size)
-    for (i <- 0 until output.size) {
+    for (i <- output.indices) {
       if (useSet) {
         implicit val config = Bag.configuration.compact[V]
         compareArrays[V](Bag(expectedOutput(i): _*).toArray,

@@ -25,7 +25,7 @@ public class SharedJavaSparkContext implements SparkContextProvider {
   private static transient SparkContext _sc;
   private static transient JavaSparkContext _jsc;
   protected boolean initialized = false;
-  public static SparkConf _conf = new SparkConf().setMaster("local[4]").setAppName("magic");
+  private static SparkConf _conf = new SparkConf().setMaster("local[4]").setAppName("magic");
 
   public SparkConf conf() {
     return _conf;

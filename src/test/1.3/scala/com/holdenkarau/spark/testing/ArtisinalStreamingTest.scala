@@ -61,7 +61,7 @@ class ArtisinalStreamingTest extends FunSuite with SharedSparkContext {
     val maxWaitTime = 60 * 60 * 30
     ssc.start()
     while (result.size < 2 && System.currentTimeMillis() - startTime < maxWaitTime) {
-      ssc.awaitTermination(50)
+      ssc.awaitTerminationOrTimeout(50)
     }
     ssc.stop(stopSparkContext = false)
     assert(List("happy pandas", "sad pandas") === result.toList)

@@ -16,14 +16,9 @@
  */
 package com.holdenkarau.spark.testing
 
-import org.apache.spark.streaming._
-import org.apache.spark.streaming.dstream._
 import org.apache.spark._
 import org.apache.spark.rdd.RDD
-import org.apache.spark.SparkContext._
-
-import org.scalatest.FunSuite
-import org.scalatest.exceptions.TestFailedException
+import org.apache.spark.streaming.dstream._
 
 class SampleStreamingActionTest extends StreamingActionBase {
 

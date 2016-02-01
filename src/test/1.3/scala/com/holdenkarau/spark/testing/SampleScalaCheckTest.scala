@@ -16,15 +16,9 @@
  */
 package com.holdenkarau.spark.testing
 
-import org.apache.spark.streaming._
-import org.apache.spark.streaming.dstream._
-import org.apache.spark._
 import org.apache.spark.rdd.RDD
-import org.apache.spark.SparkContext._
-import org.scalacheck.Prop.{forAll, BooleanOperators}
-
+import org.scalacheck.Prop.forAll
 import org.scalatest.FunSuite
-import org.scalatest.exceptions.TestFailedException
 
 class SampleScalaCheckTest extends FunSuite with SharedSparkContext {
   // tag::propertySample[]
@@ -46,9 +40,9 @@ class SampleScalaCheckTest extends FunSuite with SharedSparkContext {
   // end::propertySample2[]
 
   def filterOne(rdd: RDD[String]): RDD[Int] = {
-    rdd.filter(_.size > 2).map(_.size)
+    rdd.filter(_.length > 2).map(_.length)
   }
   def filterOther(rdd: RDD[String]): RDD[Int] = {
-    rdd.map(_.size).filter(_ > 2)
+    rdd.map(_.length).filter(_ > 2)
   }
 }

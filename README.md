@@ -27,7 +27,7 @@ or
 
 Note that new versions (0.0.8+) are built against Spark 1.3.0+ for simplicity, but if you need an old version file an issue and I will re-enable cross-builds for older versions.
 
-The [spark-packages page for spark-testing-base](http://spark-packages.org/package/holdenk/spark-testing-base) lists the releases avaialble.
+The [spark-packages page for spark-testing-base](http://spark-packages.org/package/holdenk/spark-testing-base) lists the releases available.
 
 This package is can be cross compiled against scala 2.10.4 and 2.11.6 in the traditional manner.
 
@@ -41,6 +41,6 @@ In sbt you can add:
         parallelExecution in Test := false
 
 # Where is this from?
-Much of this code is a stripped down version of the test suite bases that are in Apache Spark but are not accessiable. Other parts are also inspiried by ssbase (scalacheck generators for Spark).
+Much of this code is a stripped down version of the test suite bases that are in Apache Spark but are not accessible. Other parts are also inspired by ssbase (scalacheck generators for Spark).
 
 Other parts of this are implemented on top of the test suite bases to make your life even easier.

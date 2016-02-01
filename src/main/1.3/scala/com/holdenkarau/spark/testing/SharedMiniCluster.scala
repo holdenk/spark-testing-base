@@ -111,16 +111,15 @@ trait SharedMiniCluster extends BeforeAndAfterAll { self: Suite =>
     try {
       setup()
     } catch {
-      case e: Exception => {
+      case e: Exception =>
         shutdown()
         throw e
-      }
     }
     super.beforeAll()
   }
 
   def setup() {
-    tempDir = Utils.createTempDir();
+    tempDir = Utils.createTempDir()
     logConfDir = new File(tempDir, "log4j")
     logConfDir.mkdir()
     System.setProperty("SPARK_YARN_MODE", "true")
@@ -147,10 +146,10 @@ trait SharedMiniCluster extends BeforeAndAfterAll { self: Suite =>
     val sparkLibDir = sys.env("SPARK_HOME") + "/lib/"
     val candidates = List(new File(sparkAssemblyDir).listFiles,
       new File(sparkLibDir).listFiles).filter(_ != null).flatMap(_.toSeq)
-    val sparkAssemblyJar = candidates.filter{f =>
+    val sparkAssemblyJar = candidates.find{f =>
       val name = f.getName
       name.endsWith(".jar") && name.startsWith("spark-assembly")}
-      .headOption.getOrElse(throw new Exception(
+      .getOrElse(throw new Exception(
         "Failed to find spark assembly jar, make sure SPARK_HOME is set correctly"))
       .getAbsolutePath()
 

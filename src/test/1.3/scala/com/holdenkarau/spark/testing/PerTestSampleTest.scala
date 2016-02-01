@@ -16,12 +16,7 @@
  */
 package com.holdenkarau.spark.testing
 
-import org.apache.spark._
-import org.apache.spark.rdd.RDD
-import org.apache.spark.SparkContext._
-
 import org.scalatest.FunSuite
-import org.scalatest.exceptions.TestFailedException
 
 /**
  * Illustrate using per-test sample test. This is the one to use
