@@ -54,7 +54,7 @@ class ArtisinalStreamingTest extends FunSuite with SharedSparkContext {
     val idstream = ssc.queueStream(Queue(input:_*))
     val tdstream = idstream.filter(_.contains("pandas"))
     val result = ArrayBuffer[String]()
-    tdstream.foreachRDD{(rdd: RDD[String], _) =>
+    tdstream.foreach{(rdd: RDD[String], _) =>
       result ++= rdd.collect()
     }
     val startTime = System.currentTimeMillis()

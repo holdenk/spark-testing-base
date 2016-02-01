@@ -32,7 +32,7 @@ class SampleStreamingActionTest extends StreamingActionBase {
 
   def countWordsLength(acc: Accumulator[Int]): (DStream[String] => Unit) = {
     def c(input: DStream[String]): Unit = {
-      input.foreachRDD{r: RDD[String] =>
+      input.foreach{r: RDD[String] =>
         r.foreach{e: String => acc += e.length()}}
     }
     c _
