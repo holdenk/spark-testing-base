@@ -21,6 +21,8 @@ from utils import add_pyspark_path, quiet_py4j
 
 import unittest2
 from pyspark.context import SparkContext
+from pyspark import HiveContext
+
 import os
 
 
@@ -37,6 +39,7 @@ class SparkTestingBaseTestCase(unittest2.TestCase):
     def setUp(self):
         """Setup a basic Spark context for testing"""
         self.sc = SparkContext(self.getMaster())
+        self.sql_context = HiveContext(self.sc)
         quiet_py4j()
         
     def tearDown(self):
@@ -65,6 +68,7 @@ class SparkTestingBaseReuse(unittest2.TestCase):
         """Setup a basic Spark context for testing"""
         class_name = cls.__name__
         cls.sc = SparkContext(cls.getMaster(), appName=class_name)
+        cls.sql_context = HiveContext(cls.sc)
         quiet_py4j()
         
     @classmethod
