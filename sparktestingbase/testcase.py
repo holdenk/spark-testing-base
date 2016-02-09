@@ -24,6 +24,7 @@ from pyspark.context import SparkContext
 from pyspark import HiveContext
 
 import os
+import shutil
 
 
 class SparkTestingBaseTestCase(unittest2.TestCase):
@@ -66,6 +67,7 @@ class SparkTestingBaseReuse(unittest2.TestCase):
     @classmethod
     def setUpClass(cls):
         """Setup a basic Spark context for testing"""
+        print "setting up class"
         class_name = cls.__name__
         cls.sc = SparkContext(cls.getMaster(), appName=class_name)
         cls.sql_context = HiveContext(cls.sc)
@@ -79,6 +81,9 @@ class SparkTestingBaseReuse(unittest2.TestCase):
         """
         print "stopping class"
         cls.sc.stop()
+        derby_path = os.path.join(os.getcwd(), 'metastore_db')
+        if os.path.exists(derby_path):
+            shutil.rmtree(derby_path)
         # To avoid Akka rebinding to the same port, since it doesn't unbind
         # immediately on shutdown
         cls.sc._jvm.System.clearProperty("spark.driver.port")
