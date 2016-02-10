@@ -17,7 +17,8 @@
 
 """Provides a common test case base for Python Spark tests"""
 
-from utils import add_pyspark_path, quiet_py4j
+from utils import quiet_py4j
+from utils import quiet_logs
 
 import unittest2
 from pyspark.context import SparkContext
@@ -70,6 +71,7 @@ class SparkTestingBaseReuse(unittest2.TestCase):
         print "setting up class"
         class_name = cls.__name__
         cls.sc = SparkContext(cls.getMaster(), appName=class_name)
+        quiet_logs(cls.sc)
         cls.sql_context = HiveContext(cls.sc)
         quiet_py4j()
         
