@@ -17,6 +17,9 @@
 package com.holdenkarau.spark.testing
 
 import org.apache.spark.rdd.RDD
+import org.apache.spark.sql.{DataFrame, Row}
+import org.apache.spark.sql.types.{StringType, StructType, IntegerType, StructField}
+import org.scalacheck.{Arbitrary, Gen}
 import org.scalacheck.Prop.forAll
 import org.scalatest.FunSuite
 
@@ -38,6 +41,27 @@ class SampleScalaCheckTest extends FunSuite with SharedSparkContext {
     }
   }
   // end::propertySample2[]
+
+  test("assert generating rows correctly") {
+    val schema = StructType(List(StructField("name", StringType), StructField("age", IntegerType)))
+    val rowGen: Arbitrary[Row] = DataframeGenerator.getRowGenerator(schema)
+    println("Sample: " + rowGen.arbitrary.sample)
+
+    forAll(rowGen.arbitrary) {
+      row => row.schema === schema && row.get(0).isInstanceOf[String] && row.get(1).isInstanceOf[Int]
+    }
+  }
+
+  test("assert generating dataframes") {
+    val schema = StructType(List(StructField("name", StringType), StructField("age", IntegerType)))
+    val dataframeGen: Arbitrary[DataFrame] = DataframeGenerator.genDataFrame(sc, schema)
+    println("Sample:")
+    dataframeGen.arbitrary.sample.get.show
+
+    forAll(dataframeGen.arbitrary) {
+      dataframe => dataframe.schema === schema
+    }
+  }
 
   def filterOne(rdd: RDD[String]): RDD[Int] = {
     rdd.filter(_.length > 2).map(_.length)
