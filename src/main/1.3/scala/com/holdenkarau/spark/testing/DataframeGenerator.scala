@@ -8,24 +8,27 @@ import org.scalacheck.{Arbitrary, Gen}
 
 object DataframeGenerator {
 
+  /**
+    * Generates a DataFrame for the required Schama
+    *
+    * @param sc Spark Context
+    * @param schema The required Schema
+    * @param minPartitions defaults to 1
+    *
+    * @return
+    */
   def genDataFrame(sc: SparkContext, schema: StructType, minPartitions: Int = 1): Arbitrary[DataFrame] = {
-    implicit val arbRow: Arbitrary[Row] = getRowGenerator(schema)
-    arbitraryDataFrame(sc, schema, minPartitions)
-  }
-
-  def getRowGenerator(schema: StructType): Arbitrary[Row] = {
-    val generators: List[Gen[Any]] = createGenerators(schema.fields)
-    val listGen: Gen[List[Any]] = Gen.sequence[List[Any], Any](generators)
-    Arbitrary{ listGen.map(list => Row.fromSeq(list)) }
-  }
-
-  private def arbitraryDataFrame(sc: SparkContext, schema: StructType, minPartitions: Int = 1)
-                                (implicit a: Arbitrary[Row]): Arbitrary[DataFrame] = {
-
-    val arbitraryRDDs: Arbitrary[RDD[Row]] = RDDGenerator.arbitraryRDD(sc, minPartitions)
+    val arbitraryRDDs: Arbitrary[RDD[Row]] = RDDGenerator.arbitraryRDD(sc, minPartitions)(getRowGenerator(schema))
 
     val sqlContext = new org.apache.spark.sql.SQLContext(sc)
     Arbitrary{arbitraryRDDs.arbitrary.map(sqlContext.createDataFrame(_, schema))}
+  }
+
+  def getRowGenerator(schema: StructType): Gen[Row] = {
+    val generators: List[Gen[Any]] = createGenerators(schema.fields)
+    val listGen: Gen[List[Any]] = Gen.sequence[List[Any], Any](generators)
+    val generator: Gen[Row] = listGen.map(list => Row.fromSeq(list))
+    generator
   }
 
   private def createGenerators(fields: Array[StructField]): List[Gen[Any]] = {
