@@ -22,46 +22,52 @@ import org.apache.spark.sql.types.{StringType, StructType, IntegerType, StructFi
 import org.scalacheck.{Arbitrary, Gen}
 import org.scalacheck.Prop.forAll
 import org.scalatest.FunSuite
+import org.scalatest.prop.Checkers
 
-class SampleScalaCheckTest extends FunSuite with SharedSparkContext {
+class SampleScalaCheckTest extends FunSuite with SharedSparkContext with Checkers {
   // tag::propertySample[]
   // A trivial property that the map doesn't change the number of elements
   test("map should not change number of elements") {
-    forAll(RDDGenerator.genRDD[String](sc)){
-      rdd => rdd.map(_.length).count() == rdd.count()
-    }
+    val property =
+      forAll(RDDGenerator.genRDD[String](sc)(Arbitrary.arbitrary[String])){
+        rdd => rdd.map(_.length).count() == rdd.count()
+      }
+
+    check(property)
   }
   // end::propertySample[]
   // A slightly more complex property check using RDDComparisions
   // tag::propertySample2[]
   test("assert that two methods on the RDD have the same results") {
-    forAll(RDDGenerator.genRDD[String](sc)){
-      rdd => RDDComparisons.compare(filterOne(rdd),
-        filterOther(rdd)).isEmpty
-    }
+    val property =
+      forAll(RDDGenerator.genRDD[String](sc)(Arbitrary.arbitrary[String])) {
+        rdd => RDDComparisons.compare(filterOne(rdd), filterOther(rdd)).isEmpty
+      }
+
+    check(property)
   }
   // end::propertySample2[]
 
-  test("assert generating rows correctly") {
-    val schema = StructType(List(StructField("name", StringType), StructField("age", IntegerType)))
-    val rowGen: Arbitrary[Row] = DataframeGenerator.getRowGenerator(schema)
-    println("Sample: " + rowGen.arbitrary.sample)
+//  test("assert generating rows correctly") {
+//    val schema = StructType(List(StructField("name", StringType), StructField("age", IntegerType)))
+//    val rowGen: Arbitrary[Row] = DataframeGenerator.getRowGenerator(schema)
+//    println("Sample: " + rowGen.arbitrary.sample)
+//
+//    forAll(rowGen.arbitrary) {
+//      row => row.schema === schema && row.get(0).isInstanceOf[String] && row.get(1).isInstanceOf[Int]
+//    }
+//  }
 
-    forAll(rowGen.arbitrary) {
-      row => row.schema === schema && row.get(0).isInstanceOf[String] && row.get(1).isInstanceOf[Int]
-    }
-  }
-
-  test("assert generating dataframes") {
-    val schema = StructType(List(StructField("name", StringType), StructField("age", IntegerType)))
-    val dataframeGen: Arbitrary[DataFrame] = DataframeGenerator.genDataFrame(sc, schema)
-    println("Sample:")
-    dataframeGen.arbitrary.sample.get.show
-
-    forAll(dataframeGen.arbitrary) {
-      dataframe => dataframe.schema === schema
-    }
-  }
+//  test("assert generating dataframes") {
+//    val schema = StructType(List(StructField("name", StringType), StructField("age", IntegerType)))
+//    val dataframeGen: Arbitrary[DataFrame] = DataframeGenerator.genDataFrame(sc, schema)
+//    println("Sample:")
+//    dataframeGen.arbitrary.sample.get.show
+//
+//    forAll(dataframeGen.arbitrary) {
+//      dataframe => dataframe.schema === schema
+//    }
+//  }
 
   def filterOne(rdd: RDD[String]): RDD[Int] = {
     rdd.filter(_.length > 2).map(_.length)
