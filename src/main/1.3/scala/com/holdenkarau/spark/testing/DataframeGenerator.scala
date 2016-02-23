@@ -1,8 +1,7 @@
 package com.holdenkarau.spark.testing
 
-import org.apache.spark.SparkContext
 import org.apache.spark.rdd.RDD
-import org.apache.spark.sql.{Row, DataFrame}
+import org.apache.spark.sql.{SQLContext, Row, DataFrame}
 import org.apache.spark.sql.types._
 import org.scalacheck.{Arbitrary, Gen}
 
@@ -11,16 +10,16 @@ object DataframeGenerator {
   /**
     * Generates a DataFrame for the required Schama
     *
-    * @param sc Spark Context
+    * @param sqlContext SQL Context
     * @param schema The required Schema
     * @param minPartitions defaults to 1
     *
     * @return
     */
-  def genDataFrame(sc: SparkContext, schema: StructType, minPartitions: Int = 1): Arbitrary[DataFrame] = {
-    val arbitraryRDDs: Arbitrary[RDD[Row]] = RDDGenerator.arbitraryRDD(sc, minPartitions)(getRowGenerator(schema))
+  def genDataFrame(sqlContext: SQLContext, schema: StructType, minPartitions: Int = 1): Arbitrary[DataFrame] = {
+    val arbitraryRDDs: Arbitrary[RDD[Row]] =
+      RDDGenerator.arbitraryRDD(sqlContext.sparkContext, minPartitions)(getRowGenerator(schema))
 
-    val sqlContext = new org.apache.spark.sql.SQLContext(sc)
     Arbitrary{arbitraryRDDs.arbitrary.map(sqlContext.createDataFrame(_, schema))}
   }
 

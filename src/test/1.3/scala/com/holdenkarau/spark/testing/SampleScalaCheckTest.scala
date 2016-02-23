@@ -17,7 +17,7 @@
 package com.holdenkarau.spark.testing
 
 import org.apache.spark.rdd.RDD
-import org.apache.spark.sql.{DataFrame, Row}
+import org.apache.spark.sql.{SQLContext, DataFrame, Row}
 import org.apache.spark.sql.types.{StringType, StructType, IntegerType, StructField}
 import org.scalacheck.{Arbitrary, Gen}
 import org.scalacheck.Prop.forAll
@@ -61,7 +61,8 @@ class SampleScalaCheckTest extends FunSuite with SharedSparkContext with Checker
 
   test("assert dataframes created correctly") {
     val schema = StructType(List(StructField("name", StringType), StructField("age", IntegerType)))
-    val dataframeGen = DataframeGenerator.genDataFrame(sc, schema)
+    val sqlContext = new SQLContext(sc)
+    val dataframeGen = DataframeGenerator.genDataFrame(sqlContext, schema)
 
     val property =
       forAll(dataframeGen.arbitrary) {
