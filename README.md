@@ -10,20 +10,22 @@ This is not my beautiful code.
 
 # How?
 
-So you include com.holdenkarau.spark-testing-base [spark_version]_0.3.0 and extend one
+So you include com.holdenkarau.spark-testing-base [spark_version]_0.3.1 and extend one
 of the classes and write some simple tests instead.
-For example to include this in a project using Spark 1.5.2:
+For example to include this in a project using Spark 1.6.0:
 
-    "com.holdenkarau" %% "spark-testing-base" % "1.5.2_0.3.0"
+    "com.holdenkarau" %% "spark-testing-base" % "1.6.0_0.3.1"
 
 or
 
         <dependency>
             <groupId>com.holdenkarau</groupId>
             <artifactId>spark-testing-base</artifactId>
-            <version>${spark.version}_0.2.0</version>
+            <version>${spark.version}_0.3.1</version>
             <scope>test</scope>
         </dependency>
+
+How to use it inside your code ?? have a look at the [wiki](https://github.com/holdenk/spark-testing-base/wiki) page.
 
 Note that new versions (0.0.8+) are built against Spark 1.3.0+ for simplicity, but if you need an old version file an issue and I will re-enable cross-builds for older versions.
 
