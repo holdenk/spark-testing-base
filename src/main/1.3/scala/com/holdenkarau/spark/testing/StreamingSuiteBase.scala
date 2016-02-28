@@ -55,6 +55,7 @@ trait StreamingSuiteBase extends FunSuite with BeforeAndAfterAll with Logging
     ): Seq[Seq[V]] = {
     val output = super.runStreams(outputStream, ssc, numBatches, numExpectedOutput)
     assert(output.size === numExpectedOutput, "Unexpected number of outputs generated")
+    // TODO why verify here ( already check size at method verifyOutput) !!
     output
   }
 

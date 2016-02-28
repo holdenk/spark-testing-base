@@ -16,28 +16,20 @@
  */
 package com.holdenkarau.spark.testing
 
-import org.apache.spark.streaming._
-import org.apache.spark._
-import org.apache.spark.SparkContext._
-
 import java.io._
 
-import scala.collection.mutable.ArrayBuffer
-import scala.collection.mutable.SynchronizedBuffer
-import scala.collection.immutable.{HashBag => Bag}
-import scala.language.implicitConversions
-import scala.reflect.ClassTag
-
-import org.scalatest.{BeforeAndAfterAll, FunSuite}
-import org.scalatest.time.{Span, Seconds => ScalaTestSeconds}
+import org.apache.spark.rdd.RDD
+import org.apache.spark.streaming._
+import org.apache.spark.streaming.dstream.DStream
+import org.apache.spark.streaming.util.TestManualClock
+import org.apache.spark.{Logging, SparkConf, _}
 import org.scalatest.concurrent.Eventually.timeout
 import org.scalatest.concurrent.PatienceConfiguration
+import org.scalatest.time.{Seconds => ScalaTestSeconds, Span}
 
-import org.apache.spark.streaming.dstream.{DStream, InputDStream}
-import org.apache.spark.streaming.scheduler.{StreamingListenerBatchStarted, StreamingListenerBatchCompleted, StreamingListener}
-import org.apache.spark.streaming.util.TestManualClock
-import org.apache.spark.{SparkConf, Logging}
-import org.apache.spark.rdd.RDD
+import scala.collection.mutable.{ArrayBuffer, SynchronizedBuffer}
+import scala.language.implicitConversions
+import scala.reflect.ClassTag
 
 /**
   * This is a output stream just for testing.
@@ -202,6 +194,7 @@ private[holdenkarau] trait StreamingSuiteCommon extends Logging with SparkContex
       val clock = ssc.getScheduler().clock.asInstanceOf[TestManualClock]
       logInfo("Manual clock before advancing = " + clock.currentTime())
       if (actuallyWait) {
+	      // TODO how user activate actuallyWait flag ??
         for (i <- 1 to numBatches) {
           logInfo("Actually waiting for " + batchDuration)
           clock.addToTime(batchDuration.milliseconds)
@@ -216,9 +209,13 @@ private[holdenkarau] trait StreamingSuiteCommon extends Logging with SparkContex
       val startTime = System.currentTimeMillis()
       while (output.size < numExpectedOutput &&
         System.currentTimeMillis() - startTime < maxWaitTimeMillis) {
+        // TODO what if numExpectedOutput is very large and need more time than maxWaitTimeMillis
         logInfo("output.size = " + output.size + ", numExpectedOutput = " + numExpectedOutput)
         ssc.awaitTerminationOrTimeout(50)
       }
+      // TODO also is it better to compare the output with expected output while it is generated or wait to end ??
+      // for example: the output length may be 10^6 and the first element in the output doesn't match expected output
+      // why should we continue ??
       val timeTaken = System.currentTimeMillis() - startTime
       logInfo("Output generated in " + timeTaken + " milliseconds")
       output.foreach(x => logInfo("[" + x.mkString(",") + "]"))
@@ -226,6 +223,7 @@ private[holdenkarau] trait StreamingSuiteCommon extends Logging with SparkContex
       Thread.sleep(100) // Give some time for the forgetting old RDDs to complete
     } finally {
       ssc.stop(stopSparkContext = false)
+      // TODO why stop context here and at method withOutputAndStreamingContext
     }
     output.toSeq
   }
