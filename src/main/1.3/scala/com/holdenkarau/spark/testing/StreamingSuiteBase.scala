@@ -119,7 +119,7 @@ trait StreamingSuiteBase extends FunSuite with BeforeAndAfterAll with Logging
 
   /**
     * Test unary DStream operation with a list of inputs, with number of
-    * batches to run same as the number of expected output values
+    * batches to run same as the number of input values
     *
     * @param ordered Compare the output values with the expected output values ordered or not.
     *                Comparing doubles may not work well in case of unordered.
@@ -134,7 +134,8 @@ trait StreamingSuiteBase extends FunSuite with BeforeAndAfterAll with Logging
   }
 
   /**
-    * Test unary DStream operation with a list of inputs
+    * Test unary DStream operation with a list of inputs.
+    *
     * @param input      Sequence of input collections
     * @param operation  Binary DStream operation to be applied to the 2 inputs
     * @param expectedOutput Sequence of expected output collections
@@ -149,7 +150,8 @@ trait StreamingSuiteBase extends FunSuite with BeforeAndAfterAll with Logging
     numBatches: Int,
     ordered: Boolean
   ) (implicit equality: Equality[V]) {
-    val numBatches_ = if (numBatches > 0) numBatches else expectedOutput.size
+    val numBatches_ = if (numBatches > 0) numBatches else input.size
+
     withOutputAndStreamingContext(setupStreams[U, V](input, operation)) { (outputStream, ssc) =>
       val output: Seq[Seq[V]] = runStreams[V](outputStream, ssc, numBatches_, expectedOutput.size)
       verifyOutput[V](output, expectedOutput, ordered)
@@ -158,7 +160,7 @@ trait StreamingSuiteBase extends FunSuite with BeforeAndAfterAll with Logging
 
   /**
     * Test binary DStream operation with two lists of inputs, with number of
-    * batches to run same as the number of expected output values
+    * batches to run same as the number of input values. The size of the two input lists Should be the same.
     *
     * @param ordered Compare the output values with the expected output values ordered or not.
     *                Comparing doubles may not work well in case of unordered.
@@ -174,7 +176,8 @@ trait StreamingSuiteBase extends FunSuite with BeforeAndAfterAll with Logging
   }
 
   /**
-    * Test binary DStream operation with two lists of inputs
+    * Test binary DStream operation with two lists of inputs. The size of the two input lists Should be the same.
+    *
     * @param input1     First sequence of input collections
     * @param input2     Second sequence of input collections
     * @param operation  Binary DStream operation to be applied to the 2 inputs
@@ -191,7 +194,10 @@ trait StreamingSuiteBase extends FunSuite with BeforeAndAfterAll with Logging
     numBatches: Int,
     ordered: Boolean
   ) (implicit equality: Equality[W]) {
-    val numBatches_ = if (numBatches > 0) numBatches else expectedOutput.size
+    assert(input1.length === input2.length, "Length of the input lists are not equal")
+
+    val numBatches_ = if (numBatches > 0) numBatches else input1.size
+
     withOutputAndStreamingContext(setupStreams[U, V, W](input1, input2, operation)) {
       (outputStream, ssc) =>
       val output = runStreams[W](outputStream, ssc, numBatches_, expectedOutput.size)
