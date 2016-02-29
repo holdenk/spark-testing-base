@@ -126,6 +126,18 @@ class SampleStreamingTest extends StreamingSuiteBase {
       testOperation(input1, input2, nothing _, output, ordered = false)
     }
   }
+
+  test("number of batches can't be greater than input length") {
+    def nothing(stream: DStream[Int]) = stream
+
+    val input = List(List(1), List(2))
+    val output = List(List(1), List(2))
+
+    intercept[TestFailedException] {
+      testOperation(input, nothing _, output, 100, ordered = false)
+    }
+  }
+
 }
 
 object SampleStreamingTest {

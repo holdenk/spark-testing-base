@@ -139,7 +139,7 @@ trait StreamingSuiteBase extends FunSuite with BeforeAndAfterAll with Logging
     * @param input      Sequence of input collections
     * @param operation  Binary DStream operation to be applied to the 2 inputs
     * @param expectedOutput Sequence of expected output collections
-    * @param numBatches Number of batches to run the operation for
+    * @param numBatches Number of batches to run the operation for. Should be less than or equal input length.
     * @param ordered Compare the output values with the expected output values ordered or not.
     *                Comparing doubles may not work well in case of unordered.
     */
@@ -150,6 +150,8 @@ trait StreamingSuiteBase extends FunSuite with BeforeAndAfterAll with Logging
     numBatches: Int,
     ordered: Boolean
   ) (implicit equality: Equality[V]) {
+    assert(numBatches <= input.length, "number of batches can't be greater than input length")
+
     val numBatches_ = if (numBatches > 0) numBatches else input.size
 
     withOutputAndStreamingContext(setupStreams[U, V](input, operation)) { (outputStream, ssc) =>
@@ -182,7 +184,7 @@ trait StreamingSuiteBase extends FunSuite with BeforeAndAfterAll with Logging
     * @param input2     Second sequence of input collections
     * @param operation  Binary DStream operation to be applied to the 2 inputs
     * @param expectedOutput Sequence of expected output collections
-    * @param numBatches Number of batches to run the operation for
+    * @param numBatches Number of batches to run the operation for. Should be less than or equal input length.
     * @param ordered Compare the output values with the expected output values ordered or not.
     *                Comparing doubles may not work well in case of unordered.
     */
@@ -195,6 +197,7 @@ trait StreamingSuiteBase extends FunSuite with BeforeAndAfterAll with Logging
     ordered: Boolean
   ) (implicit equality: Equality[W]) {
     assert(input1.length === input2.length, "Length of the input lists are not equal")
+    assert(numBatches <= input1.length, "number of batches can't be greater than input length")
 
     val numBatches_ = if (numBatches > 0) numBatches else input1.size
 
