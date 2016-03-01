@@ -72,6 +72,15 @@ class SampleScalaCheckTest extends FunSuite with SharedSparkContext with Checker
     check(property)
   }
 
+  test("generate rdd of specific size") {
+    implicit val generatorDrivenConfig =
+      PropertyCheckConfig(minSize = 10, maxSize = 20)
+    val prop = forAll(RDDGenerator.genRDD[String](sc)(Arbitrary.arbitrary[String])){
+      rdd => rdd.count() <= 20
+    }
+    check(prop)
+  }
+
   def filterOne(rdd: RDD[String]): RDD[Int] = {
     rdd.filter(_.length > 2).map(_.length)
   }
