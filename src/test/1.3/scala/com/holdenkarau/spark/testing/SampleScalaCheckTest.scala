@@ -48,6 +48,23 @@ class SampleScalaCheckTest extends FunSuite with SharedSparkContext with Checker
   }
   // end::propertySample2[]
 
+  test("test custom RDD generator") {
+
+    val property =
+      forAll(RDDGenerator.genRDD[Human](sc) {
+        val generator: Gen[Human] = for {
+          name <- Arbitrary.arbitrary[String]
+          age <- Arbitrary.arbitrary[Int]
+        } yield (Human(name, age))
+
+        generator
+      }) {
+        rdd => rdd.map(_.age).count() == rdd.count()
+      }
+
+    check(property)
+  }
+
   test("assert rows' types like schema type") {
     val schema = StructType(List(StructField("name", StringType), StructField("age", IntegerType)))
     val rowGen: Gen[Row] = DataframeGenerator.getRowGenerator(schema)
@@ -84,7 +101,10 @@ class SampleScalaCheckTest extends FunSuite with SharedSparkContext with Checker
   def filterOne(rdd: RDD[String]): RDD[Int] = {
     rdd.filter(_.length > 2).map(_.length)
   }
+
   def filterOther(rdd: RDD[String]): RDD[Int] = {
     rdd.map(_.length).filter(_ > 2)
   }
 }
+
+case class Human(name: String, age: Int)
