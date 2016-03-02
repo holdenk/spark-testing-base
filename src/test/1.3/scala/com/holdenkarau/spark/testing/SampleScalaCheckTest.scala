@@ -17,7 +17,7 @@
 package com.holdenkarau.spark.testing
 
 import org.apache.spark.rdd.RDD
-import org.apache.spark.sql.{SQLContext, DataFrame, Row}
+import org.apache.spark.sql.{SQLContext, Row}
 import org.apache.spark.sql.types.{StringType, StructType, IntegerType, StructField}
 import org.scalacheck.{Arbitrary, Gen}
 import org.scalacheck.Prop.forAll
@@ -50,15 +50,18 @@ class SampleScalaCheckTest extends FunSuite with SharedSparkContext with Checker
 
   test("test custom RDD generator") {
 
-    val property =
-      forAll(RDDGenerator.genRDD[Human](sc) {
+    val humanGen: Gen[RDD[Human]] =
+      RDDGenerator.genRDD[Human](sc) {
         val generator: Gen[Human] = for {
           name <- Arbitrary.arbitrary[String]
           age <- Arbitrary.arbitrary[Int]
         } yield (Human(name, age))
 
         generator
-      }) {
+      }
+
+    val property =
+      forAll(humanGen) {
         rdd => rdd.map(_.age).count() == rdd.count()
       }
 
@@ -76,7 +79,7 @@ class SampleScalaCheckTest extends FunSuite with SharedSparkContext with Checker
     check(property)
   }
 
-  test("assert dataframes created correctly") {
+  test("test generating Dataframes") {
     val schema = StructType(List(StructField("name", StringType), StructField("age", IntegerType)))
     val sqlContext = new SQLContext(sc)
     val dataframeGen = DataframeGenerator.genDataFrame(sqlContext, schema)
@@ -98,11 +101,11 @@ class SampleScalaCheckTest extends FunSuite with SharedSparkContext with Checker
     check(prop)
   }
 
-  def filterOne(rdd: RDD[String]): RDD[Int] = {
+  private def filterOne(rdd: RDD[String]): RDD[Int] = {
     rdd.filter(_.length > 2).map(_.length)
   }
 
-  def filterOther(rdd: RDD[String]): RDD[Int] = {
+  private def filterOther(rdd: RDD[String]): RDD[Int] = {
     rdd.map(_.length).filter(_ > 2)
   }
 }
