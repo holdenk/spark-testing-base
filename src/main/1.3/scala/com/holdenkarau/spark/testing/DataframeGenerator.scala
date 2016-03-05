@@ -8,7 +8,7 @@ import org.scalacheck.{Arbitrary, Gen}
 object DataframeGenerator {
 
   /**
-    * Generates a DataFrame for the required Schama
+    * Creates a DataFrame Generator for the given Schema.
     *
     * @param sqlContext SQL Context
     * @param schema The required Schema

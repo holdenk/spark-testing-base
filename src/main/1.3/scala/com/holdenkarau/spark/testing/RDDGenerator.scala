@@ -20,7 +20,7 @@
  */
 package com.holdenkarau.spark.testing
 
-import scala.reflect.{ClassTag, classTag}
+import scala.reflect.ClassTag
 
 import org.apache.spark.rdd.RDD
 import org.apache.spark.SparkContext
@@ -57,6 +57,7 @@ object RDDGenerator {
             val mp = minPartitions
             val specialPartitionSizes = List(size, (size/2), mp, mp + 1, mp + 3).filter(_ > mp)
             val partitionsGen = for {
+              // TODO change 1 to minPartitions
               partitionCount <- Gen.chooseNum(1, 2 * size, specialPartitionSizes: _*)
             } yield partitionCount
             // Wrap the scalacheck generator in a Spark generator
