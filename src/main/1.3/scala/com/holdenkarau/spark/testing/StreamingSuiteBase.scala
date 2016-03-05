@@ -21,7 +21,6 @@ import scala.language.implicitConversions
 import scala.reflect.ClassTag
 
 import org.apache.spark.Logging
-import org.apache.spark.streaming._
 import org.apache.spark.streaming.dstream.DStream
 import org.scalactic.Equality
 import org.scalatest.{BeforeAndAfterAll, FunSuite}
@@ -47,17 +46,6 @@ trait StreamingSuiteBase extends FunSuite with BeforeAndAfterAll with Logging
     super.afterAll()
   }
 
-  override def runStreams[V: ClassTag](
-    outputStream: TestOutputStream[V],
-    ssc: TestStreamingContext,
-    numBatches: Int,
-    numExpectedOutput: Int
-    ): Seq[Seq[V]] = {
-    val output = super.runStreams(outputStream, ssc, numBatches, numExpectedOutput)
-    assert(output.size === numExpectedOutput, "Unexpected number of outputs generated")
-    output
-  }
-
   /**
     * Verify whether the output values after running a DStream operation
     * is same as the expected output values, by comparing the output
@@ -65,7 +53,6 @@ trait StreamingSuiteBase extends FunSuite with BeforeAndAfterAll with Logging
     *
     * @param ordered Compare the output values with the expected output values ordered or not.
     *                Comparing doubles may not work well in case of unordered.
-    *
     */
   def verifyOutput[V: ClassTag](
    output: Seq[Seq[V]],
