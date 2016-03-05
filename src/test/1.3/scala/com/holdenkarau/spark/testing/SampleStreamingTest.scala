@@ -17,6 +17,7 @@
 package com.holdenkarau.spark.testing
 
 import org.apache.spark.rdd.RDD
+import org.apache.spark.streaming.Seconds
 import org.apache.spark.streaming.dstream._
 import org.scalactic.Equality
 import org.scalatest.exceptions.TestFailedException
@@ -56,7 +57,7 @@ class SampleStreamingTest extends StreamingSuiteBase {
   test("a wrong expected multiset for a micro batch leads to a test fail") {
     val input = List(List("hi"), List("hi holden"), List("bye"))
     val badMultisetExpected = List(List("hi"), List("hi", "holden", "hi"), List("bye"))
-    val thrown = intercept[TestFailedException] {
+    intercept[TestFailedException] {
         testOperation[String, String](input, tokenize _, badMultisetExpected, ordered = false)
     }
   }
@@ -95,6 +96,46 @@ class SampleStreamingTest extends StreamingSuiteBase {
 
     testOperation[Int, Int](input, doNothing _, expected, ordered = false)
     testOperation[Int, Int](input, doNothing _, expected, ordered = true)
+  }
+
+  test("CountByWindow with windowDuration 3s and slideDuration=2s") {
+    // There should be 2 windows :  {batch2, batch1},  {batch4, batch3, batch2}
+    val batch1 = List("a", "b")
+    val batch2 = List("d", "f", "a")
+    val batch3 = List("f", "g"," h")
+    val batch4 = List("a")
+    val input= List(batch1, batch2, batch3, batch4)
+    val expected = List(List(5L), List(7L))
+
+    def countByWindow(ds:DStream[String]):DStream[Long] = {
+      ds.countByWindow(windowDuration = Seconds(3), slideDuration = Seconds(2))
+    }
+
+    testOperation[String, Long](input, countByWindow _, expected, ordered = true)
+  }
+
+  test("two lists length should be equal") {
+    def nothing(stream1: DStream[Int], stream2: DStream[Int]) = stream1
+
+    val input1 = List(List(1), List(2))
+    val input2 = List(List(1), List(2), List(3))
+
+    val output = List(List(1), List(2), List(3))
+
+    intercept[TestFailedException] {
+      testOperation(input1, input2, nothing _, output, ordered = false)
+    }
+  }
+
+  test("number of batches can't be greater than input length") {
+    def nothing(stream: DStream[Int]) = stream
+
+    val input = List(List(1), List(2))
+    val output = List(List(1), List(2))
+
+    intercept[TestFailedException] {
+      testOperation(input, nothing _, output, 100, ordered = false)
+    }
   }
 
 }
