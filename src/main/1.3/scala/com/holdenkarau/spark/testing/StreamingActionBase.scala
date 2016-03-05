@@ -45,7 +45,7 @@ trait StreamingActionBase extends StreamingSuiteBase {
     }
   }
 
-  def withStreamingContext(outputStreamSSC: TestStreamingContext)
+  private def withStreamingContext(outputStreamSSC: TestStreamingContext)
                           (block: TestStreamingContext => Unit): Unit = {
     try {
       block(outputStreamSSC)
@@ -59,7 +59,7 @@ trait StreamingActionBase extends StreamingSuiteBase {
     }
   }
 
-  def setupStream[U: ClassTag](input: Seq[Seq[U]],
+  private def setupStream[U: ClassTag](input: Seq[Seq[U]],
                                operation: DStream[U] => Any): TestStreamingContext = {
 
     // Create TestStreamingContext
@@ -75,7 +75,7 @@ trait StreamingActionBase extends StreamingSuiteBase {
     ssc
   }
 
-  def runActionStream(ssc: TestStreamingContext, numBatches: Int) {
+  private def runActionStream(ssc: TestStreamingContext, numBatches: Int) {
     assert(numBatches > 0, "Number of batches to run stream computation is zero")
 
     // Start computation
