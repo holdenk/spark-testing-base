@@ -30,6 +30,7 @@ script:
   - ./sbt/sbt scalastyle
   - "export SPARK_HOME=`pwd`/spark-1.4.1-bin-hadoop2.4/"
   - SPARK_CONF_DIR=./log4j/ ./sbt/sbt clean coverage test
+  - cp ./log4j/log4j.properties $SPARK_HOME/conf/
   - ./python/run-tests
   - "pep8 --ignore=E402 ./python"
 after_success:
