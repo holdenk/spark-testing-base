@@ -57,7 +57,7 @@ private[holdenkarau] trait StreamingSuiteCommon extends Logging with SparkContex
    * Create an input stream for the provided input sequence. This is done using
    * TestInputStream as queueStream's are not checkpointable.
    */
-  def createTestInputStream[T: ClassTag](sc: SparkContext, ssc_ : TestStreamingContext,
+  private[holdenkarau] def createTestInputStream[T: ClassTag](sc: SparkContext, ssc_ : TestStreamingContext,
     input: Seq[Seq[T]]): TestInputStream[T] = {
     new TestInputStream(sc, ssc_, input, numInputPartitions)
   }
@@ -104,7 +104,7 @@ private[holdenkarau] trait StreamingSuiteCommon extends Logging with SparkContex
    * Run a block of code with the given StreamingContext and automatically
    * stop the context when the block completes or when an exception is thrown.
    */
-  def withOutputAndStreamingContext[R](outputStreamSSC: (TestOutputStream[R], TestStreamingContext))
+  private[holdenkarau] def withOutputAndStreamingContext[R](outputStreamSSC: (TestOutputStream[R], TestStreamingContext))
     (block: (TestOutputStream[R], TestStreamingContext) => Unit): Unit = {
     val outputStream = outputStreamSSC._1
     val ssc = outputStreamSSC._2
@@ -125,7 +125,7 @@ private[holdenkarau] trait StreamingSuiteCommon extends Logging with SparkContex
    * Set up required DStreams to test the DStream operation using the two sequences
    * of input collections.
    */
-  def setupStreams[U: ClassTag, V: ClassTag](
+  private[holdenkarau] def setupStreams[U: ClassTag, V: ClassTag](
     input: Seq[Seq[U]],
     operation: DStream[U] => DStream[V],
     numPartitions: Int = numInputPartitions
@@ -148,7 +148,7 @@ private[holdenkarau] trait StreamingSuiteCommon extends Logging with SparkContex
    * Set up required DStreams to test the binary operation using the sequence
    * of input collections.
    */
-  def setupStreams[U: ClassTag, V: ClassTag, W: ClassTag](
+  private[holdenkarau] def setupStreams[U: ClassTag, V: ClassTag, W: ClassTag](
     input1: Seq[Seq[U]],
     input2: Seq[Seq[V]],
     operation: (DStream[U], DStream[V]) => DStream[W]
@@ -175,7 +175,7 @@ private[holdenkarau] trait StreamingSuiteCommon extends Logging with SparkContex
    *
    * Returns a sequence of items for each RDD.
    */
-  def runStreams[V: ClassTag](
+  private[holdenkarau] def runStreams[V: ClassTag](
     outputStream: TestOutputStream[V],
     ssc: TestStreamingContext,
     numBatches: Int,
@@ -220,7 +220,7 @@ private[holdenkarau] trait StreamingSuiteCommon extends Logging with SparkContex
     output.toSeq
   }
 
-  def setupClock() = {
+  private[holdenkarau] def setupClock() = {
     if (useManualClock) {
       logInfo("Using manual clock")
       conf.set("spark.streaming.clock", "org.apache.spark.streaming.util.TestManualClock")
