@@ -108,6 +108,9 @@ trait StreamingSuiteBase extends FunSuite with BeforeAndAfterAll with Logging
     * Test unary DStream operation with a list of inputs, with number of
     * batches to run same as the number of input values
     *
+    * @param input      Sequence of input collections
+    * @param operation  Binary DStream operation to be applied to the 2 inputs
+    * @param expectedOutput Sequence of expected output collections
     * @param ordered Compare the output values with the expected output values ordered or not.
     *                Comparing doubles may not work well in case of unordered.
     */
@@ -117,32 +120,10 @@ trait StreamingSuiteBase extends FunSuite with BeforeAndAfterAll with Logging
    expectedOutput: Seq[Seq[V]],
    ordered: Boolean = false
   ) (implicit equality: Equality[V]) {
-    testOperation[U, V](input, operation, expectedOutput, -1, ordered)
-  }
-
-  /**
-    * Test unary DStream operation with a list of inputs.
-    *
-    * @param input      Sequence of input collections
-    * @param operation  Binary DStream operation to be applied to the 2 inputs
-    * @param expectedOutput Sequence of expected output collections
-    * @param numBatches Number of batches to run the operation for. Should be less than or equal input length.
-    * @param ordered Compare the output values with the expected output values ordered or not.
-    *                Comparing doubles may not work well in case of unordered.
-    */
-  def testOperation[U: ClassTag, V: ClassTag](
-    input: Seq[Seq[U]],
-    operation: DStream[U] => DStream[V],
-    expectedOutput: Seq[Seq[V]],
-    numBatches: Int,
-    ordered: Boolean
-  ) (implicit equality: Equality[V]) {
-    assert(numBatches <= input.length, "number of batches can't be greater than input length")
-
-    val numBatches_ = if (numBatches > 0) numBatches else input.size
+    val numBatches = input.size
 
     withOutputAndStreamingContext(setupStreams[U, V](input, operation)) { (outputStream, ssc) =>
-      val output: Seq[Seq[V]] = runStreams[V](outputStream, ssc, numBatches_, expectedOutput.size)
+      val output: Seq[Seq[V]] = runStreams[V](outputStream, ssc, numBatches, expectedOutput.size)
       verifyOutput[V](output, expectedOutput, ordered)
     }
   }
@@ -151,27 +132,10 @@ trait StreamingSuiteBase extends FunSuite with BeforeAndAfterAll with Logging
     * Test binary DStream operation with two lists of inputs, with number of
     * batches to run same as the number of input values. The size of the two input lists Should be the same.
     *
-    * @param ordered Compare the output values with the expected output values ordered or not.
-    *                Comparing doubles may not work well in case of unordered.
-    */
-  def testOperation[U: ClassTag, V: ClassTag, W: ClassTag](
-    input1: Seq[Seq[U]],
-    input2: Seq[Seq[V]],
-    operation: (DStream[U], DStream[V]) => DStream[W],
-    expectedOutput: Seq[Seq[W]],
-    ordered: Boolean
-  ) (implicit equality: Equality[W]) {
-    testOperation[U, V, W](input1, input2, operation, expectedOutput, -1, ordered)
-  }
-
-  /**
-    * Test binary DStream operation with two lists of inputs. The size of the two input lists Should be the same.
-    *
     * @param input1     First sequence of input collections
     * @param input2     Second sequence of input collections
     * @param operation  Binary DStream operation to be applied to the 2 inputs
     * @param expectedOutput Sequence of expected output collections
-    * @param numBatches Number of batches to run the operation for. Should be less than or equal input length.
     * @param ordered Compare the output values with the expected output values ordered or not.
     *                Comparing doubles may not work well in case of unordered.
     */
@@ -180,17 +144,15 @@ trait StreamingSuiteBase extends FunSuite with BeforeAndAfterAll with Logging
     input2: Seq[Seq[V]],
     operation: (DStream[U], DStream[V]) => DStream[W],
     expectedOutput: Seq[Seq[W]],
-    numBatches: Int,
     ordered: Boolean
   ) (implicit equality: Equality[W]) {
     assert(input1.length === input2.length, "Length of the input lists are not equal")
-    assert(numBatches <= input1.length, "number of batches can't be greater than input length")
 
-    val numBatches_ = if (numBatches > 0) numBatches else input1.size
+    val numBatches = input1.size
 
     withOutputAndStreamingContext(setupStreams[U, V, W](input1, input2, operation)) {
       (outputStream, ssc) =>
-      val output = runStreams[W](outputStream, ssc, numBatches_, expectedOutput.size)
+      val output = runStreams[W](outputStream, ssc, numBatches, expectedOutput.size)
       verifyOutput[W](output, expectedOutput, ordered)
     }
   }
