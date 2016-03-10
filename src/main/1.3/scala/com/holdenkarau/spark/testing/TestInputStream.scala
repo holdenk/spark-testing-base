@@ -19,14 +19,13 @@ package com.holdenkarau.spark.testing
 import org.apache.spark.streaming._
 import org.apache.spark._
 import org.apache.spark.rdd.RDD
-import org.apache.spark.SparkContext._
 
 import scala.language.implicitConversions
 import scala.reflect.ClassTag
 import org.apache.spark.streaming.dstream.FriendlyInputDStream
 
 /**
- * This is a input stream just for the testsuites. This is equivalent to a checkpointable,
+ * This is an input stream just for the testsuites. This is equivalent to a checkpointable,
  * replayable, reliable message queue like Kafka. It requires a sequence as input, and
  * returns the i_th element at the i_th batch unde manual clock.
  * Based on TestInputStream class from TestSuiteBase in the Apache Spark project.
@@ -43,9 +42,11 @@ class TestInputStream[T: ClassTag](@transient var sc: SparkContext,
     logInfo("Computing RDD for time " + validTime)
     val index = ((validTime - ourZeroTime) / slideDuration - 1).toInt
     val selectedInput = if (index < input.size) input(index) else Seq[T]()
+    // TODO what if the number of batches doesn't equal size of input list !!
+    // for example => if input.size = 10, numOfBatches = 2 (Should we return 5 at every call !!)
 
     // lets us test cases where RDDs are not created
-    if (selectedInput == null) {
+    if (selectedInput == null) { //TODO will never be null !!
       return None
     }
 

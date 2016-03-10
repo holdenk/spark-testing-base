@@ -34,7 +34,7 @@ trait StreamingActionBase extends StreamingSuiteBase {
   /**
    * Execute unary DStream operation with a list of inputs and no expected output
    * @param input      Sequence of input collections
-   * @param operation  Binary DStream operation to be applied to the 2 inputs
+   * @param operation  Unary DStream operation to be applied to the input
    */
   def runAction[U: ClassTag](
                               input: Seq[Seq[U]],
@@ -107,15 +107,18 @@ trait StreamingActionBase extends StreamingSuiteBase {
       val startTime = System.currentTimeMillis()
       while (batchCountListener.batchCount < numBatches &&
         System.currentTimeMillis() - startTime < maxWaitTimeMillis) {
+        // TODO What if we need more time than maxWaitTimeMillis
         logInfo("batches run = " + batchCountListener.batchCount + ", numBatches = " + numBatches)
         ssc.awaitTerminationOrTimeout(50)
       }
+      // TODO What if the batchCount still less than numBatches and this loop breaks !!
       val timeTaken = System.currentTimeMillis() - startTime
       logInfo("Output generated in " + timeTaken + " milliseconds")
 
       Thread.sleep(100) // Give some time for the forgetting old RDDs to complete
     } finally {
       ssc.stop(stopSparkContext = false)
+      // TODO already closing the StreamingContext at method (withStreamingContext)
     }
   }
 
