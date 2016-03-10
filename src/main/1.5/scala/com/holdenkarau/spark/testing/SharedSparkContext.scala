@@ -41,8 +41,6 @@ trait SharedSparkContext extends BeforeAndAfterAll with SparkContextProvider {
 
   override def beforeAll() {
     _sc = new SparkContext(conf)
-    _sc.setLogLevel(org.apache.log4j.Level.WARN.toString)
-
     super.beforeAll()
   }
 
