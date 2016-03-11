@@ -127,8 +127,7 @@ private[holdenkarau] trait StreamingSuiteCommon extends Logging with SparkContex
    */
   private[holdenkarau] def setupStreams[U: ClassTag, V: ClassTag](
     input: Seq[Seq[U]],
-    operation: DStream[U] => DStream[V],
-    numPartitions: Int = numInputPartitions
+    operation: DStream[U] => DStream[V]
   ): (TestOutputStream[V], TestStreamingContext) = {
     // Create TestStreamingContext
     val ssc = new TestStreamingContext(sc, batchDuration)
