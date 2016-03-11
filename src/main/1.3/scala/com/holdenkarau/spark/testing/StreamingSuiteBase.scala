@@ -106,7 +106,8 @@ trait StreamingSuiteBase extends FunSuite with BeforeAndAfterAll with Logging
 
   /**
     * Test unary DStream operation with a list of inputs, with number of
-    * batches to run same as the number of input values
+    * batches to run same as the number of input values.
+    * You can simulate the input batch as a List of values or as null to simulate empty batch.
     *
     * @param input      Sequence of input collections
     * @param operation  Binary DStream operation to be applied to the 2 inputs
@@ -131,6 +132,7 @@ trait StreamingSuiteBase extends FunSuite with BeforeAndAfterAll with Logging
   /**
     * Test binary DStream operation with two lists of inputs, with number of
     * batches to run same as the number of input values. The size of the two input lists Should be the same.
+    * You can simulate the input batch as a List of values or as null to simulate empty batch.
     *
     * @param input1     First sequence of input collections
     * @param input2     Second sequence of input collections

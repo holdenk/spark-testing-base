@@ -127,6 +127,15 @@ class SampleStreamingTest extends StreamingSuiteBase {
     }
   }
 
+  test("empty batch by using null") {
+    def multiply(stream1: DStream[Int]) = stream1.map(_ * 3)
+
+    val input1 = List(List(1), null, List(10))
+    val output = List(List(3), List(30))
+
+    testOperation(input1, multiply _, output, ordered = false)
+  }
+
 }
 
 object SampleStreamingTest {
