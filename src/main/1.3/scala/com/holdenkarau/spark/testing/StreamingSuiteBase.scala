@@ -51,7 +51,8 @@ trait StreamingSuiteBase extends FunSuite with BeforeAndAfterAll with Logging
     * is same as the expected output values, by comparing the output
     * collections either as lists (order matters) or sets (order does not matter)
     *
-    * @param ordered Compare the output values with the expected output values ordered or not.
+    * @param ordered Compare output values with expected output values
+    *                within the same output batch ordered or unordered.
     *                Comparing doubles may not work well in case of unordered.
     */
   def verifyOutput[V: ClassTag](
@@ -112,7 +113,8 @@ trait StreamingSuiteBase extends FunSuite with BeforeAndAfterAll with Logging
     * @param input      Sequence of input collections
     * @param operation  Binary DStream operation to be applied to the 2 inputs
     * @param expectedOutput Sequence of expected output collections
-    * @param ordered Compare the output values with the expected output values ordered or not.
+    * @param ordered Compare output values with expected output values
+    *                within the same output batch ordered or unordered.
     *                Comparing doubles may not work well in case of unordered.
     */
   def testOperation[U: ClassTag, V: ClassTag](
@@ -138,7 +140,8 @@ trait StreamingSuiteBase extends FunSuite with BeforeAndAfterAll with Logging
     * @param input2     Second sequence of input collections
     * @param operation  Binary DStream operation to be applied to the 2 inputs
     * @param expectedOutput Sequence of expected output collections
-    * @param ordered Compare the output values with the expected output values ordered or not.
+    * @param ordered Compare output values with expected output values
+    *                within the same output batch ordered or unOrdered.
     *                Comparing doubles may not work well in case of unordered.
     */
   def testOperation[U: ClassTag, V: ClassTag, W: ClassTag](
@@ -146,7 +149,7 @@ trait StreamingSuiteBase extends FunSuite with BeforeAndAfterAll with Logging
     input2: Seq[Seq[V]],
     operation: (DStream[U], DStream[V]) => DStream[W],
     expectedOutput: Seq[Seq[W]],
-    ordered: Boolean
+    ordered: Boolean = false
   ) (implicit equality: Equality[W]) {
     assert(input1.length === input2.length, "Length of the input lists are not equal")
 

@@ -95,7 +95,8 @@ class JavaStreamingSuiteBase extends JavaSuiteBase with StreamingSuiteCommon {
     * @param input Sequence of input collections
     * @param operation Binary DStream operation to be applied to the 2 inputs
     * @param expectedOutput Sequence of expected output collections
-    * @param ordered Compare the output values with the expected output values ordered or not.
+    * @param ordered Compare output values with expected output values
+    *                within the same output batch ordered or unordered.
     *                Comparing doubles may not work well in case of unordered.
     */
   def testOperation[U, V](input: JList[JList[U]],
