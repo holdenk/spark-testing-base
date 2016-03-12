@@ -17,6 +17,7 @@
 package com.holdenkarau.spark.testing;
 
 import org.apache.spark.api.java.function.Function;
+import org.apache.spark.api.java.function.Function2;
 import org.apache.spark.streaming.api.java.JavaDStream;
 import org.junit.Test;
 
@@ -25,24 +26,60 @@ import java.util.Arrays;
 import java.util.List;
 
 public class SampleJavaStreamingTest extends JavaStreamingSuiteBase implements Serializable {
-  private static final List<List<Integer>> input =  Arrays.asList(
-    Arrays.asList(1,2), Arrays.asList(3,4,5));
-  private static final List<List<Integer>> expectedOutput =  Arrays.asList(
-    Arrays.asList(2), Arrays.asList(4));
 
-  private final Function<JavaDStream<Integer>, JavaDStream<Integer>> filter =
+  @Test
+  public void verifyFilterTest() {
+    List<List<Integer>> input = Arrays.asList(Arrays.asList(1, 2), Arrays.asList(3, 4, 5));
+    List<List<Integer>> expectedOutput = Arrays.asList(Arrays.asList(2), Arrays.asList(4));
+
+    testOperation(input, filterOddOperation, expectedOutput);
+    testOperation(input, filterOddOperation, expectedOutput, true);
+  }
+
+  @Test (expected = java.lang.AssertionError.class)
+  public void wrongUnaryOperation() {
+    List<List<Integer>> input = Arrays.asList(Arrays.asList(1, 2), Arrays.asList(3, 4, 5));
+    List<List<Integer>> expectedOutput = Arrays.asList(Arrays.asList(-2), Arrays.asList(4));
+
+    testOperation(input, filterOddOperation, expectedOutput);
+  }
+
+  @Test
+  public void verifyBinaryOperation() {
+    List<List<Integer>> input1 = Arrays.asList(Arrays.asList(1), Arrays.asList(3));
+    List<List<Integer>> input2 = Arrays.asList(Arrays.asList(2), Arrays.asList(4));
+    List<List<Integer>> expectedOutput = Arrays.asList(Arrays.asList(1, 2), Arrays.asList(3, 4));
+
+    testOperation(input1, input2, unionOperation, expectedOutput);
+    testOperation(input1, input2, unionOperation, expectedOutput, true);
+  }
+
+  @Test (expected = java.lang.AssertionError.class)
+  public void wrongBinaryOperation() {
+    List<List<Integer>> input1 = Arrays.asList(Arrays.asList(1), Arrays.asList(3));
+    List<List<Integer>> input2 = Arrays.asList(Arrays.asList(2), Arrays.asList(4));
+    List<List<Integer>> expectedOutput = Arrays.asList(Arrays.asList(1, 2, 3), Arrays.asList(3, 4));
+
+    testOperation(input1, input2, unionOperation, expectedOutput);
+    testOperation(input1, input2, unionOperation, expectedOutput, true);
+  }
+
+  private final Function<JavaDStream<Integer>, JavaDStream<Integer>> filterOddOperation =
     new Function<JavaDStream<Integer>, JavaDStream<Integer>>() {
       public JavaDStream<Integer> call(JavaDStream<Integer> myInput) {
         return myInput.filter(new Function<Integer, Boolean>() {
-            public Boolean call(Integer x) { return x % 2 == 0;}});
+          public Boolean call(Integer x) {
+            return x % 2 == 0;
+          }
+        });
       }
     };
 
-  @Test public void verifyFilterTest() {
-    testOperation(input, filter, expectedOutput);
-  }
+  private final Function2<JavaDStream<Integer>, JavaDStream<Integer>, JavaDStream<Integer>> unionOperation =
+    new Function2<JavaDStream<Integer>, JavaDStream<Integer>, JavaDStream<Integer>>() {
+      public JavaDStream<Integer> call(JavaDStream<Integer> input1, JavaDStream<Integer> input2) {
+        return input1.union(input2);
+      }
+    };
 
-  @Test public void verifyFilterTestWithSet() {
-    //testOperation(input, filter, SampleStreamingTest.expectedOutput, true);
-  }
 }
