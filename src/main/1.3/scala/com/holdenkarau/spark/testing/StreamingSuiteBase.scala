@@ -55,33 +55,30 @@ trait StreamingSuiteBase extends FunSuite with BeforeAndAfterAll with Logging
    *                within the same output batch ordered or unordered.
    *                Comparing doubles may not work well in case of unordered.
    */
-  def verifyOutput[V: ClassTag](
-      output: Seq[Seq[V]],
-      expectedOutput: Seq[Seq[V]],
-      ordered: Boolean
-    ) (implicit equality: Equality[V]): Unit = {
+  def verifyOutput[V: ClassTag](ordered: Boolean)
+                               (output: mutable.Queue[Seq[V]], expectedOutput: mutable.Queue[Seq[V]])
+                               (implicit equality: Equality[V]) {
 
     logInfo("--------------------------------")
-    logInfo("output.size = " + output.size)
-    logInfo("output")
+    logInfo("output:")
     output.foreach(x => logInfo("[" + x.mkString(",") + "]"))
-    logInfo("expected output.size = " + expectedOutput.size)
-    logInfo("expected output")
+    logInfo("expected output:")
     expectedOutput.foreach(x => logInfo("[" + x.mkString(",") + "]"))
     logInfo("--------------------------------")
 
     // Match the output with the expected output
-    assert(output.size === expectedOutput.size, "Number of outputs do not match")
     if (ordered) {
-      for (i <- output.indices)
-        equalsOrdered(output(i), expectedOutput(i))
+      while (output.nonEmpty && expectedOutput.nonEmpty)
+        equalsOrdered(output.dequeue(), expectedOutput.dequeue())
 
     } else {
-      for (i <- output.indices)
-        equalsUnordered(output(i), expectedOutput(i))
+      while (output.nonEmpty && expectedOutput.nonEmpty)
+        equalsUnordered(output.dequeue(), expectedOutput.dequeue())
     }
 
-    logInfo("Output verified successfully")
+    assert(output.size <= expectedOutput.size, "Generated output greater than expected output")
+
+    logInfo("Output verified successfully, remaining: " + expectedOutput.size)
   }
 
   private def equalsUnordered[V](output: Seq[V], expected: Seq[V])(implicit equality: Equality[V]) = {
@@ -126,9 +123,9 @@ trait StreamingSuiteBase extends FunSuite with BeforeAndAfterAll with Logging
     ) (implicit equality: Equality[V]): Unit = {
     val numBatches = input.size
 
-    withOutputAndStreamingContext(setupStreams[U, V](input, operation)) { (outputStream, ssc) =>
-      val output: Seq[Seq[V]] = runStreams[V](outputStream, ssc, numBatches, expectedOutput.size)
-      verifyOutput[V](output, expectedOutput, ordered)
+    withOutputAndStreamingContext(setupStreams[U, V](input, operation)) {
+      (outputStream, ssc) =>
+        runStreams[V](outputStream, ssc, numBatches, expectedOutput, verifyOutput(ordered))
     }
   }
 
@@ -158,8 +155,7 @@ trait StreamingSuiteBase extends FunSuite with BeforeAndAfterAll with Logging
 
     withOutputAndStreamingContext(setupStreams[U, V, W](input1, input2, operation)) {
       (outputStream, ssc) =>
-        val output = runStreams[W](outputStream, ssc, numBatches, expectedOutput.size)
-        verifyOutput[W](output, expectedOutput, ordered)
+        runStreams[W](outputStream, ssc, numBatches, expectedOutput, verifyOutput(ordered))
     }
   }
 }
