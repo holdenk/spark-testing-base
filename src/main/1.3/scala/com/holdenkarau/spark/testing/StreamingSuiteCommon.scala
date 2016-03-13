@@ -27,7 +27,6 @@ import org.scalatest.concurrent.Eventually.timeout
 import org.scalatest.concurrent.PatienceConfiguration
 import org.scalatest.time.{Seconds => ScalaTestSeconds, Span}
 
-import scala.collection.immutable.{HashBag => Bag}
 import scala.collection.mutable.{ArrayBuffer, SynchronizedBuffer}
 import scala.language.implicitConversions
 import scala.reflect.ClassTag
@@ -109,6 +108,7 @@ private[holdenkarau] trait StreamingSuiteCommon extends Logging with SparkContex
     val outputStream = outputStreamSSC._1
     val ssc = outputStreamSSC._2
     try {
+      ssc.start()
       block(outputStream, ssc)
     } finally {
       try {
@@ -185,9 +185,6 @@ private[holdenkarau] trait StreamingSuiteCommon extends Logging with SparkContex
     logInfo("numBatches = " + numBatches + ", numExpectedOutput = " + numExpectedOutput)
 
     val output = outputStream.output
-
-    // Start computation
-    ssc.start()
 
     // Advance manual clock
     val clock = ssc.getScheduler().clock.asInstanceOf[TestManualClock]
