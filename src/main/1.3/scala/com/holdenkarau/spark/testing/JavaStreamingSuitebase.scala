@@ -31,7 +31,7 @@ import scala.reflect.ClassTag
 /**
   * This is the base trait for Spark Streaming testsuite. This provides basic functionality
   * to run user-defined set of input on user-defined stream operations, and verify the output.
-  * This implementation is designer to work with JUnit for java users.
+  * This implementation is designed to work with JUnit for java users.
   *
   * Note: this always uses the manual clock
   */
@@ -45,9 +45,12 @@ class JavaStreamingSuiteBase extends JavaSuiteBase with StreamingSuiteCommon {
    * is same as the expected output values, by comparing the output
    * collections either as lists (order matters) or sets (order does not matter)
    */
-  def verifyOutput[V: ClassTag](output: Seq[Seq[V]],
-                                expectedOutput: Seq[Seq[V]],
-                                ordered: Boolean) {
+  def verifyOutput[V: ClassTag](
+      output: Seq[Seq[V]],
+      expectedOutput: Seq[Seq[V]],
+      ordered: Boolean
+  ) {
+
     logInfo("--------------------------------")
     logInfo("output.size = " + output.size)
     logInfo("output")
@@ -81,9 +84,11 @@ class JavaStreamingSuiteBase extends JavaSuiteBase with StreamingSuiteCommon {
     * @param operation Binary DStream operation to be applied to the 2 inputs
     * @param expectedOutput Sequence of expected output collections
     */
-  def testOperation[U, V](input: JList[JList[U]],
-                          operation: JFunction[JavaDStream[U], JavaDStream[V]],
-                          expectedOutput: JList[JList[V]]) {
+  def testOperation[U, V](
+      input: JList[JList[U]],
+      operation: JFunction[JavaDStream[U], JavaDStream[V]],
+      expectedOutput: JList[JList[V]]
+  ) {
     testOperation[U, V](input, operation, expectedOutput, false)
   }
 
@@ -99,10 +104,12 @@ class JavaStreamingSuiteBase extends JavaSuiteBase with StreamingSuiteCommon {
     *                within the same output batch ordered or unordered.
     *                Comparing doubles may not work well in case of unordered.
     */
-  def testOperation[U, V](input: JList[JList[U]],
-                          operation: JFunction[JavaDStream[U], JavaDStream[V]],
-                          expectedOutput: JList[JList[V]],
-                          ordered: Boolean) {
+  def testOperation[U, V](
+      input: JList[JList[U]],
+      operation: JFunction[JavaDStream[U], JavaDStream[V]],
+      expectedOutput: JList[JList[V]],
+      ordered: Boolean
+  ) {
 
     val numBatches = input.size
 
@@ -134,10 +141,12 @@ class JavaStreamingSuiteBase extends JavaSuiteBase with StreamingSuiteCommon {
     * @param operation  Binary DStream operation to be applied to the 2 inputs
     * @param expectedOutput Sequence of expected output collections
     */
-  def testOperation[U, V, W](input1: JList[JList[U]],
-                             input2: JList[JList[V]],
-                             operation: JFunction2[JavaDStream[U], JavaDStream[V], JavaDStream[W]],
-                             expectedOutput: JList[JList[W]]) {
+  def testOperation[U, V, W](
+      input1: JList[JList[U]],
+      input2: JList[JList[V]],
+      operation: JFunction2[JavaDStream[U], JavaDStream[V], JavaDStream[W]],
+      expectedOutput: JList[JList[W]]
+  ) {
     testOperation(input1, input2, operation, expectedOutput, false)
   }
 
@@ -154,11 +163,13 @@ class JavaStreamingSuiteBase extends JavaSuiteBase with StreamingSuiteCommon {
     *                within the same output batch ordered or unOrdered.
     *                Comparing doubles may not work well in case of unordered.
     */
-  def testOperation[U, V, W](input1: JList[JList[U]],
-                             input2: JList[JList[V]],
-                             operation: JFunction2[JavaDStream[U], JavaDStream[V], JavaDStream[W]],
-                             expectedOutput: JList[JList[W]],
-                             ordered: Boolean) {
+  def testOperation[U, V, W](
+      input1: JList[JList[U]],
+      input2: JList[JList[V]],
+      operation: JFunction2[JavaDStream[U], JavaDStream[V], JavaDStream[W]],
+      expectedOutput: JList[JList[W]],
+      ordered: Boolean
+  ) {
 
     assertEquals("Length of the input lists are not equal", input1.length, input2.length)
     val numBatches = input1.size

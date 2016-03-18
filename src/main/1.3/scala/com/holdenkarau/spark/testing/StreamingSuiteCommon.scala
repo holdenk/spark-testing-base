@@ -103,8 +103,10 @@ private[holdenkarau] trait StreamingSuiteCommon extends Logging with SparkContex
    * Run a block of code with the given StreamingContext and automatically
    * stop the context when the block completes or when an exception is thrown.
    */
-  private[holdenkarau] def withOutputAndStreamingContext[R](outputStreamSSC: (TestOutputStream[R], TestStreamingContext))
-    (block: (TestOutputStream[R], TestStreamingContext) => Unit): Unit = {
+  private[holdenkarau] def withOutputAndStreamingContext[R]
+      (outputStreamSSC: (TestOutputStream[R], TestStreamingContext))
+      (block: (TestOutputStream[R], TestStreamingContext) => Unit): Unit = {
+
     val outputStream = outputStreamSSC._1
     val ssc = outputStreamSSC._2
     try {
@@ -126,8 +128,8 @@ private[holdenkarau] trait StreamingSuiteCommon extends Logging with SparkContex
    * of input collections.
    */
   private[holdenkarau] def setupStreams[U: ClassTag, V: ClassTag](
-    input: Seq[Seq[U]],
-    operation: DStream[U] => DStream[V]
+      input: Seq[Seq[U]],
+      operation: DStream[U] => DStream[V]
   ): (TestOutputStream[V], TestStreamingContext) = {
     // Create TestStreamingContext
     val ssc = new TestStreamingContext(sc, batchDuration)
@@ -148,9 +150,9 @@ private[holdenkarau] trait StreamingSuiteCommon extends Logging with SparkContex
    * of input collections.
    */
   private[holdenkarau] def setupStreams[U: ClassTag, V: ClassTag, W: ClassTag](
-    input1: Seq[Seq[U]],
-    input2: Seq[Seq[V]],
-    operation: (DStream[U], DStream[V]) => DStream[W]
+      input1: Seq[Seq[U]],
+      input2: Seq[Seq[V]],
+      operation: (DStream[U], DStream[V]) => DStream[W]
   ): (TestOutputStream[W], TestStreamingContext) = {
     // Create StreamingContext
     val ssc = new TestStreamingContext(sc, batchDuration)
@@ -175,10 +177,10 @@ private[holdenkarau] trait StreamingSuiteCommon extends Logging with SparkContex
    * Returns a sequence of items for each RDD.
    */
   private[holdenkarau] def runStreams[V: ClassTag](
-    outputStream: TestOutputStream[V],
-    ssc: TestStreamingContext,
-    numBatches: Int,
-    numExpectedOutput: Int
+      outputStream: TestOutputStream[V],
+      ssc: TestStreamingContext,
+      numBatches: Int,
+      numExpectedOutput: Int
     ): Seq[Seq[V]] = {
     assert(numBatches > 0, "Number of batches to run stream computation is zero")
     assert(numExpectedOutput > 0, "Number of expected outputs after " + numBatches + " is zero")

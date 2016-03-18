@@ -56,10 +56,11 @@ trait StreamingSuiteBase extends FunSuite with BeforeAndAfterAll with Logging
     *                Comparing doubles may not work well in case of unordered.
     */
   def verifyOutput[V: ClassTag](
-   output: Seq[Seq[V]],
-   expectedOutput: Seq[Seq[V]],
-   ordered: Boolean
+      output: Seq[Seq[V]],
+      expectedOutput: Seq[Seq[V]],
+      ordered: Boolean
   ) (implicit equality: Equality[V]) {
+
     logInfo("--------------------------------")
     logInfo("output.size = " + output.size)
     logInfo("output")
@@ -118,10 +119,10 @@ trait StreamingSuiteBase extends FunSuite with BeforeAndAfterAll with Logging
     *                Comparing doubles may not work well in case of unordered.
     */
   def testOperation[U: ClassTag, V: ClassTag](
-   input: Seq[Seq[U]],
-   operation: DStream[U] => DStream[V],
-   expectedOutput: Seq[Seq[V]],
-   ordered: Boolean = false
+      input: Seq[Seq[U]],
+      operation: DStream[U] => DStream[V],
+      expectedOutput: Seq[Seq[V]],
+      ordered: Boolean = false
   ) (implicit equality: Equality[V]) {
     val numBatches = input.size
 
@@ -145,11 +146,11 @@ trait StreamingSuiteBase extends FunSuite with BeforeAndAfterAll with Logging
     *                Comparing doubles may not work well in case of unordered.
     */
   def testOperation[U: ClassTag, V: ClassTag, W: ClassTag](
-    input1: Seq[Seq[U]],
-    input2: Seq[Seq[V]],
-    operation: (DStream[U], DStream[V]) => DStream[W],
-    expectedOutput: Seq[Seq[W]],
-    ordered: Boolean = false
+      input1: Seq[Seq[U]],
+      input2: Seq[Seq[V]],
+      operation: (DStream[U], DStream[V]) => DStream[W],
+      expectedOutput: Seq[Seq[W]],
+      ordered: Boolean = false
   ) (implicit equality: Equality[W]) {
     assert(input1.length === input2.length, "Length of the input lists are not equal")
 
