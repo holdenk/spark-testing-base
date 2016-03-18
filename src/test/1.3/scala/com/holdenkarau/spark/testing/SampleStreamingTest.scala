@@ -35,6 +35,7 @@ class SampleStreamingTest extends StreamingSuiteBase {
   def tokenize(f: DStream[String]): DStream[String] = {
     f.flatMap(_.split(" "))
   }
+
   //end::simpleStreamingTest[]
 
   test("simple two stream streaming test") {
@@ -58,7 +59,7 @@ class SampleStreamingTest extends StreamingSuiteBase {
     val input = List(List("hi"), List("hi holden"), List("bye"))
     val badMultisetExpected = List(List("hi"), List("hi", "holden", "hi"), List("bye"))
     intercept[TestFailedException] {
-        testOperation[String, String](input, tokenize _, badMultisetExpected, ordered = false)
+      testOperation[String, String](input, tokenize _, badMultisetExpected, ordered = false)
     }
   }
 
@@ -102,12 +103,12 @@ class SampleStreamingTest extends StreamingSuiteBase {
     // There should be 2 windows :  {batch2, batch1},  {batch4, batch3, batch2}
     val batch1 = List("a", "b")
     val batch2 = List("d", "f", "a")
-    val batch3 = List("f", "g"," h")
+    val batch3 = List("f", "g", " h")
     val batch4 = List("a")
-    val input= List(batch1, batch2, batch3, batch4)
+    val input = List(batch1, batch2, batch3, batch4)
     val expected = List(List(5L), List(7L))
 
-    def countByWindow(ds:DStream[String]):DStream[Long] = {
+    def countByWindow(ds: DStream[String]): DStream[Long] = {
       ds.countByWindow(windowDuration = Seconds(3), slideDuration = Seconds(2))
     }
 

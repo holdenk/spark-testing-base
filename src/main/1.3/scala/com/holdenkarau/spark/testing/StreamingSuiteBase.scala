@@ -26,11 +26,11 @@ import org.scalactic.Equality
 import org.scalatest.{BeforeAndAfterAll, FunSuite}
 
 /**
-  * This is the base trait for Spark Streaming testsuites. This provides basic functionality
-  * to run user-defined set of input on user-defined stream operations, and verify the output.
-  */
+ * This is the base trait for Spark Streaming testsuites. This provides basic functionality
+ * to run user-defined set of input on user-defined stream operations, and verify the output.
+ */
 trait StreamingSuiteBase extends FunSuite with BeforeAndAfterAll with Logging
-    with StreamingSuiteCommon with SharedSparkContext {
+  with StreamingSuiteCommon with SharedSparkContext {
 
   // Default before function for any streaming test suite. Override this
   // if you want to add your stuff to "before" (i.e., don't call before { } )
@@ -47,19 +47,19 @@ trait StreamingSuiteBase extends FunSuite with BeforeAndAfterAll with Logging
   }
 
   /**
-    * Verify whether the output values after running a DStream operation
-    * is same as the expected output values, by comparing the output
-    * collections either as lists (order matters) or sets (order does not matter)
-    *
-    * @param ordered Compare output values with expected output values
-    *                within the same output batch ordered or unordered.
-    *                Comparing doubles may not work well in case of unordered.
-    */
+   * Verify whether the output values after running a DStream operation
+   * is same as the expected output values, by comparing the output
+   * collections either as lists (order matters) or sets (order does not matter)
+   *
+   * @param ordered Compare output values with expected output values
+   *                within the same output batch ordered or unordered.
+   *                Comparing doubles may not work well in case of unordered.
+   */
   def verifyOutput[V: ClassTag](
       output: Seq[Seq[V]],
       expectedOutput: Seq[Seq[V]],
       ordered: Boolean
-  ) (implicit equality: Equality[V]) {
+    ) (implicit equality: Equality[V]): Unit = {
 
     logInfo("--------------------------------")
     logInfo("output.size = " + output.size)
@@ -84,7 +84,7 @@ trait StreamingSuiteBase extends FunSuite with BeforeAndAfterAll with Logging
     logInfo("Output verified successfully")
   }
 
-  private def equalsUnordered[V](output: Seq[V], expected: Seq[V]) (implicit equality: Equality[V]) = {
+  private def equalsUnordered[V](output: Seq[V], expected: Seq[V])(implicit equality: Equality[V]) = {
     assert(output.length === expected.length)
 
     val length = output.length
@@ -100,30 +100,30 @@ trait StreamingSuiteBase extends FunSuite with BeforeAndAfterAll with Logging
     }
   }
 
-  private def equalsOrdered[V](output: Seq[V], expected: Seq[V]) (implicit equality: Equality[V])  = {
+  private def equalsOrdered[V](output: Seq[V], expected: Seq[V])(implicit equality: Equality[V]) = {
     assert(output.length === expected.length)
     for (i <- output.indices)
       assert(output(i) === expected(i))
   }
 
   /**
-    * Test unary DStream operation with a list of inputs, with number of
-    * batches to run same as the number of input values.
-    * You can simulate the input batch as a List of values or as null to simulate empty batch.
-    *
-    * @param input      Sequence of input collections
-    * @param operation  Binary DStream operation to be applied to the 2 inputs
-    * @param expectedOutput Sequence of expected output collections
-    * @param ordered Compare output values with expected output values
-    *                within the same output batch ordered or unordered.
-    *                Comparing doubles may not work well in case of unordered.
-    */
+   * Test unary DStream operation with a list of inputs, with number of
+   * batches to run same as the number of input values.
+   * You can simulate the input batch as a List of values or as null to simulate empty batch.
+   *
+   * @param input          Sequence of input collections
+   * @param operation      Binary DStream operation to be applied to the 2 inputs
+   * @param expectedOutput Sequence of expected output collections
+   * @param ordered        Compare output values with expected output values
+   *                       within the same output batch ordered or unordered.
+   *                       Comparing doubles may not work well in case of unordered.
+   */
   def testOperation[U: ClassTag, V: ClassTag](
       input: Seq[Seq[U]],
       operation: DStream[U] => DStream[V],
       expectedOutput: Seq[Seq[V]],
       ordered: Boolean = false
-  ) (implicit equality: Equality[V]) {
+    ) (implicit equality: Equality[V]): Unit = {
     val numBatches = input.size
 
     withOutputAndStreamingContext(setupStreams[U, V](input, operation)) { (outputStream, ssc) =>
@@ -133,33 +133,33 @@ trait StreamingSuiteBase extends FunSuite with BeforeAndAfterAll with Logging
   }
 
   /**
-    * Test binary DStream operation with two lists of inputs, with number of
-    * batches to run same as the number of input values. The size of the two input lists Should be the same.
-    * You can simulate the input batch as a List of values or as null to simulate empty batch.
-    *
-    * @param input1     First sequence of input collections
-    * @param input2     Second sequence of input collections
-    * @param operation  Binary DStream operation to be applied to the 2 inputs
-    * @param expectedOutput Sequence of expected output collections
-    * @param ordered Compare output values with expected output values
-    *                within the same output batch ordered or unOrdered.
-    *                Comparing doubles may not work well in case of unordered.
-    */
+   * Test binary DStream operation with two lists of inputs, with number of
+   * batches to run same as the number of input values. The size of the two input lists Should be the same.
+   * You can simulate the input batch as a List of values or as null to simulate empty batch.
+   *
+   * @param input1         First sequence of input collections
+   * @param input2         Second sequence of input collections
+   * @param operation      Binary DStream operation to be applied to the 2 inputs
+   * @param expectedOutput Sequence of expected output collections
+   * @param ordered        Compare output values with expected output values
+   *                       within the same output batch ordered or unOrdered.
+   *                       Comparing doubles may not work well in case of unordered.
+   */
   def testOperation[U: ClassTag, V: ClassTag, W: ClassTag](
       input1: Seq[Seq[U]],
       input2: Seq[Seq[V]],
       operation: (DStream[U], DStream[V]) => DStream[W],
       expectedOutput: Seq[Seq[W]],
       ordered: Boolean = false
-  ) (implicit equality: Equality[W]) {
+    ) (implicit equality: Equality[W]): Unit = {
     assert(input1.length === input2.length, "Length of the input lists are not equal")
 
     val numBatches = input1.size
 
     withOutputAndStreamingContext(setupStreams[U, V, W](input1, input2, operation)) {
       (outputStream, ssc) =>
-      val output = runStreams[W](outputStream, ssc, numBatches, expectedOutput.size)
-      verifyOutput[W](output, expectedOutput, ordered)
+        val output = runStreams[W](outputStream, ssc, numBatches, expectedOutput.size)
+        verifyOutput[W](output, expectedOutput, ordered)
     }
   }
 }

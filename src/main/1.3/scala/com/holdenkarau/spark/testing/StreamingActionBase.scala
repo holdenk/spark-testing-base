@@ -34,8 +34,8 @@ trait StreamingActionBase extends StreamingSuiteBase {
   /**
    * Execute unary DStream operation with a list of inputs and no expected output
    *
-   * @param input      Sequence of input collections
-   * @param operation  Unary DStream operation to be applied to the input
+   * @param input     Sequence of input collections
+   * @param operation Unary DStream operation to be applied to the input
    */
   def runAction[U: ClassTag](input: Seq[Seq[U]], operation: DStream[U] => Unit) {
 
@@ -46,7 +46,7 @@ trait StreamingActionBase extends StreamingSuiteBase {
   }
 
   private def withStreamingContext(outputStreamSSC: TestStreamingContext)
-                          (block: TestStreamingContext => Unit): Unit = {
+      (block: TestStreamingContext => Unit): Unit = {
     try {
       block(outputStreamSSC)
     } finally {
@@ -60,7 +60,7 @@ trait StreamingActionBase extends StreamingSuiteBase {
   }
 
   private def setupStream[U: ClassTag](input: Seq[Seq[U]],
-                               operation: DStream[U] => Any): TestStreamingContext = {
+      operation: DStream[U] => Any): TestStreamingContext = {
 
     // Create TestStreamingContext
     val ssc = new TestStreamingContext(sc, batchDuration)

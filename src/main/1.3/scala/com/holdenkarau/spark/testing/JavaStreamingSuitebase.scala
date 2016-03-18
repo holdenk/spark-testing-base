@@ -29,12 +29,12 @@ import scala.language.implicitConversions
 import scala.reflect.ClassTag
 
 /**
-  * This is the base trait for Spark Streaming testsuite. This provides basic functionality
-  * to run user-defined set of input on user-defined stream operations, and verify the output.
-  * This implementation is designed to work with JUnit for java users.
-  *
-  * Note: this always uses the manual clock
-  */
+ * This is the base trait for Spark Streaming testsuite. This provides basic functionality
+ * to run user-defined set of input on user-defined stream operations, and verify the output.
+ * This implementation is designed to work with JUnit for java users.
+ *
+ * Note: this always uses the manual clock
+ */
 class JavaStreamingSuiteBase extends JavaSuiteBase with StreamingSuiteCommon {
 
   override def conf = super.conf
@@ -48,8 +48,7 @@ class JavaStreamingSuiteBase extends JavaSuiteBase with StreamingSuiteCommon {
   def verifyOutput[V: ClassTag](
       output: Seq[Seq[V]],
       expectedOutput: Seq[Seq[V]],
-      ordered: Boolean
-  ) {
+      ordered: Boolean): Unit = {
 
     logInfo("--------------------------------")
     logInfo("output.size = " + output.size)
@@ -76,40 +75,38 @@ class JavaStreamingSuiteBase extends JavaSuiteBase with StreamingSuiteCommon {
   }
 
   /**
-    * Test unary DStream operation with a list of inputs, with number of
-    * batches to run same as the number of input values.
-    * You can simulate the input batch as a List of values or as null to simulate empty batch.
-    *
-    * @param input Sequence of input collections
-    * @param operation Binary DStream operation to be applied to the 2 inputs
-    * @param expectedOutput Sequence of expected output collections
-    */
+   * Test unary DStream operation with a list of inputs, with number of
+   * batches to run same as the number of input values.
+   * You can simulate the input batch as a List of values or as null to simulate empty batch.
+   *
+   * @param input          Sequence of input collections
+   * @param operation      Binary DStream operation to be applied to the 2 inputs
+   * @param expectedOutput Sequence of expected output collections
+   */
   def testOperation[U, V](
       input: JList[JList[U]],
       operation: JFunction[JavaDStream[U], JavaDStream[V]],
-      expectedOutput: JList[JList[V]]
-  ) {
+      expectedOutput: JList[JList[V]]): Unit = {
     testOperation[U, V](input, operation, expectedOutput, false)
   }
 
   /**
-    * Test unary DStream operation with a list of inputs, with number of
-    * batches to run same as the number of input values.
-    * You can simulate the input batch as a List of values or as null to simulate empty batch.
-    *
-    * @param input Sequence of input collections
-    * @param operation Binary DStream operation to be applied to the 2 inputs
-    * @param expectedOutput Sequence of expected output collections
-    * @param ordered Compare output values with expected output values
-    *                within the same output batch ordered or unordered.
-    *                Comparing doubles may not work well in case of unordered.
-    */
+   * Test unary DStream operation with a list of inputs, with number of
+   * batches to run same as the number of input values.
+   * You can simulate the input batch as a List of values or as null to simulate empty batch.
+   *
+   * @param input          Sequence of input collections
+   * @param operation      Binary DStream operation to be applied to the 2 inputs
+   * @param expectedOutput Sequence of expected output collections
+   * @param ordered        Compare output values with expected output values
+   *                       within the same output batch ordered or unordered.
+   *                       Comparing doubles may not work well in case of unordered.
+   */
   def testOperation[U, V](
       input: JList[JList[U]],
       operation: JFunction[JavaDStream[U], JavaDStream[V]],
       expectedOutput: JList[JList[V]],
-      ordered: Boolean
-  ) {
+      ordered: Boolean): Unit = {
 
     val numBatches = input.size
 
@@ -125,51 +122,49 @@ class JavaStreamingSuiteBase extends JavaSuiteBase with StreamingSuiteCommon {
 
     withOutputAndStreamingContext(setupStreams[U, V](sInput, wrappedOperation)) {
       (outputStream, ssc) =>
-      val output: Seq[Seq[V]] = runStreams[V](outputStream, ssc, numBatches, expectedOutput.size)
-      verifyOutput[V](output, sExpectedOutput, ordered)
+        val output: Seq[Seq[V]] = runStreams[V](outputStream, ssc, numBatches, expectedOutput.size)
+        verifyOutput[V](output, sExpectedOutput, ordered)
     }
   }
 
 
   /**
-    * Test binary DStream operation with two lists of inputs, with number of
-    * batches to run same as the number of input values. The size of the two input lists Should be the same.
-    * You can simulate the input batch as a List of values or as null to simulate empty batch.
-    *
-    * @param input1     First sequence of input collections
-    * @param input2     Second sequence of input collections
-    * @param operation  Binary DStream operation to be applied to the 2 inputs
-    * @param expectedOutput Sequence of expected output collections
-    */
+   * Test binary DStream operation with two lists of inputs, with number of
+   * batches to run same as the number of input values. The size of the two input lists Should be the same.
+   * You can simulate the input batch as a List of values or as null to simulate empty batch.
+   *
+   * @param input1         First sequence of input collections
+   * @param input2         Second sequence of input collections
+   * @param operation      Binary DStream operation to be applied to the 2 inputs
+   * @param expectedOutput Sequence of expected output collections
+   */
   def testOperation[U, V, W](
       input1: JList[JList[U]],
       input2: JList[JList[V]],
       operation: JFunction2[JavaDStream[U], JavaDStream[V], JavaDStream[W]],
-      expectedOutput: JList[JList[W]]
-  ) {
+      expectedOutput: JList[JList[W]]): Unit = {
     testOperation(input1, input2, operation, expectedOutput, false)
   }
 
-    /**
-    * Test binary DStream operation with two lists of inputs, with number of
-    * batches to run same as the number of input values. The size of the two input lists Should be the same.
-    * You can simulate the input batch as a List of values or as null to simulate empty batch.
-    *
-    * @param input1     First sequence of input collections
-    * @param input2     Second sequence of input collections
-    * @param operation  Binary DStream operation to be applied to the 2 inputs
-    * @param expectedOutput Sequence of expected output collections
-    * @param ordered Compare output values with expected output values
-    *                within the same output batch ordered or unOrdered.
-    *                Comparing doubles may not work well in case of unordered.
-    */
+  /**
+   * Test binary DStream operation with two lists of inputs, with number of
+   * batches to run same as the number of input values. The size of the two input lists Should be the same.
+   * You can simulate the input batch as a List of values or as null to simulate empty batch.
+   *
+   * @param input1         First sequence of input collections
+   * @param input2         Second sequence of input collections
+   * @param operation      Binary DStream operation to be applied to the 2 inputs
+   * @param expectedOutput Sequence of expected output collections
+   * @param ordered        Compare output values with expected output values
+   *                       within the same output batch ordered or unOrdered.
+   *                       Comparing doubles may not work well in case of unordered.
+   */
   def testOperation[U, V, W](
       input1: JList[JList[U]],
       input2: JList[JList[V]],
       operation: JFunction2[JavaDStream[U], JavaDStream[V], JavaDStream[W]],
       expectedOutput: JList[JList[W]],
-      ordered: Boolean
-  ) {
+      ordered: Boolean): Unit = {
 
     assertEquals("Length of the input lists are not equal", input1.length, input2.length)
     val numBatches = input1.size

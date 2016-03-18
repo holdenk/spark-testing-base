@@ -36,7 +36,7 @@ public class SampleJavaStreamingTest extends JavaStreamingSuiteBase implements S
     testOperation(input, filterOddOperation, expectedOutput, true);
   }
 
-  @Test (expected = java.lang.AssertionError.class)
+  @Test(expected = java.lang.AssertionError.class)
   public void wrongUnaryOperation() {
     List<List<Integer>> input = Arrays.asList(Arrays.asList(1, 2), Arrays.asList(3, 4, 5));
     List<List<Integer>> expectedOutput = Arrays.asList(Arrays.asList(-2), Arrays.asList(4));
@@ -54,7 +54,7 @@ public class SampleJavaStreamingTest extends JavaStreamingSuiteBase implements S
     testOperation(input1, input2, unionOperation, expectedOutput, true);
   }
 
-  @Test (expected = java.lang.AssertionError.class)
+  @Test(expected = java.lang.AssertionError.class)
   public void wrongBinaryOperation() {
     List<List<Integer>> input1 = Arrays.asList(Arrays.asList(1), Arrays.asList(3));
     List<List<Integer>> input2 = Arrays.asList(Arrays.asList(2), Arrays.asList(4));

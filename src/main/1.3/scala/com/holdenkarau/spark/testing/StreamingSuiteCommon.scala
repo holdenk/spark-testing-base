@@ -32,17 +32,19 @@ import scala.language.implicitConversions
 import scala.reflect.ClassTag
 
 /**
-  * This is a output stream just for testing.
-  *
-  * The buffer contains a sequence of RDD's, each containing a sequence of items
-  */
+ * This is a output stream just for testing.
+ *
+ * The buffer contains a sequence of RDD's, each containing a sequence of items
+ */
 // tag::collectResults[]
 class TestOutputStream[T: ClassTag](parent: DStream[T],
   val output: ArrayBuffer[Seq[T]] = ArrayBuffer[Seq[T]]()) extends Serializable {
+  
   parent.foreachRDD{(rdd: RDD[T], time) =>
     val collected = rdd.collect()
     output += collected
   }
+
 }
 // end::collectResults[]
 
@@ -56,10 +58,13 @@ private[holdenkarau] trait StreamingSuiteCommon extends Logging with SparkContex
    * Create an input stream for the provided input sequence. This is done using
    * TestInputStream as queueStream's are not checkpointable.
    */
-  private[holdenkarau] def createTestInputStream[T: ClassTag](sc: SparkContext, ssc_ : TestStreamingContext,
-    input: Seq[Seq[T]]): TestInputStream[T] = {
+  private[holdenkarau] def createTestInputStream[T: ClassTag](
+      sc: SparkContext,
+      ssc_ : TestStreamingContext,
+      input: Seq[Seq[T]]): TestInputStream[T] = {
     new TestInputStream(sc, ssc_, input, numInputPartitions)
   }
+
   // end::createTestInputStream[]
 
   // Batch duration
@@ -129,8 +134,8 @@ private[holdenkarau] trait StreamingSuiteCommon extends Logging with SparkContex
    */
   private[holdenkarau] def setupStreams[U: ClassTag, V: ClassTag](
       input: Seq[Seq[U]],
-      operation: DStream[U] => DStream[V]
-  ): (TestOutputStream[V], TestStreamingContext) = {
+      operation: DStream[U] => DStream[V]): (TestOutputStream[V], TestStreamingContext) = {
+
     // Create TestStreamingContext
     val ssc = new TestStreamingContext(sc, batchDuration)
     if (checkpointDir != null) {
@@ -153,7 +158,7 @@ private[holdenkarau] trait StreamingSuiteCommon extends Logging with SparkContex
       input1: Seq[Seq[U]],
       input2: Seq[Seq[V]],
       operation: (DStream[U], DStream[V]) => DStream[W]
-  ): (TestOutputStream[W], TestStreamingContext) = {
+    ): (TestOutputStream[W], TestStreamingContext) = {
     // Create StreamingContext
     val ssc = new TestStreamingContext(sc, batchDuration)
     if (checkpointDir != null) {
