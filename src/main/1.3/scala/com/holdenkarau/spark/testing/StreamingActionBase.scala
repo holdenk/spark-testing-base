@@ -24,7 +24,7 @@ import org.apache.spark.streaming.util.TestManualClock
 import scala.reflect.ClassTag
 
 /**
- * Methods for testing Spark actions.   Because actions don't return a DStream, you will need
+ * Methods for testing Spark actions. Because actions don't return a DStream, you will need
  * to verify the results of your test against mocks.
  */
 trait StreamingActionBase extends StreamingSuiteBase {
@@ -33,22 +33,20 @@ trait StreamingActionBase extends StreamingSuiteBase {
 
   /**
    * Execute unary DStream operation with a list of inputs and no expected output
-   * @param input      Sequence of input collections
-   * @param operation  Binary DStream operation to be applied to the 2 inputs
+   *
+   * @param input     Sequence of input collections
+   * @param operation Unary DStream operation to be applied to the input
    */
-  def runAction[U: ClassTag](
-                              input: Seq[Seq[U]],
-                              operation: DStream[U] => Unit
-                              ) {
+  def runAction[U: ClassTag](input: Seq[Seq[U]], operation: DStream[U] => Unit) {
+
     val numBatches_ = input.size
-    val output =
-      withStreamingContext(setupStream[U](input, operation)) { ssc =>
-        runActionStream(ssc, numBatches_)
-      }
+    withStreamingContext(setupStream[U](input, operation)) { ssc =>
+      runActionStream(ssc, numBatches_)
+    }
   }
 
-  def withStreamingContext(outputStreamSSC: TestStreamingContext)
-                          (block: TestStreamingContext => Unit): Unit = {
+  private def withStreamingContext(outputStreamSSC: TestStreamingContext)
+      (block: TestStreamingContext => Unit): Unit = {
     try {
       block(outputStreamSSC)
     } finally {
@@ -61,10 +59,8 @@ trait StreamingActionBase extends StreamingSuiteBase {
     }
   }
 
-  def setupStream[U: ClassTag](
-                                input: Seq[Seq[U]],
-                                operation: DStream[U] => Any
-                                ): TestStreamingContext = {
+  private def setupStream[U: ClassTag](input: Seq[Seq[U]],
+      operation: DStream[U] => Any): TestStreamingContext = {
 
     // Create TestStreamingContext
     val ssc = new TestStreamingContext(sc, batchDuration)
@@ -79,44 +75,37 @@ trait StreamingActionBase extends StreamingSuiteBase {
     ssc
   }
 
-  def runActionStream(
-                       ssc: TestStreamingContext,
-                       numBatches: Int
-                       ) {
+  private def runActionStream(ssc: TestStreamingContext, numBatches: Int) {
     assert(numBatches > 0, "Number of batches to run stream computation is zero")
 
-    try {
-      // Start computation
-      ssc.start()
+    // Start computation
+    ssc.start()
 
-      // Advance manual clock
-      val clock = ssc.getScheduler().clock.asInstanceOf[TestManualClock]
-      logInfo("Manual clock before advancing = " + clock.currentTime())
-      if (actuallyWait) {
-        for (i <- 1 to numBatches) {
-          logInfo("Actually waiting for " + batchDuration)
-          clock.addToTime(batchDuration.milliseconds)
-          Thread.sleep(batchDuration.milliseconds)
-        }
-      } else {
-        clock.addToTime(numBatches * batchDuration.milliseconds)
+    // Advance manual clock
+    val clock = ssc.getScheduler().clock.asInstanceOf[TestManualClock]
+    logInfo("Manual clock before advancing = " + clock.currentTime())
+    if (actuallyWait) {
+      for (i <- 1 to numBatches) {
+        logInfo("Actually waiting for " + batchDuration)
+        clock.addToTime(batchDuration.milliseconds)
+        Thread.sleep(batchDuration.milliseconds)
       }
-      logInfo("Manual clock after advancing = " + clock.currentTime())
-
-      // wait for expected number of batches to execute
-      val startTime = System.currentTimeMillis()
-      while (batchCountListener.batchCount < numBatches &&
-        System.currentTimeMillis() - startTime < maxWaitTimeMillis) {
-        logInfo("batches run = " + batchCountListener.batchCount + ", numBatches = " + numBatches)
-        ssc.awaitTerminationOrTimeout(50)
-      }
-      val timeTaken = System.currentTimeMillis() - startTime
-      logInfo("Output generated in " + timeTaken + " milliseconds")
-
-      Thread.sleep(100) // Give some time for the forgetting old RDDs to complete
-    } finally {
-      ssc.stop(stopSparkContext = false)
+    } else {
+      clock.addToTime(numBatches * batchDuration.milliseconds)
     }
+    logInfo("Manual clock after advancing = " + clock.currentTime())
+
+    // wait for expected number of batches to execute
+    val startTime = System.currentTimeMillis()
+    while (batchCountListener.batchCount < numBatches &&
+      System.currentTimeMillis() - startTime < maxWaitTimeMillis) {
+      logInfo("batches run = " + batchCountListener.batchCount + ", numBatches = " + numBatches)
+      ssc.awaitTerminationOrTimeout(50)
+    }
+    val timeTaken = System.currentTimeMillis() - startTime
+    logInfo("Output generated in " + timeTaken + " milliseconds")
+
+    Thread.sleep(100) // Give some time for the forgetting old RDDs to complete
   }
 
 }
