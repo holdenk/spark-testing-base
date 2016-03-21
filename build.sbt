@@ -31,55 +31,38 @@ unmanagedSourceDirectories in Compile  := {
   if (sparkVersion.value >= "1.6") Seq(
     (sourceDirectory in Compile)(_ / "1.6/scala"),
     (sourceDirectory in Compile)(_ / "1.5/scala"),
-    (sourceDirectory in Compile)(_ / "1.5/java"),
     (sourceDirectory in Compile)(_ / "1.4/scala"),
-    (sourceDirectory in Compile)(_ / "1.4/java"),
-    (sourceDirectory in Compile)(_ / "1.3/scala"),
-    (sourceDirectory in Compile)(_ / "1.3/java")
+    (sourceDirectory in Compile)(_ / "1.3/scala"), (sourceDirectory in Compile)(_ / "1.3/java")
   ).join.value
   else if (sparkVersion.value >= "1.5") Seq(
     (sourceDirectory in Compile)(_ / "1.5/scala"),
-    (sourceDirectory in Compile)(_ / "1.5/java"),
     (sourceDirectory in Compile)(_ / "1.4/scala"),
-    (sourceDirectory in Compile)(_ / "1.4/java"),
-    (sourceDirectory in Compile)(_ / "1.3/scala"),
-    (sourceDirectory in Compile)(_ / "1.3/java")
+    (sourceDirectory in Compile)(_ / "1.3/scala"), (sourceDirectory in Compile)(_ / "1.3/java")
   ).join.value
   else if (sparkVersion.value >= "1.4") Seq(
     (sourceDirectory in Compile)(_ / "pre-1.5/scala"),
-    (sourceDirectory in Compile)(_ / "pre-1.5/java"),
     (sourceDirectory in Compile)(_ / "1.4/scala"),
-    (sourceDirectory in Compile)(_ / "1.4/java"),
-    (sourceDirectory in Compile)(_ / "1.3/scala"),
-    (sourceDirectory in Compile)(_ / "1.3/java")
+    (sourceDirectory in Compile)(_ / "1.3/scala"), (sourceDirectory in Compile)(_ / "1.3/java")
   ).join.value
   else Seq(
     (sourceDirectory in Compile)(_ / "pre-1.5/scala"),
-    (sourceDirectory in Compile)(_ / "pre-1.5/java"),
-    (sourceDirectory in Compile)(_ / "1.3/scala"),
-    (sourceDirectory in Compile)(_ / "1.3/java"),
+    (sourceDirectory in Compile)(_ / "1.3/scala"), (sourceDirectory in Compile)(_ / "1.3/java"),
     (sourceDirectory in Compile)(_ / "1.3-only/scala")
   ).join.value
 }
 
 unmanagedSourceDirectories in Test  := {
   if (sparkVersion.value >= "1.6") Seq(
-    (sourceDirectory in Test)(_ / "1.6/scala"),
-    (sourceDirectory in Test)(_ / "1.6/java"),
+    (sourceDirectory in Test)(_ / "1.6/scala"), (sourceDirectory in Test)(_ / "1.6/java"),
     (sourceDirectory in Test)(_ / "1.4/scala"),
-    (sourceDirectory in Test)(_ / "1.4/java"),
-    (sourceDirectory in Test)(_ / "1.3/scala"),
-    (sourceDirectory in Test)(_ / "1.3/java")
+    (sourceDirectory in Test)(_ / "1.3/scala"), (sourceDirectory in Test)(_ / "1.3/java")
   ).join.value
   else if (sparkVersion.value >= "1.4") Seq(
     (sourceDirectory in Test)(_ / "1.4/scala"),
-    (sourceDirectory in Test)(_ / "1.4/java"),
-    (sourceDirectory in Test)(_ / "1.3/scala"),
-    (sourceDirectory in Test)(_ / "1.3/java")
+    (sourceDirectory in Test)(_ / "1.3/scala"), (sourceDirectory in Test)(_ / "1.3/java")
   ).join.value
   else Seq(
-    (sourceDirectory in Test)(_ / "1.3/scala"),
-    (sourceDirectory in Test)(_ / "1.3/java")
+    (sourceDirectory in Test)(_ / "1.3/scala"), (sourceDirectory in Test)(_ / "1.3/java")
   ).join.value
 }
 
