@@ -20,7 +20,10 @@ object DataframeGenerator {
 
   /**
    * Creates a DataFrame Generator for the given Schema, and the given custom generators.
-   * custom generators should be in the form of (column index, generator function)
+   * custom generators should be in the form of (column index, generator function).
+   *
+   * Note: The given custom generators should match the required schema,
+   * for ex. you can't use Int generator for StringType.
    *
    * @param sqlContext     SQL Context.
    * @param schema         The required Schema.
@@ -50,6 +53,8 @@ object DataframeGenerator {
 
   /**
    * Creates row generator for the required schema and with user's custom generators.
+   *
+   * Note: Custom generators should match the required schema, for ex. you can't use Int generator for StringType.
    *
    * @param schema           the required Row's schema.
    * @param customGenerators user custom generator, this is useful if the user want to
@@ -88,6 +93,6 @@ object DataframeGenerator {
 
 }
 
-class ColumnGenerator(val index: Int, generator: => Gen[Any]) {
+class ColumnGenerator(val index: Int, generator: => Gen[Any]) extends java.io.Serializable {
   lazy val gen = generator
 }
