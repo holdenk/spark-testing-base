@@ -69,9 +69,10 @@ object DataframeGenerator {
   }
 
   private def createGenerators(fields: Array[StructField], userGenerators: Seq[ColumnGenerator]): List[Gen[Any]] = {
-    val generatorMap: Map[Int, ColumnGenerator] = userGenerators.map(generator => (generator.index -> generator)).toMap
+    val generatorMap = userGenerators.map(generator => (generator.columnName -> generator)).toMap
     (0 until fields.length).toList.map(index =>
-      if (generatorMap.contains(index)) generatorMap.get(index).get.gen else getGenerator(fields(index)))
+      if (generatorMap.contains(fields(index).name)) generatorMap.get(fields(index).name).get.gen
+      else getGenerator(fields(index)))
   }
 
   private def getGenerator(fieldType: StructField): Gen[Any] = {
@@ -93,6 +94,6 @@ object DataframeGenerator {
 
 }
 
-class ColumnGenerator(val index: Int, generator: => Gen[Any]) extends java.io.Serializable {
+class ColumnGenerator(val columnName: String, generator: => Gen[Any]) extends java.io.Serializable {
   lazy val gen = generator
 }

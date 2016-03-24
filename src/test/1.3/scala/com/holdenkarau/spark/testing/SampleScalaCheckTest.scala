@@ -95,7 +95,7 @@ class SampleScalaCheckTest extends FunSuite with SharedSparkContext with Checker
   test("test custom columns generators") {
     val schema = StructType(List(StructField("name", StringType), StructField("age", IntegerType)))
     val sqlContext = new SQLContext(sc)
-    val ageGenerator = new ColumnGenerator(1, Gen.choose(10, 100))
+    val ageGenerator = new ColumnGenerator("age", Gen.choose(10, 100))
     val dataframeGen = DataframeGenerator.genDataFrameWithCustomFields(sqlContext, schema)(ageGenerator)
 
     val property =
@@ -109,8 +109,8 @@ class SampleScalaCheckTest extends FunSuite with SharedSparkContext with Checker
   test("test multiple columns generators") {
     val schema = StructType(List(StructField("name", StringType), StructField("age", IntegerType)))
     val sqlContext = new SQLContext(sc)
-    val nameGenerator = new ColumnGenerator(0, Gen.oneOf("Holden", "Hanafy")) // name should be on of those
-    val ageGenerator = new ColumnGenerator(1, Gen.choose(10, 100))
+    val nameGenerator = new ColumnGenerator("name", Gen.oneOf("Holden", "Hanafy")) // name should be on of those
+    val ageGenerator = new ColumnGenerator("age", Gen.choose(10, 100))
     val dataframeGen = DataframeGenerator.genDataFrameWithCustomFields(sqlContext, schema)(nameGenerator, ageGenerator)
 
     val property =
