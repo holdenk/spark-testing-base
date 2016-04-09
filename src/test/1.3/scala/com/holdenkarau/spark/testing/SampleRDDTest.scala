@@ -135,4 +135,34 @@ class SampleRDDTest extends FunSuite with SharedSparkContext {
 
     assert(None !== RDDComparisons.compareWithOrder(inputRDD, expectedRDD))
   }
+
+  test("assertEqualsWithOrder Success") {
+    val rdd = sc.parallelize(List(1, 2, 3, 4))
+    RDDComparisons.assertRDDEqualsWithOrder(rdd, rdd)
+  }
+
+  test("assertEqualsWithoutOrder Success") {
+    val rdd1 = sc.parallelize(List(1, 2, 3, 4))
+    val rdd2 = sc.parallelize(List(4, 3, 2, 1))
+
+    RDDComparisons.assertRDDEquals(rdd1, rdd2)
+  }
+
+  test("assertEqualsWithOrder Failure") {
+    val rdd1 = sc.parallelize(List(1, 2, 3, 4))
+    val rdd2 = sc.parallelize(List(2, 2, 3, 4))
+    intercept[org.scalatest.exceptions.TestFailedException] {
+      RDDComparisons.assertRDDEqualsWithOrder(rdd1, rdd2)
+    }
+  }
+
+  test("assertEqualsWithoutOrder Failure") {
+    val rdd1 = sc.parallelize(List(1, 2, 3, 4))
+    val rdd2 = sc.parallelize(List(1, 2, 3, 5))
+
+    intercept[org.scalatest.exceptions.TestFailedException] {
+      RDDComparisons.assertRDDEquals(rdd1, rdd2)
+    }
+  }
+
 }
