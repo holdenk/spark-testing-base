@@ -12,6 +12,9 @@ trait TestSuite extends TestSuiteLike with FunSuiteLike {
   override def assert[U](expected: U, actual: U)(implicit CT: ClassTag[U]) =
     org.scalatest.Assertions.assert(expected === actual)
 
+  override def assertTrue(expected: Boolean) =
+    org.scalatest.Assertions.assert(expected === true)
+
   def assert[U](message: String, expected: U, actual: U)(implicit CT: ClassTag[U]) =
     org.scalatest.Assertions.assert(expected === actual, message)
 }
@@ -25,6 +28,9 @@ trait JavaTestSuite extends TestSuiteLike {
   override def assert[U](expected: U, actual: U)(implicit CT: ClassTag[U]) =
     org.junit.Assert.assertEquals(expected, actual)
 
+  override def assertTrue(expected: Boolean) =
+    org.junit.Assert.assertTrue(expected)
+
   def assert[U](message: String, expected: U, actual: U)(implicit CT: ClassTag[U]) =
     org.junit.Assert.assertEquals(message, expected, actual)
 }
@@ -33,6 +39,8 @@ trait TestSuiteLike {
   def assertEmpty[U](arr: Array[U])(implicit CT: ClassTag[U])
 
   def assert[U](expected: U, actual: U)(implicit CT: ClassTag[U])
+
+  def assertTrue(expected: Boolean)
 
   def assert[U](message: String, expected: U, actual: U)(implicit CT: ClassTag[U])
 }

@@ -25,7 +25,17 @@ import org.apache.spark.rdd._
 import scala.reflect.ClassTag
 
 
-object RDDComparisons {
+object RDDComparisons extends TestSuite {
+
+  // tag::PANDA_ORDERED[]
+  /**
+   * Asserts two RDDs are equal (with the same order).
+   * If they are equal assertion succeeds, otherwise assertion fails.
+   */
+  def assertRDDEqualsWithOrder[T: ClassTag](expected: RDD[T], result: RDD[T]): Unit = {
+    assertTrue(compareWithOrder(expected, result).isEmpty)
+  }
+
   /**
    * Compare two RDDs with order (e.g. [1,2,3] != [3,2,1])
    * If the partitioners are not the same this requires multiple passes
@@ -46,10 +56,10 @@ object RDDComparisons {
       val indexedResult = indexRDD(result)
       indexedExpected.cogroup(indexedResult).filter{case (_, (i1, i2)) =>
         i1.isEmpty || i2.isEmpty || i1.head != i2.head}.take(1).headOption.
-        map{case (_, (i1, i2)) => (i1.headOption, i2.headOption)}.take(1).headOption
+      map{case (_, (i1, i2)) => (i1.headOption, i2.headOption)}.take(1).headOption
     }
 
-  // tag::PANDA_ORDERED[]
+
   /**
    * Compare two RDDs. If they are equal returns None, otherwise
    * returns Some with the first mismatch. Assumes we have the same partitioner.
@@ -71,9 +81,18 @@ object RDDComparisons {
       }
     }.filter{case (v1, v2) => v1 != v2}.take(1).headOption
   }
+
   // end::PANDA_ORDERED[]
 
   // tag::PANDA_UNORDERED[]
+  /**
+   * Asserts two RDDs are equal (un ordered).
+   * If they are equal assertion succeeds, otherwise assertion fails.
+   */
+  def assertRDDEquals[T: ClassTag](expected: RDD[T], result: RDD[T]): Unit = {
+    assertTrue(compare(expected, result).isEmpty)
+  }
+
   /**
    * Compare two RDDs where we do not require the order to be equal.
    * If they are equal returns None, otherwise returns Some with the first mismatch.
@@ -87,10 +106,12 @@ object RDDComparisons {
     val expectedKeyed = expected.map(x => (x, 1)).reduceByKey(_ + _)
     val resultKeyed = result.map(x => (x, 1)).reduceByKey(_ + _)
     // Group them together and filter for difference
-    expectedKeyed.cogroup(resultKeyed).filter{case (_, (i1, i2)) =>
-      i1.isEmpty || i2.isEmpty || i1.head != i2.head}
+    expectedKeyed.cogroup(resultKeyed).filter { case (_, (i1, i2)) =>
+      i1.isEmpty || i2.isEmpty || i1.head != i2.head
+    }
       .take(1).headOption.
-      map{case (v, (i1, i2)) => (v, i1.headOption.getOrElse(0), i2.headOption.getOrElse(0))}
+      map { case (v, (i1, i2)) => (v, i1.headOption.getOrElse(0), i2.headOption.getOrElse(0)) }
   }
+
   // end::PANDA_UNORDERED[]
 }

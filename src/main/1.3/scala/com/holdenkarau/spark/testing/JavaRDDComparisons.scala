@@ -2,7 +2,15 @@ package com.holdenkarau.spark.testing
 
 import org.apache.spark.api.java.JavaRDD
 
-object JavaRDDComparisons {
+object JavaRDDComparisons extends JavaTestSuite {
+
+  /**
+   * Asserts two RDDs are equal (with the same order).
+   * If they are equal assertion succeeds, otherwise assertion fails.
+   */
+  def assertRDDEqualsWithOrder[T](expected: JavaRDD[T], result: JavaRDD[T]): Unit = {
+    assertTrue(compareWithOrder(expected, result).isEmpty)
+  }
 
   /**
    * Compare two RDDs. If they are equal returns None, otherwise
@@ -11,6 +19,14 @@ object JavaRDDComparisons {
   def compareWithOrder[T](expected: JavaRDD[T], result: JavaRDD[T]): Option[(T, T)] = {
     implicit val ctag = Utils.fakeClassTag[T]
     RDDComparisons.compareWithOrder(expected.rdd, result.rdd)
+  }
+
+  /**
+   * Asserts two RDDs are equal (un ordered).
+   * If they are equal assertion succeeds, otherwise assertion fails.
+   */
+  def assertRDDEquals[T](expected: JavaRDD[T], result: JavaRDD[T]): Unit = {
+    assertTrue(compare(expected, result).isEmpty)
   }
 
   /**
