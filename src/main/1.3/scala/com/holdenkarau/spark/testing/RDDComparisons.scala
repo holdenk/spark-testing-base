@@ -20,9 +20,10 @@
  */
 package com.holdenkarau.spark.testing
 
-import scala.reflect.{classTag, ClassTag}
-
+import org.apache.spark.api.java.JavaRDD
 import org.apache.spark.rdd._
+
+import scala.reflect.ClassTag
 
 
 object RDDComparisons {
@@ -48,6 +49,15 @@ object RDDComparisons {
         i1.isEmpty || i2.isEmpty || i1.head != i2.head}.take(1).headOption.
         map{case (_, (i1, i2)) => (i1.headOption, i2.headOption)}.take(1).headOption
     }
+
+  def compareWithOrder[T](expected: JavaRDD[T], result: JavaRDD[T]): Option[(T, T)] = {
+    implicit val ctag = Utils.fakeClassTag[T]
+    compareWithOrder(expected.rdd, result.rdd)
+  }
+
+  def compare[T](expected: JavaRDD[T], result: JavaRDD[T]): Option[(T, Integer, Integer)] = {
+    implicit val ctag = Utils.fakeClassTag[T]
+    compare(expected.rdd, result.rdd).map(x => (x._1, Integer.valueOf(x._2), Integer.valueOf(x._3)))
   }
 
   // tag::PANDA_ORDERED[]
