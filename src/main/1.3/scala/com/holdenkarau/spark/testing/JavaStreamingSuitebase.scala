@@ -110,8 +110,8 @@ class JavaStreamingSuiteBase extends JavaSuiteBase with StreamingSuiteCommon {
 
     val numBatches = input.size
 
-    implicit val ctagU = fakeClassTag[U]
-    implicit val ctagV = fakeClassTag[V]
+    implicit val ctagU = Utils.fakeClassTag[U]
+    implicit val ctagV = Utils.fakeClassTag[V]
 
     val sInput = toSeq(input)
     val sExpectedOutput = toSeq(expectedOutput)
@@ -169,9 +169,9 @@ class JavaStreamingSuiteBase extends JavaSuiteBase with StreamingSuiteCommon {
     assertEquals("Length of the input lists are not equal", input1.length, input2.length)
     val numBatches = input1.size
 
-    implicit val ctagU = fakeClassTag[U]
-    implicit val ctagV = fakeClassTag[V]
-    implicit val ctagW = fakeClassTag[W]
+    implicit val ctagU = Utils.fakeClassTag[U]
+    implicit val ctagV = Utils.fakeClassTag[V]
+    implicit val ctagW = Utils.fakeClassTag[W]
 
     val sInput1 = toSeq(input1)
     val sInput2 = toSeq(input2)
@@ -189,7 +189,4 @@ class JavaStreamingSuiteBase extends JavaSuiteBase with StreamingSuiteCommon {
   }
 
   private def toSeq[U](input: JList[JList[U]]) = input.map(_.toSeq).toSeq
-
-  private def fakeClassTag[T]: ClassTag[T] = ClassTag.AnyRef.asInstanceOf[ClassTag[T]]
-
 }
