@@ -20,7 +20,6 @@
  */
 package com.holdenkarau.spark.testing
 
-import org.apache.spark.api.java.JavaRDD
 import org.apache.spark.rdd._
 
 import scala.reflect.ClassTag
@@ -50,16 +49,6 @@ object RDDComparisons {
         map{case (_, (i1, i2)) => (i1.headOption, i2.headOption)}.take(1).headOption
     }
 
-  def compareWithOrder[T](expected: JavaRDD[T], result: JavaRDD[T]): Option[(T, T)] = {
-    implicit val ctag = Utils.fakeClassTag[T]
-    compareWithOrder(expected.rdd, result.rdd)
-  }
-
-  def compare[T](expected: JavaRDD[T], result: JavaRDD[T]): Option[(T, Integer, Integer)] = {
-    implicit val ctag = Utils.fakeClassTag[T]
-    compare(expected.rdd, result.rdd).map(x => (x._1, Integer.valueOf(x._2), Integer.valueOf(x._3)))
-  }
-
   // tag::PANDA_ORDERED[]
   /**
    * Compare two RDDs. If they are equal returns None, otherwise
@@ -88,6 +77,10 @@ object RDDComparisons {
   /**
    * Compare two RDDs where we do not require the order to be equal.
    * If they are equal returns None, otherwise returns Some with the first mismatch.
+   *
+   * @return None if the two RDDs are equal, or Some That contains first mismatch information.
+   *         Mismatch information will be Tuple3 of: (key, number of times this key occur in expected RDD,
+   *         number of times this key occur in result RDD)
    */
   def compare[T: ClassTag](expected: RDD[T], result: RDD[T]): Option[(T, Int, Int)] = {
     // Key the values and count the number of each unique element
@@ -95,7 +88,8 @@ object RDDComparisons {
     val resultKeyed = result.map(x => (x, 1)).reduceByKey(_ + _)
     // Group them together and filter for difference
     expectedKeyed.cogroup(resultKeyed).filter{case (_, (i1, i2)) =>
-      i1.isEmpty || i2.isEmpty || i1.head != i2.head}.take(1).headOption.
+      i1.isEmpty || i2.isEmpty || i1.head != i2.head}
+      .take(1).headOption.
       map{case (v, (i1, i2)) => (v, i1.headOption.getOrElse(0), i2.headOption.getOrElse(0))}
   }
   // end::PANDA_UNORDERED[]

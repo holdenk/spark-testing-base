@@ -42,14 +42,14 @@ public class SampleJavaRDDTest extends SharedJavaSparkContext implements Seriali
   @Test
   public void compareWithOrderExpectedSuccess() {
     JavaRDD<Integer> rdd = jsc().parallelize(Arrays.asList(1, 2));
-    Option<Tuple2<Integer, Integer>> result = RDDComparisons.compareWithOrder(rdd, rdd);
+    Option<Tuple2<Integer, Integer>> result = JavaRDDComparisons.compareWithOrder(rdd, rdd);
     assertTrue(result.isEmpty());
   }
 
   @Test
   public void compareWithoutOrderExpectedSuccess() {
     JavaRDD<String> rdd = jsc().parallelize(Arrays.asList("Hello", "It's", "Me"));
-    Option<Tuple3<String, Integer, Integer>> result = RDDComparisons.compare(rdd, rdd);
+    Option<Tuple3<String, Integer, Integer>> result = JavaRDDComparisons.compare(rdd, rdd);
     assertTrue(result.isEmpty());
   }
 
@@ -58,7 +58,7 @@ public class SampleJavaRDDTest extends SharedJavaSparkContext implements Seriali
     JavaRDD<Integer> rdd1 = jsc().parallelize(Arrays.asList(1, 2, 3, 4));
     JavaRDD<Integer> rdd2 = jsc().parallelize(Arrays.asList(1, 2, 3, 5));
 
-    Option<Tuple2<Integer, Integer>> result = RDDComparisons.compareWithOrder(rdd1, rdd2);
+    Option<Tuple2<Integer, Integer>> result = JavaRDDComparisons.compareWithOrder(rdd1, rdd2);
     assertTrue(result.isDefined());
   }
 
@@ -67,7 +67,7 @@ public class SampleJavaRDDTest extends SharedJavaSparkContext implements Seriali
     JavaRDD<String> rdd1 = jsc().parallelize(Arrays.asList("Hello", "It's", "Me"));
     JavaRDD<String> rdd2 = jsc().parallelize(Arrays.asList("Hello", "It's", "YOU"));
 
-    Option<Tuple3<String, Integer, Integer>> result = RDDComparisons.compare(rdd1, rdd2);
+    Option<Tuple3<String, Integer, Integer>> result = JavaRDDComparisons.compare(rdd1, rdd2);
     assertTrue(result.isDefined());
   }
 
