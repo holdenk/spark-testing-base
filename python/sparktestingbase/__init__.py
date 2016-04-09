@@ -24,5 +24,5 @@ Helpful classes to write Spark tests.
 
 __all__ = ["SparkTestingBaseTestCase"]
 """
-from utils import add_pyspark_path_if_needed
+from .utils import add_pyspark_path_if_needed
 add_pyspark_path_if_needed()
