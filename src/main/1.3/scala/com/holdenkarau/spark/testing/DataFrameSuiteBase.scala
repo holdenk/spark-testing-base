@@ -79,7 +79,7 @@ trait DataFrameSuiteBaseLike extends SparkContextProvider with TestSuiteLike wit
    * Compares if two [[DataFrame]]s are equal, checks the schema and then if that matches
    * checks if the rows are equal.
    */
-  def equalDataFrames(expected: DataFrame, result: DataFrame) {
+  def assertDataFrameEquals(expected: DataFrame, result: DataFrame) {
     assert(expected.schema, result.schema)
 
     try {
@@ -106,7 +106,7 @@ trait DataFrameSuiteBaseLike extends SparkContextProvider with TestSuiteLike wit
     *
     * @param tol max acceptable tolerance, should be less than 1.
     */
-  def approxEqualDataFrames(expected: DataFrame, result: DataFrame, tol: Double) {
+  def assertDataFrameApproximateEquals(expected: DataFrame, result: DataFrame, tol: Double) {
     assert(expected.schema, result.schema)
 
     try {

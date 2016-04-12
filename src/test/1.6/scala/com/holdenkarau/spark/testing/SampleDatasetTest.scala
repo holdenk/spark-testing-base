@@ -8,7 +8,7 @@ class SampleDatasetTest extends DatasetSuiteBase {
 
     val emptyDS = sc.parallelize(List[Person]()).toDS
 
-    equalDatasets(emptyDS, emptyDS)
+    assertDatasetEquals(emptyDS, emptyDS)
   }
 
   test("dataset equal itself") {
@@ -18,7 +18,7 @@ class SampleDatasetTest extends DatasetSuiteBase {
     val list = List(Person("Holden", 2000, 60.0), Person("Hanafy", 23, 80.0))
     val persons = sc.parallelize(list).toDS
 
-    equalDatasets(persons, persons)
+    assertDatasetEquals(persons, persons)
   }
   
   test("unequal different strings") {
@@ -32,7 +32,7 @@ class SampleDatasetTest extends DatasetSuiteBase {
     val persons2 = sc.parallelize(list2).toDS
 
     intercept[org.scalatest.exceptions.TestFailedException] {
-      equalDatasets(persons1, persons2)
+      assertDatasetEquals(persons1, persons2)
     }
   }
 
@@ -47,7 +47,7 @@ class SampleDatasetTest extends DatasetSuiteBase {
     val persons2 = sc.parallelize(list2).toDS
 
     intercept[org.scalatest.exceptions.TestFailedException] {
-      equalDatasets(persons1, persons2)
+      assertDatasetEquals(persons1, persons2)
     }
   }
 
@@ -62,7 +62,7 @@ class SampleDatasetTest extends DatasetSuiteBase {
     val persons2 = sc.parallelize(list2).toDS
 
     intercept[org.scalatest.exceptions.TestFailedException] {
-      equalDatasets(persons1, persons2)
+      assertDatasetEquals(persons1, persons2)
     }
   }
 
@@ -76,7 +76,7 @@ class SampleDatasetTest extends DatasetSuiteBase {
     val persons1 = sc.parallelize(list1).toDS
     val persons2 = sc.parallelize(list2).toDS
 
-    equalDatasets(persons1, persons2)
+    assertDatasetEquals(persons1, persons2)
   }
 
   test("unequal with custom equals") {
@@ -90,7 +90,7 @@ class SampleDatasetTest extends DatasetSuiteBase {
     val persons2 = sc.parallelize(list2).toDS
 
     intercept[org.scalatest.exceptions.TestFailedException] {
-      equalDatasets(persons1, persons2)
+      assertDatasetEquals(persons1, persons2)
     }
   }
 
@@ -100,7 +100,7 @@ class SampleDatasetTest extends DatasetSuiteBase {
 
     val emptyDS = sc.parallelize(List[Person]()).toDS
 
-    approxEqualDatasets(emptyDS, emptyDS, 0.1)
+    assertDatasetApproximateEquals(emptyDS, emptyDS, 0.1)
   }
 
   test("approximate equal same dataset") {
@@ -110,7 +110,7 @@ class SampleDatasetTest extends DatasetSuiteBase {
     val list = List(Person("Holden", 2000, 60.0), Person("Hanafy", 23, 80.0))
     val persons = sc.parallelize(list).toDS
 
-    approxEqualDatasets(persons, persons, 0.0)
+    assertDatasetApproximateEquals(persons, persons, 0.0)
   }
 
   test("approximate equal with acceptable tolerance") {
@@ -123,7 +123,7 @@ class SampleDatasetTest extends DatasetSuiteBase {
     val persons1 = sc.parallelize(list1).toDS
     val persons2 = sc.parallelize(list2).toDS
 
-    approxEqualDatasets(persons1, persons2, 0.21)
+    assertDatasetApproximateEquals(persons1, persons2, 0.21)
   }
 
   test("approximate not equal with low tolerance") {
@@ -137,7 +137,7 @@ class SampleDatasetTest extends DatasetSuiteBase {
     val persons2 = sc.parallelize(list2).toDS
 
     intercept[org.scalatest.exceptions.TestFailedException] {
-      approxEqualDatasets(persons1, persons2, 0.2)
+      assertDatasetApproximateEquals(persons1, persons2, 0.2)
     }
   }
 }
