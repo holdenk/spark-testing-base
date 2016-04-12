@@ -50,15 +50,16 @@ object RDDComparisons extends TestSuite {
     } else {
       // Otherwise index every element
       def indexRDD[T](rdd: RDD[T]): RDD[(Long, T)] = {
-        rdd.zipWithIndex.map{case (x, y) => (y, x)}
+        rdd.zipWithIndex.map { case (x, y) => (y, x) }
       }
       val indexedExpected = indexRDD(expected)
       val indexedResult = indexRDD(result)
-      indexedExpected.cogroup(indexedResult).filter{case (_, (i1, i2)) =>
-        i1.isEmpty || i2.isEmpty || i1.head != i2.head}.take(1).headOption.
-      map{case (_, (i1, i2)) => (i1.headOption, i2.headOption)}.take(1).headOption
+      indexedExpected.cogroup(indexedResult).filter { case (_, (i1, i2)) =>
+        i1.isEmpty || i2.isEmpty || i1.head != i2.head
+      }.take(1).headOption.
+        map { case (_, (i1, i2)) => (i1.headOption, i2.headOption) }.take(1).headOption
     }
-
+  }
 
   /**
    * Compare two RDDs. If they are equal returns None, otherwise
@@ -68,18 +69,19 @@ object RDDComparisons extends TestSuite {
     // Handle mismatched lengths by converting into options and padding with Nones
     expected.zipPartitions(result) {
       (thisIter, otherIter) =>
-      new Iterator[(Option[T], Option[T])] {
-        def hasNext: Boolean = (thisIter.hasNext || otherIter.hasNext)
-        def next(): (Option[T], Option[T]) = {
-          (thisIter.hasNext, otherIter.hasNext) match {
-            case (false, true) => (Option.empty[T], Some(otherIter.next()))
-            case (true, false) => (Some(thisIter.next()), Option.empty[T])
-            case (true, true) =>  (Some(thisIter.next()), Some(otherIter.next()))
-            case _ => throw new Exception("next called when elements consumed")
+        new Iterator[(Option[T], Option[T])] {
+          def hasNext: Boolean = (thisIter.hasNext || otherIter.hasNext)
+
+          def next(): (Option[T], Option[T]) = {
+            (thisIter.hasNext, otherIter.hasNext) match {
+              case (false, true) => (Option.empty[T], Some(otherIter.next()))
+              case (true, false) => (Some(thisIter.next()), Option.empty[T])
+              case (true, true) => (Some(thisIter.next()), Some(otherIter.next()))
+              case _ => throw new Exception("next called when elements consumed")
+            }
           }
         }
-      }
-    }.filter{case (v1, v2) => v1 != v2}.take(1).headOption
+    }.filter { case (v1, v2) => v1 != v2 }.take(1).headOption
   }
 
   // end::PANDA_ORDERED[]

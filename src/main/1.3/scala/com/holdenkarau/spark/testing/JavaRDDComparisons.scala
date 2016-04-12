@@ -16,7 +16,7 @@ object JavaRDDComparisons extends JavaTestSuite {
    * Compare two RDDs. If they are equal returns None, otherwise
    * returns Some with the first mismatch. Assumes we have the same partitioner.
    */
-  def compareWithOrder[T](expected: JavaRDD[T], result: JavaRDD[T]): Option[(T, T)] = {
+  def compareWithOrder[T](expected: JavaRDD[T], result: JavaRDD[T]): Option[(Option[T], Option[T])] = {
     implicit val ctag = Utils.fakeClassTag[T]
     RDDComparisons.compareWithOrder(expected.rdd, result.rdd)
   }

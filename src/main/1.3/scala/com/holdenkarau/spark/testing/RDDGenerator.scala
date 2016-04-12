@@ -32,22 +32,34 @@ import org.scalacheck._
 object RDDGenerator {
 
   /**
-    * Generate an RDD of the desired type. Attempt to try different number of partitions
-    * so as to catch problems with empty partitions, etc.
-    * minPartitions defaults to 1, but when generating data too large for a single machine choose a larger value.
-    *
-    * @param sc Spark Context
-    * @param minPartitions defaults to 1
-    * @param getGenerator used to create the generator. This function will be used to create the generator as
-    *                many times as required.
-    * @tparam T The required type for the RDD
-    * @return
-    */
-  def genRDD[T: ClassTag](sc: SparkContext, minPartitions: Int = 1)(getGenerator: => Gen[T]): Gen[RDD[T]] = {
-    arbitraryRDD(sc, minPartitions)(getGenerator).arbitrary
+   * Generate an RDD of the desired type. Attempt to try different number of partitions
+   * so as to catch problems with empty partitions, etc.
+   * minPartitions defaults to 1, but when generating data too large for a single machine choose a larger value.
+   *
+   * @param sc            Spark Context
+   * @param minPartitions defaults to 1
+   * @param generator     used to create the generator. This function will be used to create the generator as
+   *                      many times as required.
+   * @tparam T The required type for the RDD
+   * @return
+   */
+  def genRDD[T: ClassTag](sc: SparkContext, minPartitions: Int = 1)(generator: => Gen[T]): Gen[RDD[T]] = {
+    arbitraryRDD(sc, minPartitions)(generator).arbitrary
   }
 
-  def arbitraryRDD[T: ClassTag](sc: SparkContext, minPartitions: Int = 1)(genElem: => Gen[T]): Arbitrary[RDD[T]] = {
+  /**
+   * Generate an RDD of the desired type. Attempt to try different number of partitions
+   * so as to catch problems with empty partitions, etc.
+   * minPartitions defaults to 1, but when generating data too large for a single machine choose a larger value.
+   *
+   * @param sc            Spark Context
+   * @param minPartitions defaults to 1
+   * @param generator     used to create the generator. This function will be used to create the generator as
+   *                      many times as required.
+   * @tparam T The required type for the RDD
+   * @return
+   */
+  def arbitraryRDD[T: ClassTag](sc: SparkContext, minPartitions: Int = 1)(generator: => Gen[T]): Arbitrary[RDD[T]] = {
     Arbitrary {
       Gen.sized(sz =>
         sz match {
@@ -55,14 +67,14 @@ object RDDGenerator {
           case size => {
             // Generate different partition sizes
             val mp = minPartitions
-            val specialPartitionSizes = List(size, (size/2), mp, mp + 1, mp + 3).filter(_ > mp)
+            val specialPartitionSizes = List(size, (size / 2), mp, mp + 1, mp + 3).filter(_ > mp)
             val partitionsGen = for {
-              // TODO change 1 to minPartitions
+            // TODO change 1 to minPartitions
               partitionCount <- Gen.chooseNum(1, 2 * size, specialPartitionSizes: _*)
             } yield partitionCount
             // Wrap the scalacheck generator in a Spark generator
-            val sparkElemGenerator = new WrappedGenerator(genElem)
-            val rdds = partitionsGen.map{numPartitions =>
+            val sparkElemGenerator = new WrappedGenerator(generator)
+            val rdds = partitionsGen.map { numPartitions =>
               RandomRDDs.randomRDD(sc, sparkElemGenerator, size, numPartitions)
             }
             rdds

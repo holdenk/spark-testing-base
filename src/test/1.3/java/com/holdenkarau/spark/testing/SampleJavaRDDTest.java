@@ -43,7 +43,7 @@ public class SampleJavaRDDTest extends SharedJavaSparkContext implements Seriali
   @Test
   public void compareWithOrderExpectedSuccess() {
     JavaRDD<Integer> rdd = jsc().parallelize(Arrays.asList(1, 2));
-    Option<Tuple2<Integer, Integer>> result = JavaRDDComparisons.compareWithOrder(rdd, rdd);
+    Option<Tuple2<Option<Integer>, Option<Integer>>> result = JavaRDDComparisons.compareWithOrder(rdd, rdd);
     assertTrue(result.isEmpty());
     JavaRDDComparisons.assertRDDEqualsWithOrder(rdd, rdd);
   }
@@ -70,7 +70,7 @@ public class SampleJavaRDDTest extends SharedJavaSparkContext implements Seriali
     JavaRDD<Integer> rdd1 = jsc().parallelize(Arrays.asList(1, 2, 3, 4));
     JavaRDD<Integer> rdd2 = jsc().parallelize(Arrays.asList(1, 2, 3, 5));
 
-    Option<Tuple2<Integer, Integer>> result = JavaRDDComparisons.compareWithOrder(rdd1, rdd2);
+    Option<Tuple2<Option<Integer>, Option<Integer>>> result = JavaRDDComparisons.compareWithOrder(rdd1, rdd2);
     assertTrue(result.isDefined());
   }
 
