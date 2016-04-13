@@ -25,7 +25,7 @@ or
             <scope>test</scope>
         </dependency>
 
-How to use it inside your code ?? have a look at the [wiki](https://github.com/holdenk/spark-testing-base/wiki) page.
+How to use it inside your code? have a look at the [wiki](https://github.com/holdenk/spark-testing-base/wiki) page.
 
 Note that new versions (0.0.8+) are built against Spark 1.3.0+ for simplicity, but if you need an old version file an issue and I will re-enable cross-builds for older versions.
 
@@ -33,6 +33,17 @@ The [spark-packages page for spark-testing-base](http://spark-packages.org/packa
 
 This package is can be cross compiled against scala 2.10.4 and 2.11.6 in the traditional manner.
 
+# Minimum Memory Requirements and OOMs
+
+The default SBT testing java options are too small to support running many of the tests due to the need to launch Spark in local mode. To increase the amount of memory in a build.sbt file you can add:
+
+        javaOptions ++= Seq("-Xms512M", "-Xmx2048M", "-XX:MaxPermSize=2048M", "-XX:+CMSClassUnloadingEnabled")
+
+If using surefire you can add:
+
+        <argLine>-Xmx2048m -XX:MaxPermSize=2048m</argLine>
+
+Note: the specific memory values are examples only (and the values used to run spark-testing-base's own tests)
 
 # Special considerations
 
@@ -41,6 +52,8 @@ Make sure to disable parallel execution
 In sbt you can add:
 
         parallelExecution in Test := false
+
+In surefire make sure that forkCount is set to 1 and reuseForks is true.
 
 # Where is this from?
 Much of this code is a stripped down version of the test suite bases that are in Apache Spark but are not accessible. Other parts are also inspired by ssbase (scalacheck generators for Spark).
