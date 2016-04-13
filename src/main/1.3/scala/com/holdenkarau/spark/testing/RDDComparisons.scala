@@ -27,16 +27,32 @@ import org.apache.spark.rdd._
 
 object RDDComparisons {
   /**
-   * Compare two RDDs. If they are equal returns None, otherwise
-   * returns Some with the first mismatch. Requires that expected has an explicit partitioner.
+   * Compare two RDDs with order (e.g. [1,2,3] != [3,2,1])
+   * If the partitioners are not the same this requires multiple passes
+   * on the input.
+   * If they are equal returns None, otherwise returns Some with the first mismatch.
+   * If the lengths are not equal, one of the two components may be None.
    */
-  def compareWithOrder[T: ClassTag](expected: RDD[T], result: RDD[T]): Option[(T, T)] = {
+  def compareWithOrder[T: ClassTag](expected: RDD[T], result: RDD[T]): Option[(Option[T], Option[T])] = {
+    // If there is a known partitioner just zip
     if (result.partitioner.map(_ == expected.partitioner.get).getOrElse(false)) {
       compareWithOrderSamePartitioner(expected, result)
     } else {
-      val targetPartitions = expected.partitions.size
-      compareWithOrderSamePartitioner(expected.repartition(targetPartitions),
-        result.repartition(targetPartitions))
+      // Otherwise index every element
+      def indexRDD[T](rdd: RDD[T]): RDD[(Int, T)] = {
+        val counts = rdd.mapPartitions(itr => List(itr.size).toIterator).collect()
+        val indexed = rdd.mapPartitionsWithIndex{
+          case (idx, itr) =>
+            val start = if (idx == 0) 0 else counts(idx-1)
+            ((Stream from start).toIterator zip itr)
+        }
+        indexed
+      }
+      val indexedExpected = indexRDD(expected)
+      val indexedResult = indexRDD(result)
+      indexedExpected.cogroup(indexedResult).filter{case (_, (i1, i2)) =>
+        i1.isEmpty || i2.isEmpty || i1.head != i2.head}.take(1).headOption.
+        map{case (_, (i1, i2)) => (i1.headOption, i2.headOption)}.take(1).headOption
     }
   }
 
@@ -45,8 +61,22 @@ object RDDComparisons {
    * Compare two RDDs. If they are equal returns None, otherwise
    * returns Some with the first mismatch. Assumes we have the same partitioner.
    */
-  def compareWithOrderSamePartitioner[T: ClassTag](expected: RDD[T], result: RDD[T]): Option[(T, T)] = {
-    expected.zip(result).filter{case (x, y) => x != y}.take(1).headOption
+  def compareWithOrderSamePartitioner[T: ClassTag](expected: RDD[T], result: RDD[T]): Option[(Option[T], Option[T])] = {
+    // Handle mismatched lengths by converting into options and padding with Nones
+    expected.zipPartitions(result) {
+      (thisIter, otherIter) =>
+      new Iterator[(Option[T], Option[T])] {
+        def hasNext: Boolean = (thisIter.hasNext || otherIter.hasNext)
+        def next(): (Option[T], Option[T]) = {
+          (thisIter.hasNext, otherIter.hasNext) match {
+            case (false, true) => (Option.empty[T], Some(otherIter.next()))
+            case (true, false) => (Some(thisIter.next()), Option.empty[T])
+            case (true, true) =>  (Some(thisIter.next()), Some(otherIter.next()))
+            case _ => throw new Exception("next called when elements consumed")
+          }
+        }
+      }
+    }.filter{case (v1, v2) => v1 == v2}.take(1).headOption
   }
   // end::PANDA_ORDERED[]
 
