@@ -1,3 +1,4 @@
+from __future__ import absolute_import
 #
 # Licensed to the Apache Software Foundation (ASF) under one or more
 # contributor license agreements.  See the NOTICE file distributed with
@@ -15,11 +16,11 @@
 # limitations under the License.
 #
 
-from utils import add_pyspark_path_if_needed, quiet_py4j
+from .utils import add_pyspark_path_if_needed, quiet_py4j
 
 add_pyspark_path_if_needed()
 
-from testcase import SparkTestingBaseReuse
+from .testcase import SparkTestingBaseReuse
 
 import os
 import sys
