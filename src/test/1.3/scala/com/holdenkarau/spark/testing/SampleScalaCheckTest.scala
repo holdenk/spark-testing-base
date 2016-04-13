@@ -17,8 +17,8 @@
 package com.holdenkarau.spark.testing
 
 import org.apache.spark.rdd.RDD
-import org.apache.spark.sql.{SQLContext, Row}
-import org.apache.spark.sql.types.{StringType, StructType, IntegerType, StructField}
+import org.apache.spark.sql.{DataFrame, Row, SQLContext}
+import org.apache.spark.sql.types._
 import org.scalacheck.{Arbitrary, Gen}
 import org.scalacheck.Prop.forAll
 import org.scalatest.FunSuite
@@ -129,6 +129,25 @@ class SampleScalaCheckTest extends FunSuite with SharedSparkContext with Checker
       rdd => rdd.count() <= 20
     }
     check(prop)
+  }
+
+  test("test Array Type generator"){
+    val schema = StructType(List(StructField("name", StringType, true),
+      StructField("pandas", ArrayType(StructType(List(
+        StructField("id", LongType, true),
+        StructField("zip", StringType, true),
+        StructField("happy", BooleanType, true),
+        StructField("attributes", ArrayType(FloatType), true)))))))
+
+    val sqlContext = new SQLContext(sc)
+    val dataframeGen: Arbitrary[DataFrame] = DataframeGenerator.arbitraryDataFrame(sqlContext, schema)
+    val property =
+      forAll(dataframeGen.arbitrary) {
+        dataframe => dataframe.schema === schema &&
+          dataframe.select("pandas.attributes").map(_.getSeq(0)).count() >= 0
+      }
+
+    check(property)
   }
 
   private def filterOne(rdd: RDD[String]): RDD[Int] = {

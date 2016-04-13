@@ -72,11 +72,10 @@ object DataframeGenerator {
     val generatorMap = userGenerators.map(generator => (generator.columnName -> generator)).toMap
     (0 until fields.length).toList.map(index =>
       if (generatorMap.contains(fields(index).name)) generatorMap.get(fields(index).name).get.gen
-      else getGenerator(fields(index)))
+      else getGenerator(fields(index).dataType))
   }
 
-  private def getGenerator(fieldType: StructField): Gen[Any] = {
-    val dataType = fieldType.dataType
+  private def getGenerator(dataType: DataType): Gen[Any] = {
     dataType match {
       case StringType => Arbitrary.arbitrary[String]
       case IntegerType => Arbitrary.arbitrary[Int]
@@ -88,6 +87,12 @@ object DataframeGenerator {
       case ByteType => Arbitrary.arbitrary[Byte]
       case ShortType => Arbitrary.arbitrary[Short]
       case BinaryType => Arbitrary.arbitrary[Array[Byte]]
+      case row: StructType => return getRowGenerator(row)
+      case arr: ArrayType => {
+        val elementGenerator = getGenerator(arr.elementType)
+        val listGenerator: Gen[Seq[Any]] = Gen.listOf(elementGenerator)
+        return listGenerator
+      }
       case _ => throw new UnsupportedOperationException(s"Type: $dataType not supported")
     }
   }
