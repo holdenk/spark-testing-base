@@ -92,6 +92,36 @@ class SampleScalaCheckTest extends FunSuite with SharedSparkContext with Checker
     check(property)
   }
 
+  test("test custom columns generators") {
+    val schema = StructType(List(StructField("name", StringType), StructField("age", IntegerType)))
+    val sqlContext = new SQLContext(sc)
+    val ageGenerator = new ColumnGenerator("age", Gen.choose(10, 100))
+    val dataframeGen = DataframeGenerator.genDataFrameWithCustomFields(sqlContext, schema)(ageGenerator)
+
+    val property =
+      forAll(dataframeGen.arbitrary) {
+        dataframe => dataframe.schema === schema && dataframe.filter("age > 100 OR age < 10").count() == 0
+      }
+
+    check(property)
+  }
+
+  test("test multiple columns generators") {
+    val schema = StructType(List(StructField("name", StringType), StructField("age", IntegerType)))
+    val sqlContext = new SQLContext(sc)
+    val nameGenerator = new ColumnGenerator("name", Gen.oneOf("Holden", "Hanafy")) // name should be on of those
+    val ageGenerator = new ColumnGenerator("age", Gen.choose(10, 100))
+    val dataframeGen = DataframeGenerator.genDataFrameWithCustomFields(sqlContext, schema)(nameGenerator, ageGenerator)
+
+    val property =
+      forAll(dataframeGen.arbitrary) {
+        dataframe => dataframe.schema === schema &&
+          dataframe.filter("(name != 'Holden' AND name != 'Hanafy') OR (age > 100 OR age < 10)").count() == 0
+      }
+
+    check(property)
+  }
+
   test("generate rdd of specific size") {
     implicit val generatorDrivenConfig =
       PropertyCheckConfig(minSize = 10, maxSize = 20)

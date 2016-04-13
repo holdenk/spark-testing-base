@@ -120,6 +120,7 @@ private[holdenkarau] trait StreamingSuiteCommon extends Logging with SparkContex
     } finally {
       try {
         ssc.stop(stopSparkContext = false)
+        Thread.sleep(200) // give some time to clean up (SPARK-1603)
       } catch {
         case e: Exception =>
           logError("Error stopping StreamingContext", e)
@@ -218,7 +219,7 @@ private[holdenkarau] trait StreamingSuiteCommon extends Logging with SparkContex
     logInfo("Output generated in " + timeTaken + " milliseconds")
     output.foreach(x => logInfo("[" + x.mkString(",") + "]"))
     assert(timeTaken < maxWaitTimeMillis, "Operation timed out after " + timeTaken + " ms")
-    Thread.sleep(100) // Give some time for the forgetting old RDDs to complete
+    Thread.sleep(200) // Give some time for the forgetting old RDDs to complete
 
     output.toSeq
   }

@@ -1,3 +1,4 @@
+from __future__ import absolute_import, print_function
 #
 # Licensed to the Apache Software Foundation (ASF) under one or more
 # contributor license agreements.  See the NOTICE file distributed with
@@ -17,7 +18,7 @@
 
 """Provides a common test case base for Python Spark tests"""
 
-from utils import add_pyspark_path, quiet_py4j
+from .utils import add_pyspark_path, quiet_py4j
 
 import unittest2
 from pyspark.context import SparkContext
@@ -73,7 +74,7 @@ class SparkTestingBaseReuse(unittest2.TestCase):
         Tear down the basic panda spark test case. This stops the running
         context and does a hack to prevent Akka rebinding on the same port.
         """
-        print "stopping class"
+        print("stopping class")
         cls.sc.stop()
         # To avoid Akka rebinding to the same port, since it doesn't unbind
         # immediately on shutdown
