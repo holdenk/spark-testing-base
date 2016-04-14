@@ -42,6 +42,16 @@ class SampleRDDTest extends FunSuite with SharedSparkContext {
     assert(None === RDDComparisons.compare(expectedRDD, inputRDD))
   }
 
+  test("RDD comparision with order same partitioner") {
+    val inputList = List("hi", "hi holden", "byez")
+    val inputRDD = sc.parallelize(inputList)
+    val tokenizedRDD = tokenize(inputRDD)
+    val ordered1 = tokenizedRDD.sortBy(x => x.head)
+    val ordered2 = tokenizedRDD.sortBy(x => x.head)
+
+    assert(None === RDDComparisons.compareWithOrder(ordered1, ordered2))
+  }
+
   test("RDD comparision with order without known partitioner") {
     val inputList = List("hi", "hi holden", "byez")
     val inputRDD = sc.parallelize(inputList)

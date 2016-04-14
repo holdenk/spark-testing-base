@@ -39,14 +39,8 @@ object RDDComparisons {
       compareWithOrderSamePartitioner(expected, result)
     } else {
       // Otherwise index every element
-      def indexRDD[T](rdd: RDD[T]): RDD[(Int, T)] = {
-        val counts = rdd.mapPartitions(itr => List(itr.size).toIterator).collect()
-        val indexed = rdd.mapPartitionsWithIndex{
-          case (idx, itr) =>
-            val start = if (idx == 0) 0 else counts(idx-1)
-            ((Stream from start).toIterator zip itr)
-        }
-        indexed
+      def indexRDD[T](rdd: RDD[T]): RDD[(Long, T)] = {
+        rdd.zipWithIndex.map{case (x, y) => (y, x)}
       }
       val indexedExpected = indexRDD(expected)
       val indexedResult = indexRDD(result)
@@ -76,7 +70,7 @@ object RDDComparisons {
           }
         }
       }
-    }.filter{case (v1, v2) => v1 == v2}.take(1).headOption
+    }.filter{case (v1, v2) => v1 != v2}.take(1).headOption
   }
   // end::PANDA_ORDERED[]
 
