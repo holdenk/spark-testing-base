@@ -90,12 +90,21 @@ object DataframeGenerator {
       case BooleanType => Arbitrary.arbitrary[Boolean]
       case TimestampType => Arbitrary.arbDate.arbitrary.map(time => new Timestamp(time.getTime))
       case DateType => Arbitrary.arbDate.arbitrary.map(time => new Date(time.getTime))
-      case row: StructType => return getRowGenerator(row)
       case arr: ArrayType => {
         val elementGenerator = getGenerator(arr.elementType)
-        val listGenerator: Gen[Seq[Any]] = Gen.listOf(elementGenerator)
-        return listGenerator
+        return Gen.listOf(elementGenerator)
       }
+      case map: MapType => {
+        val keyGenerator = getGenerator(map.keyType)
+        val valueGenerator = getGenerator(map.valueType)
+        val keyValueGenerator: Gen[(Any, Any)] = for {
+          key <- keyGenerator
+          value <- valueGenerator
+        } yield (key, value)
+
+        return Gen.mapOf(keyValueGenerator)
+      }
+      case row: StructType => return getRowGenerator(row)
       case _ => throw new UnsupportedOperationException(s"Type: $dataType not supported")
     }
   }
