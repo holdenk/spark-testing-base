@@ -1,6 +1,6 @@
 package com.holdenkarau.spark.testing
 
-import java.sql.Timestamp
+import java.sql.{Date, Timestamp}
 
 import org.apache.spark.sql.types._
 import org.apache.spark.sql.{DataFrame, Row, SQLContext}
@@ -79,16 +79,17 @@ object DataframeGenerator {
 
   private def getGenerator(dataType: DataType): Gen[Any] = {
     dataType match {
-      case StringType => Arbitrary.arbitrary[String]
-      case IntegerType => Arbitrary.arbitrary[Int]
-      case FloatType => Arbitrary.arbitrary[Float]
-      case LongType => Arbitrary.arbitrary[Long]
-      case DoubleType => Arbitrary.arbitrary[Double]
-      case BooleanType => Arbitrary.arbitrary[Boolean]
-      case TimestampType => Arbitrary.arbDate.arbitrary.map(time => new Timestamp(time.getTime))
       case ByteType => Arbitrary.arbitrary[Byte]
       case ShortType => Arbitrary.arbitrary[Short]
+      case IntegerType => Arbitrary.arbitrary[Int]
+      case LongType => Arbitrary.arbitrary[Long]
+      case FloatType => Arbitrary.arbitrary[Float]
+      case DoubleType => Arbitrary.arbitrary[Double]
+      case StringType => Arbitrary.arbitrary[String]
       case BinaryType => Arbitrary.arbitrary[Array[Byte]]
+      case BooleanType => Arbitrary.arbitrary[Boolean]
+      case TimestampType => Arbitrary.arbDate.arbitrary.map(time => new Timestamp(time.getTime))
+      case DateType => Arbitrary.arbDate.arbitrary.map(time => new Date(time.getTime))
       case row: StructType => return getRowGenerator(row)
       case arr: ArrayType => {
         val elementGenerator = getGenerator(arr.elementType)

@@ -150,8 +150,8 @@ class SampleScalaCheckTest extends FunSuite with SharedSparkContext with Checker
     check(property)
   }
 
-  test("timestamp type generation") {
-    val schema = StructType(List(StructField("time", TimestampType)))
+  test("timestamp and type generation") {
+    val schema = StructType(List(StructField("timeStamp", TimestampType), StructField("date", DateType)))
     val sqlContext = new SQLContext(sc)
     val dataframeGen = DataframeGenerator.arbitraryDataFrame(sqlContext, schema)
 
