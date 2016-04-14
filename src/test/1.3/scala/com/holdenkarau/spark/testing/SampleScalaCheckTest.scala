@@ -150,6 +150,21 @@ class SampleScalaCheckTest extends FunSuite with SharedSparkContext with Checker
     check(property)
   }
 
+  test("timestamp type generation") {
+    val schema = StructType(List(StructField("time", TimestampType)))
+    val sqlContext = new SQLContext(sc)
+    val dataframeGen = DataframeGenerator.arbitraryDataFrame(sqlContext, schema)
+
+    val property =
+      forAll(dataframeGen.arbitrary) {
+        dataframe => {
+          dataframe.schema === schema && dataframe.count >= 0
+        }
+      }
+
+    check(property)
+  }
+
   private def filterOne(rdd: RDD[String]): RDD[Int] = {
     rdd.filter(_.length > 2).map(_.length)
   }

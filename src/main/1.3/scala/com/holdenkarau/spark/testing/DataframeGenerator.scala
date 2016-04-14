@@ -1,5 +1,7 @@
 package com.holdenkarau.spark.testing
 
+import java.sql.Timestamp
+
 import org.apache.spark.sql.types._
 import org.apache.spark.sql.{DataFrame, Row, SQLContext}
 import org.scalacheck.{Arbitrary, Gen}
@@ -83,7 +85,7 @@ object DataframeGenerator {
       case LongType => Arbitrary.arbitrary[Long]
       case DoubleType => Arbitrary.arbitrary[Double]
       case BooleanType => Arbitrary.arbitrary[Boolean]
-      case TimestampType => Arbitrary.arbitrary[Long]
+      case TimestampType => Arbitrary.arbDate.arbitrary.map(time => new Timestamp(time.getTime))
       case ByteType => Arbitrary.arbitrary[Byte]
       case ShortType => Arbitrary.arbitrary[Short]
       case BinaryType => Arbitrary.arbitrary[Array[Byte]]
