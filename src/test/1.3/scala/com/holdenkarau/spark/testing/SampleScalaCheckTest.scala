@@ -82,7 +82,7 @@ class SampleScalaCheckTest extends FunSuite with SharedSparkContext with Checker
   test("test generating Dataframes") {
     val schema = StructType(List(StructField("name", StringType), StructField("age", IntegerType)))
     val sqlContext = new SQLContext(sc)
-    val dataframeGen = DataframeGenerator.genDataFrame(sqlContext, schema)
+    val dataframeGen = DataframeGenerator.arbitraryDataFrame(sqlContext, schema)
 
     val property =
       forAll(dataframeGen.arbitrary) {
@@ -96,7 +96,7 @@ class SampleScalaCheckTest extends FunSuite with SharedSparkContext with Checker
     val schema = StructType(List(StructField("name", StringType), StructField("age", IntegerType)))
     val sqlContext = new SQLContext(sc)
     val ageGenerator = new ColumnGenerator("age", Gen.choose(10, 100))
-    val dataframeGen = DataframeGenerator.genDataFrameWithCustomFields(sqlContext, schema)(ageGenerator)
+    val dataframeGen = DataframeGenerator.arbitraryDataFrameWithCustomFields(sqlContext, schema)(ageGenerator)
 
     val property =
       forAll(dataframeGen.arbitrary) {
@@ -111,7 +111,7 @@ class SampleScalaCheckTest extends FunSuite with SharedSparkContext with Checker
     val sqlContext = new SQLContext(sc)
     val nameGenerator = new ColumnGenerator("name", Gen.oneOf("Holden", "Hanafy")) // name should be on of those
     val ageGenerator = new ColumnGenerator("age", Gen.choose(10, 100))
-    val dataframeGen = DataframeGenerator.genDataFrameWithCustomFields(sqlContext, schema)(nameGenerator, ageGenerator)
+    val dataframeGen = DataframeGenerator.arbitraryDataFrameWithCustomFields(sqlContext, schema)(nameGenerator, ageGenerator)
 
     val property =
       forAll(dataframeGen.arbitrary) {

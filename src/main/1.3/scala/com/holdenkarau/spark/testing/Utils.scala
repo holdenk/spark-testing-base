@@ -25,8 +25,9 @@ import java.util.UUID
 import java.net.BindException
 
 import org.eclipse.jetty.util.MultiException
-
 import org.apache.spark.{Logging, SparkConf, SparkException}
+
+import scala.reflect.ClassTag
 
 
 object Utils extends Logging{
@@ -229,4 +230,6 @@ object Utils extends Logging{
      case _ => false
    }
   }
+
+  private[holdenkarau] def fakeClassTag[T]: ClassTag[T] = ClassTag.AnyRef.asInstanceOf[ClassTag[T]]
 }

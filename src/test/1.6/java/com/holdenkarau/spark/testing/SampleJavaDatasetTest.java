@@ -18,7 +18,7 @@ public class SampleJavaDatasetTest extends JavaDatasetSuiteBase implements Seria
         List<Person> list = new ArrayList<>();
         Dataset<Person> dataset = sqlContext().createDataset(list, Encoders.bean(Person.class));
 
-        equalDatasets(dataset, dataset);
+        assertDatasetEquals(dataset, dataset);
     }
 
     @Test
@@ -29,7 +29,7 @@ public class SampleJavaDatasetTest extends JavaDatasetSuiteBase implements Seria
         List<Person> list = Arrays.asList(person);
         Dataset<Person> dataset = sqlContext().createDataset(list, Encoders.bean(Person.class));
 
-        equalDatasets(dataset, dataset);
+        assertDatasetEquals(dataset, dataset);
     }
 
     @Test (expected = AssertionError.class)
@@ -44,7 +44,7 @@ public class SampleJavaDatasetTest extends JavaDatasetSuiteBase implements Seria
         List<Person> list2 = Arrays.asList(person2);
         Dataset<Person> dataset2 = sqlContext().createDataset(list2, Encoders.bean(Person.class));
 
-        equalDatasets(dataset1, dataset2);
+        assertDatasetEquals(dataset1, dataset2);
     }
 
     @Test
@@ -53,7 +53,7 @@ public class SampleJavaDatasetTest extends JavaDatasetSuiteBase implements Seria
         List<Person> list = new ArrayList<>();
         Dataset<Person> dataset = sqlContext().createDataset(list, Encoders.bean(Person.class));
 
-        approxEqualDatasets(dataset, dataset, 0.0);
+        assertDatasetApproximateEquals(dataset, dataset, 0.0);
     }
 
     @Test
@@ -64,7 +64,7 @@ public class SampleJavaDatasetTest extends JavaDatasetSuiteBase implements Seria
         List<Person> list = Arrays.asList(person);
         Dataset<Person> dataset = sqlContext().createDataset(list, Encoders.bean(Person.class));
 
-        approxEqualDatasets(dataset, dataset, 0.0);
+        assertDatasetApproximateEquals(dataset, dataset, 0.0);
     }
 
     @Test
@@ -79,7 +79,7 @@ public class SampleJavaDatasetTest extends JavaDatasetSuiteBase implements Seria
         List<Person> list2 = Arrays.asList(person2);
         Dataset<Person> dataset2 = sqlContext().createDataset(list2, Encoders.bean(Person.class));
 
-        approxEqualDatasets(dataset1, dataset2, 0.201);
+        assertDatasetApproximateEquals(dataset1, dataset2, 0.201);
     }
 
     @Test (expected = AssertionError.class)
@@ -94,7 +94,7 @@ public class SampleJavaDatasetTest extends JavaDatasetSuiteBase implements Seria
         List<Person> list2 = Arrays.asList(person2);
         Dataset<Person> dataset2 = sqlContext().createDataset(list2, Encoders.bean(Person.class));
 
-        approxEqualDatasets(dataset1, dataset2, 0.2);
+        assertDatasetApproximateEquals(dataset1, dataset2, 0.2);
     }
 
     private Person createPerson(String name, int age, double weight) {

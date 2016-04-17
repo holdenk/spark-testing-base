@@ -11,15 +11,13 @@ class DatasetSuiteBase extends DataFrameSuiteBase with DatasetSuiteBaseLike {
 }
 
 class JavaDatasetSuiteBase extends JavaDataFrameSuiteBase with DatasetSuiteBaseLike with Serializable {
-  def fakeClassTag[T]: ClassTag[T] = ClassTag.AnyRef.asInstanceOf[ClassTag[T]]
-
 
   /**
     * Check if two Datasets are equals, Datasets should have the same type.
     * This method could be customized by overriding equals method for the given class type.
     */
-  def equalDatasets[U](expected: Dataset[U], result: Dataset[U]) = {
-    super.equalDatasets(expected, result)(fakeClassTag[U])
+  def assertDatasetEquals[U](expected: Dataset[U], result: Dataset[U]) = {
+    super.assertDatasetEquals(expected, result)(Utils.fakeClassTag[U])
   }
 
   /**
@@ -28,8 +26,8 @@ class JavaDatasetSuiteBase extends JavaDataFrameSuiteBase with DatasetSuiteBaseL
     *
     * @param tol max acceptable tolerance, should be less than 1.
     */
-  def approxEqualDatasets[U](expected: Dataset[U], result: Dataset[U], tol: Double) = {
-    super.approxEqualDatasets(expected, result, tol)(fakeClassTag[U])
+  def assertDatasetApproximateEquals[U](expected: Dataset[U], result: Dataset[U], tol: Double) = {
+    super.assertDatasetApproximateEquals(expected, result, tol)(Utils.fakeClassTag[U])
   }
 }
 
@@ -39,8 +37,8 @@ trait DatasetSuiteBaseLike extends DataFrameSuiteBaseLike {
     * Check if two Datasets are equals, Datasets should have the same type.
     * This method could be customized by overriding equals method for the given class type.
     */
-  def equalDatasets[U](expected: Dataset[U], result: Dataset[U])
-                      (implicit UCT: ClassTag[U]) = {
+  def assertDatasetEquals[U](expected: Dataset[U], result: Dataset[U])
+                            (implicit UCT: ClassTag[U]) = {
     try {
       expected.rdd.cache
       result.rdd.cache
@@ -64,10 +62,10 @@ trait DatasetSuiteBaseLike extends DataFrameSuiteBaseLike {
     *
     * @param tol max acceptable tolerance, should be less than 1.
     */
-  def approxEqualDatasets[U](expected: Dataset[U], result: Dataset[U], tol: Double)
-                            (implicit UCT: ClassTag[U]) = {
+  def assertDatasetApproximateEquals[U](expected: Dataset[U], result: Dataset[U], tol: Double)
+                                       (implicit UCT: ClassTag[U]) = {
 
-    approxEqualDataFrames(expected.toDF, result.toDF, tol)
+    assertDataFrameApproximateEquals(expected.toDF, result.toDF, tol)
   }
 
 }

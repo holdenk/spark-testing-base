@@ -20,12 +20,22 @@
  */
 package com.holdenkarau.spark.testing
 
-import scala.reflect.{classTag, ClassTag}
-
 import org.apache.spark.rdd._
 
+import scala.reflect.ClassTag
 
-object RDDComparisons {
+
+object RDDComparisons extends TestSuite {
+
+  // tag::PANDA_ORDERED[]
+  /**
+   * Asserts two RDDs are equal (with the same order).
+   * If they are equal assertion succeeds, otherwise assertion fails.
+   */
+  def assertRDDEqualsWithOrder[T: ClassTag](expected: RDD[T], result: RDD[T]): Unit = {
+    assertTrue(compareWithOrder(expected, result).isEmpty)
+  }
+
   /**
    * Compare two RDDs with order (e.g. [1,2,3] != [3,2,1])
    * If the partitioners are not the same this requires multiple passes
@@ -40,17 +50,17 @@ object RDDComparisons {
     } else {
       // Otherwise index every element
       def indexRDD[T](rdd: RDD[T]): RDD[(Long, T)] = {
-        rdd.zipWithIndex.map{case (x, y) => (y, x)}
+        rdd.zipWithIndex.map { case (x, y) => (y, x) }
       }
       val indexedExpected = indexRDD(expected)
       val indexedResult = indexRDD(result)
-      indexedExpected.cogroup(indexedResult).filter{case (_, (i1, i2)) =>
-        i1.isEmpty || i2.isEmpty || i1.head != i2.head}.take(1).headOption.
-        map{case (_, (i1, i2)) => (i1.headOption, i2.headOption)}.take(1).headOption
+      indexedExpected.cogroup(indexedResult).filter { case (_, (i1, i2)) =>
+        i1.isEmpty || i2.isEmpty || i1.head != i2.head
+      }.take(1).headOption.
+        map { case (_, (i1, i2)) => (i1.headOption, i2.headOption) }.take(1).headOption
     }
   }
 
-  // tag::PANDA_ORDERED[]
   /**
    * Compare two RDDs. If they are equal returns None, otherwise
    * returns Some with the first mismatch. Assumes we have the same partitioner.
@@ -59,34 +69,51 @@ object RDDComparisons {
     // Handle mismatched lengths by converting into options and padding with Nones
     expected.zipPartitions(result) {
       (thisIter, otherIter) =>
-      new Iterator[(Option[T], Option[T])] {
-        def hasNext: Boolean = (thisIter.hasNext || otherIter.hasNext)
-        def next(): (Option[T], Option[T]) = {
-          (thisIter.hasNext, otherIter.hasNext) match {
-            case (false, true) => (Option.empty[T], Some(otherIter.next()))
-            case (true, false) => (Some(thisIter.next()), Option.empty[T])
-            case (true, true) =>  (Some(thisIter.next()), Some(otherIter.next()))
-            case _ => throw new Exception("next called when elements consumed")
+        new Iterator[(Option[T], Option[T])] {
+          def hasNext: Boolean = (thisIter.hasNext || otherIter.hasNext)
+
+          def next(): (Option[T], Option[T]) = {
+            (thisIter.hasNext, otherIter.hasNext) match {
+              case (false, true) => (Option.empty[T], Some(otherIter.next()))
+              case (true, false) => (Some(thisIter.next()), Option.empty[T])
+              case (true, true) => (Some(thisIter.next()), Some(otherIter.next()))
+              case _ => throw new Exception("next called when elements consumed")
+            }
           }
         }
-      }
-    }.filter{case (v1, v2) => v1 != v2}.take(1).headOption
+    }.filter { case (v1, v2) => v1 != v2 }.take(1).headOption
   }
+
   // end::PANDA_ORDERED[]
 
   // tag::PANDA_UNORDERED[]
   /**
+   * Asserts two RDDs are equal (un ordered).
+   * If they are equal assertion succeeds, otherwise assertion fails.
+   */
+  def assertRDDEquals[T: ClassTag](expected: RDD[T], result: RDD[T]): Unit = {
+    assertTrue(compare(expected, result).isEmpty)
+  }
+
+  /**
    * Compare two RDDs where we do not require the order to be equal.
    * If they are equal returns None, otherwise returns Some with the first mismatch.
+   *
+   * @return None if the two RDDs are equal, or Some That contains first mismatch information.
+   *         Mismatch information will be Tuple3 of: (key, number of times this key occur in expected RDD,
+   *         number of times this key occur in result RDD)
    */
   def compare[T: ClassTag](expected: RDD[T], result: RDD[T]): Option[(T, Int, Int)] = {
     // Key the values and count the number of each unique element
     val expectedKeyed = expected.map(x => (x, 1)).reduceByKey(_ + _)
     val resultKeyed = result.map(x => (x, 1)).reduceByKey(_ + _)
     // Group them together and filter for difference
-    expectedKeyed.cogroup(resultKeyed).filter{case (_, (i1, i2)) =>
-      i1.isEmpty || i2.isEmpty || i1.head != i2.head}.take(1).headOption.
-      map{case (v, (i1, i2)) => (v, i1.headOption.getOrElse(0), i2.headOption.getOrElse(0))}
+    expectedKeyed.cogroup(resultKeyed).filter { case (_, (i1, i2)) =>
+      i1.isEmpty || i2.isEmpty || i1.head != i2.head
+    }
+      .take(1).headOption.
+      map { case (v, (i1, i2)) => (v, i1.headOption.getOrElse(0), i2.headOption.getOrElse(0)) }
   }
+
   // end::PANDA_UNORDERED[]
 }

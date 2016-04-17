@@ -19,11 +19,11 @@ public class SampleJavaDataFrameTest extends JavaDataFrameSuiteBase implements S
                                          new BasicMagic("mahmoud", 23));
 
         DataFrame personsDataFrame = toDF(list);
-        equalDataFrames(personsDataFrame, personsDataFrame);
+        assertDataFrameEquals(personsDataFrame, personsDataFrame);
 
         List<BasicMagic> emptyList = Arrays.asList();
         DataFrame emptyDataFrame = toDF(emptyList);
-        equalDataFrames(emptyDataFrame, emptyDataFrame);
+        assertDataFrameEquals(emptyDataFrame, emptyDataFrame);
     }
 
     @Test
@@ -34,7 +34,7 @@ public class SampleJavaDataFrameTest extends JavaDataFrameSuiteBase implements S
         List<BasicMagic> magics2 = Arrays.asList(new BasicMagic("holden", 30),
                                             new BasicMagic("mahmoud", 23));
 
-        equalDataFrames(toDF(magics1), toDF(magics2));
+        assertDataFrameEquals(toDF(magics1), toDF(magics2));
     }
 
     @Test (expected = java.lang.AssertionError.class)
@@ -45,7 +45,7 @@ public class SampleJavaDataFrameTest extends JavaDataFrameSuiteBase implements S
         List<BasicMagic> magics2 = Arrays.asList(new BasicMagic("mahmoud", 40),
                                             new BasicMagic("Holden", 25));
 
-        equalDataFrames(toDF(magics1), toDF(magics2));
+        assertDataFrameEquals(toDF(magics1), toDF(magics2));
     }
 
     @Test
@@ -56,7 +56,7 @@ public class SampleJavaDataFrameTest extends JavaDataFrameSuiteBase implements S
         List<BasicMagic> magics2 = Arrays.asList(new BasicMagic("Holden", 10.1),
                                             new BasicMagic("Mahmoud", 10.0));
 
-        approxEqualDataFrames(toDF(magics1), toDF(magics2), 0.1);
+        assertDataFrameApproximateEquals(toDF(magics1), toDF(magics2), 0.1);
     }
 
     @Test (expected = java.lang.AssertionError.class)
@@ -67,7 +67,7 @@ public class SampleJavaDataFrameTest extends JavaDataFrameSuiteBase implements S
         List<BasicMagic> magics2 = Arrays.asList(new BasicMagic("Holden", 10.2),
                                             new BasicMagic("Mahmoud", 10.0));
 
-        approxEqualDataFrames(toDF(magics1), toDF(magics2), 0.1);
+        assertDataFrameApproximateEquals(toDF(magics1), toDF(magics2), 0.1);
     }
 
     @Test

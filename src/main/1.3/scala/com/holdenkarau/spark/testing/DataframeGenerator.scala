@@ -14,8 +14,8 @@ object DataframeGenerator {
    * @param minPartitions minimum number of partitions, defaults to 1.
    * @return Arbitrary DataFrames generator of the required schema.
    */
-  def genDataFrame(sqlContext: SQLContext, schema: StructType, minPartitions: Int = 1): Arbitrary[DataFrame] = {
-    genDataFrameWithCustomFields(sqlContext, schema, minPartitions)()
+  def arbitraryDataFrame(sqlContext: SQLContext, schema: StructType, minPartitions: Int = 1): Arbitrary[DataFrame] = {
+    arbitraryDataFrameWithCustomFields(sqlContext, schema, minPartitions)()
   }
 
   /**
@@ -32,8 +32,8 @@ object DataframeGenerator {
    *                       column index starts from 0 to length - 1
    * @return Arbitrary DataFrames generator of the required schema.
    */
-  def genDataFrameWithCustomFields(sqlContext: SQLContext, schema: StructType, minPartitions: Int = 1)
-                                  (userGenerators: ColumnGenerator*): Arbitrary[DataFrame] = {
+  def arbitraryDataFrameWithCustomFields(sqlContext: SQLContext, schema: StructType, minPartitions: Int = 1)
+                                        (userGenerators: ColumnGenerator*): Arbitrary[DataFrame] = {
 
     val arbitraryRDDs = RDDGenerator.genRDD(sqlContext.sparkContext, minPartitions)(getRowGenerator(schema, userGenerators))
     Arbitrary {
