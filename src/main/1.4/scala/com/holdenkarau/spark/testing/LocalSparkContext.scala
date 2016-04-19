@@ -59,4 +59,5 @@ object LocalSparkContext {
     }
   }
 
+  def clearLocalRootDirs(): Unit = SparkUtils.clearLocalRootDirs()
 }
