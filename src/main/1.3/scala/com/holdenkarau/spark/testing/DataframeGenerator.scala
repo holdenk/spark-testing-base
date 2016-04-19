@@ -1,5 +1,7 @@
 package com.holdenkarau.spark.testing
 
+import java.sql.{Date, Timestamp}
+
 import org.apache.spark.sql.types._
 import org.apache.spark.sql.{DataFrame, Row, SQLContext}
 import org.scalacheck.{Arbitrary, Gen}
@@ -72,22 +74,37 @@ object DataframeGenerator {
     val generatorMap = userGenerators.map(generator => (generator.columnName -> generator)).toMap
     (0 until fields.length).toList.map(index =>
       if (generatorMap.contains(fields(index).name)) generatorMap.get(fields(index).name).get.gen
-      else getGenerator(fields(index)))
+      else getGenerator(fields(index).dataType))
   }
 
-  private def getGenerator(fieldType: StructField): Gen[Any] = {
-    val dataType = fieldType.dataType
+  private def getGenerator(dataType: DataType): Gen[Any] = {
     dataType match {
-      case StringType => Arbitrary.arbitrary[String]
-      case IntegerType => Arbitrary.arbitrary[Int]
-      case FloatType => Arbitrary.arbitrary[Float]
-      case LongType => Arbitrary.arbitrary[Long]
-      case DoubleType => Arbitrary.arbitrary[Double]
-      case BooleanType => Arbitrary.arbitrary[Boolean]
-      case TimestampType => Arbitrary.arbitrary[Long]
       case ByteType => Arbitrary.arbitrary[Byte]
       case ShortType => Arbitrary.arbitrary[Short]
+      case IntegerType => Arbitrary.arbitrary[Int]
+      case LongType => Arbitrary.arbitrary[Long]
+      case FloatType => Arbitrary.arbitrary[Float]
+      case DoubleType => Arbitrary.arbitrary[Double]
+      case StringType => Arbitrary.arbitrary[String]
       case BinaryType => Arbitrary.arbitrary[Array[Byte]]
+      case BooleanType => Arbitrary.arbitrary[Boolean]
+      case TimestampType => Arbitrary.arbDate.arbitrary.map(time => new Timestamp(time.getTime))
+      case DateType => Arbitrary.arbDate.arbitrary.map(time => new Date(time.getTime))
+      case arr: ArrayType => {
+        val elementGenerator = getGenerator(arr.elementType)
+        return Gen.listOf(elementGenerator)
+      }
+      case map: MapType => {
+        val keyGenerator = getGenerator(map.keyType)
+        val valueGenerator = getGenerator(map.valueType)
+        val keyValueGenerator: Gen[(Any, Any)] = for {
+          key <- keyGenerator
+          value <- valueGenerator
+        } yield (key, value)
+
+        return Gen.mapOf(keyValueGenerator)
+      }
+      case row: StructType => return getRowGenerator(row)
       case _ => throw new UnsupportedOperationException(s"Type: $dataType not supported")
     }
   }
