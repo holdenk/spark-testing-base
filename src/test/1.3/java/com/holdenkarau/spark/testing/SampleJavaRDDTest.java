@@ -16,6 +16,7 @@
  */
 package com.holdenkarau.spark.testing;
 
+import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.function.Function;
 import org.junit.Test;
@@ -97,6 +98,40 @@ public class SampleJavaRDDTest extends SharedJavaSparkContext implements Seriali
     JavaRDD<Integer> rdd2 = jsc().parallelize(Arrays.asList(5, 3, 2, 1));
 
     JavaRDDComparisons.assertRDDEquals(rdd1, rdd2);
+  }
+
+  @Test
+  public void comparePairRDDExpectedSuccess() {
+    List<Tuple2<Integer, Integer>> pairList1 = Arrays.asList(new Tuple2<>(1, 1), new Tuple2<>(2, 2), new Tuple2<>(3, 3));
+    JavaPairRDD<Integer, Integer> rdd1 = jsc().parallelizePairs(pairList1);
+
+    List<Tuple2<Integer, Integer>> pairList2 = Arrays.asList(new Tuple2<>(2, 2), new Tuple2<>(3, 3), new Tuple2<>(1, 1));
+    JavaPairRDD<Integer, Integer> rdd2 = jsc().parallelizePairs(pairList2);
+
+    JavaRDDComparisons.assertPairRDDEquals(rdd1, rdd2);
+    JavaRDDComparisons.assertPairRDDEqualsWithOrder(rdd1, rdd1);
+  }
+
+  @Test(expected = java.lang.AssertionError.class)
+  public void comparePairRDDExpectedFailure() {
+    List<Tuple2<Integer, Integer>> pairList1 = Arrays.asList(new Tuple2<>(1, 1), new Tuple2<>(2, 2));
+    JavaPairRDD<Integer, Integer> rdd1 = jsc().parallelizePairs(pairList1);
+
+    List<Tuple2<Integer, Integer>> pairList2 = Arrays.asList(new Tuple2<>(2, 2), new Tuple2<>(3, 3));
+    JavaPairRDD<Integer, Integer> rdd2 = jsc().parallelizePairs(pairList2);
+
+    JavaRDDComparisons.assertPairRDDEquals(rdd1, rdd2);
+  }
+
+  @Test(expected = java.lang.AssertionError.class)
+  public void compareWithOrderPairRDDExpectedFailure() {
+    List<Tuple2<Integer, Integer>> pairList1 = Arrays.asList(new Tuple2<>(1, 1), new Tuple2<>(2, 2));
+    JavaPairRDD<Integer, Integer> rdd1 = jsc().parallelizePairs(pairList1);
+
+    List<Tuple2<Integer, Integer>> pairList2 = Arrays.asList(new Tuple2<>(2, 2), new Tuple2<>(1, 1));
+    JavaPairRDD<Integer, Integer> rdd2 = jsc().parallelizePairs(pairList2);
+
+    JavaRDDComparisons.assertPairRDDEqualsWithOrder(rdd1, rdd2);
   }
 
 }
