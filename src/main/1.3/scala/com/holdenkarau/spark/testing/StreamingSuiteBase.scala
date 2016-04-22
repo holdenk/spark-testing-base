@@ -23,14 +23,16 @@ import scala.reflect.ClassTag
 import org.apache.spark.Logging
 import org.apache.spark.streaming.dstream.DStream
 import org.scalactic.Equality
-import org.scalatest.{BeforeAndAfterAll, FunSuite}
+import org.scalatest.{BeforeAndAfterAll, Suite}
 
 /**
  * This is the base trait for Spark Streaming testsuites. This provides basic functionality
  * to run user-defined set of input on user-defined stream operations, and verify the output.
  */
-trait StreamingSuiteBase extends FunSuite with BeforeAndAfterAll with Logging
+trait StreamingSuiteBase extends BeforeAndAfterAll with Logging
   with StreamingSuiteCommon with SharedSparkContext {
+
+  self: Suite =>
 
   // Default before function for any streaming test suite. Override this
   // if you want to add your stuff to "before" (i.e., don't call before { } )
