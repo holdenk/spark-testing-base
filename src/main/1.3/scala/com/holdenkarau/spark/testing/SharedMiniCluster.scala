@@ -153,6 +153,8 @@ trait SharedMiniCluster extends BeforeAndAfterAll { self: Suite =>
         "Failed to find spark assembly jar, make sure SPARK_HOME is set correctly"))
       .getAbsolutePath()
 
+    println("Spark assembly Jar: " + sparkAssemblyJar)
+
     // Set some yarn props
     sys.props += ("spark.yarn.jar" -> ("local:" + sparkAssemblyJar))
     sys.props += ("spark.executor.instances" -> "1")
@@ -196,12 +198,14 @@ trait SharedMiniCluster extends BeforeAndAfterAll { self: Suite =>
   }
 
   def shutdown() {
-    if (yarnCluster != null) {
-      yarnCluster.stop()
-    }
     if (_sc != null) {
       _sc.stop()
     }
+
+    if (yarnCluster != null) {
+      yarnCluster.stop()
+    }
+
     System.clearProperty("SPARK_YARN_MODE")
     _sc = null
     yarnCluster = null
