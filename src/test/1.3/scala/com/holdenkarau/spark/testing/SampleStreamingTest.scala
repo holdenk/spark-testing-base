@@ -21,8 +21,9 @@ import org.apache.spark.streaming.Seconds
 import org.apache.spark.streaming.dstream._
 import org.scalactic.Equality
 import org.scalatest.exceptions.TestFailedException
+import org.scalatest.FunSuite
 
-class SampleStreamingTest extends StreamingSuiteBase {
+class SampleStreamingTest extends FunSuite with StreamingSuiteBase {
 
   //tag::simpleStreamingTest[]
   test("really simple transformation") {

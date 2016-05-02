@@ -20,6 +20,7 @@ import org.apache.spark.streaming.TestStreamingContext
 import org.apache.spark.streaming.dstream.DStream
 import org.apache.spark.streaming.scheduler.{StreamingListenerBatchCompleted, StreamingListener}
 import org.apache.spark.streaming.util.TestManualClock
+import org.scalatest.Suite
 
 import scala.reflect.ClassTag
 
@@ -28,6 +29,8 @@ import scala.reflect.ClassTag
  * to verify the results of your test against mocks.
  */
 trait StreamingActionBase extends StreamingSuiteBase {
+  self: Suite =>
+
 
   val batchCountListener = new BatchCountListener
 

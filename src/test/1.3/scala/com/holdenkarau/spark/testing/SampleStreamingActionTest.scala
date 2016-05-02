@@ -19,8 +19,9 @@ package com.holdenkarau.spark.testing
 import org.apache.spark._
 import org.apache.spark.rdd.RDD
 import org.apache.spark.streaming.dstream._
+import org.scalatest.FunSuite
 
-class SampleStreamingActionTest extends StreamingActionBase {
+class SampleStreamingActionTest extends FunSuite with StreamingActionBase {
 
   test("a simple action") {
     val input = List(List("hi"), List("bye"))
