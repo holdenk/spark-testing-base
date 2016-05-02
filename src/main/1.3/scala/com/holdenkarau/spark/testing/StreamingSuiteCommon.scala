@@ -27,7 +27,7 @@ import org.scalatest.concurrent.Eventually.timeout
 import org.scalatest.concurrent.PatienceConfiguration
 import org.scalatest.time.{Seconds => ScalaTestSeconds, Span}
 
-import scala.collection.mutable.{ArrayBuffer, SynchronizedBuffer}
+import scala.collection.mutable
 import scala.language.implicitConversions
 import scala.reflect.ClassTag
 
@@ -38,8 +38,8 @@ import scala.reflect.ClassTag
  */
 // tag::collectResults[]
 class TestOutputStream[T: ClassTag](parent: DStream[T],
-  val output: ArrayBuffer[Seq[T]] = ArrayBuffer[Seq[T]]()) extends Serializable {
-  
+  val output: mutable.SynchronizedQueue[Seq[T]] = new mutable.SynchronizedQueue[Seq[T]]) extends Serializable {
+
   parent.foreachRDD{(rdd: RDD[T], time) =>
     val collected = rdd.collect()
     output += collected
@@ -146,8 +146,7 @@ private[holdenkarau] trait StreamingSuiteCommon extends Logging with SparkContex
     // Setup the stream computation
     val inputStream = createTestInputStream(sc, ssc, input)
     val operatedStream = operation(inputStream)
-    val outputStream = new TestOutputStream[V](operatedStream,
-      new ArrayBuffer[Seq[V]] with SynchronizedBuffer[Seq[V]])
+    val outputStream = new TestOutputStream[V](operatedStream)
     (outputStream, ssc)
   }
 
@@ -170,8 +169,7 @@ private[holdenkarau] trait StreamingSuiteCommon extends Logging with SparkContex
     val inputStream1 = createTestInputStream(sc, ssc, input1)
     val inputStream2 = createTestInputStream(sc, ssc, input2)
     val operatedStream = operation(inputStream1, inputStream2)
-    val outputStream = new TestOutputStream[W](operatedStream,
-      new ArrayBuffer[Seq[W]] with SynchronizedBuffer[Seq[W]])
+    val outputStream = new TestOutputStream[W](operatedStream)
     (outputStream, ssc)
   }
 
@@ -183,11 +181,15 @@ private[holdenkarau] trait StreamingSuiteCommon extends Logging with SparkContex
    * Returns a sequence of items for each RDD.
    */
   private[holdenkarau] def runStreams[V: ClassTag](
-      outputStream: TestOutputStream[V],
-      ssc: TestStreamingContext,
-      numBatches: Int,
-      numExpectedOutput: Int
-    ): Seq[Seq[V]] = {
+     outputStream: TestOutputStream[V],
+     ssc: TestStreamingContext,
+     numBatches: Int,
+     expectedOutput: Seq[Seq[V]],
+     verifyOutputTillNow: (mutable.Queue[Seq[V]], mutable.Queue[Seq[V]]) => Unit
+  ): Unit = {
+    val numExpectedOutput = expectedOutput.length
+    val expectedOutputQueue: mutable.Queue[Seq[V]] = scala.collection.mutable.Queue(expectedOutput: _*)
+
     assert(numBatches > 0, "Number of batches to run stream computation is zero")
     assert(numExpectedOutput > 0, "Number of expected outputs after " + numBatches + " is zero")
     logInfo("numBatches = " + numBatches + ", numExpectedOutput = " + numExpectedOutput)
@@ -202,6 +204,7 @@ private[holdenkarau] trait StreamingSuiteCommon extends Logging with SparkContex
         logInfo("Actually waiting for " + batchDuration)
         clock.addToTime(batchDuration.milliseconds)
         Thread.sleep(batchDuration.milliseconds)
+        verifyOutputTillNow(output, expectedOutputQueue)
       }
     } else {
       clock.addToTime(numBatches * batchDuration.milliseconds)
@@ -210,18 +213,19 @@ private[holdenkarau] trait StreamingSuiteCommon extends Logging with SparkContex
 
     // Wait until expected number of output items have been generated
     val startTime = System.currentTimeMillis()
-    while (output.size < numExpectedOutput &&
-      System.currentTimeMillis() - startTime < maxWaitTimeMillis) {
-      logInfo("output.size = " + output.size + ", numExpectedOutput = " + numExpectedOutput)
+    while (expectedOutputQueue.nonEmpty && System.currentTimeMillis() - startTime < maxWaitTimeMillis) {
+      logInfo("output.size = " + output.size + ", expectedOutput.size = " + expectedOutputQueue.size)
+      verifyOutputTillNow(output, expectedOutputQueue)
       ssc.awaitTerminationOrTimeout(50)
     }
+    verifyOutputTillNow(output, expectedOutputQueue)
     val timeTaken = System.currentTimeMillis() - startTime
     logInfo("Output generated in " + timeTaken + " milliseconds")
-    output.foreach(x => logInfo("[" + x.mkString(",") + "]"))
+
     assert(timeTaken < maxWaitTimeMillis, "Operation timed out after " + timeTaken + " ms")
     Thread.sleep(200) // Give some time for the forgetting old RDDs to complete
 
-    output.toSeq
+    assert(expectedOutputQueue.isEmpty, "Can't match remaining elements")
   }
 
   private[holdenkarau] def setupClock() = {

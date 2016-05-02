@@ -25,6 +25,7 @@ import org.junit.Assert._
 
 import scala.collection.JavaConversions._
 import scala.collection.immutable.{HashBag => Bag}
+import scala.collection.mutable
 import scala.language.implicitConversions
 import scala.reflect.ClassTag
 
@@ -45,10 +46,8 @@ class JavaStreamingSuiteBase extends JavaSuiteBase with StreamingSuiteCommon {
    * is same as the expected output values, by comparing the output
    * collections either as lists (order matters) or sets (order does not matter)
    */
-  def verifyOutput[V: ClassTag](
-      output: Seq[Seq[V]],
-      expectedOutput: Seq[Seq[V]],
-      ordered: Boolean): Unit = {
+  def verifyOutput[V: ClassTag](ordered: Boolean)
+    (output: mutable.Queue[Seq[V]], expectedOutput: mutable.Queue[Seq[V]]) {
 
     logInfo("--------------------------------")
     logInfo("output.size = " + output.size)
@@ -61,16 +60,16 @@ class JavaStreamingSuiteBase extends JavaSuiteBase with StreamingSuiteCommon {
     logInfo("--------------------------------")
 
     // Match the output with the expected output
-    assertEquals("Number of outputs do not match", expectedOutput.size, output.size)
-    for (i <- output.indices) {
-      if (ordered) {
-        compareArrays[V](expectedOutput(i).toArray, output(i).toArray)
-      } else {
-        implicit val config = Bag.configuration.compact[V]
-        compareArrays[V](Bag(expectedOutput(i): _*).toArray, Bag(output(i): _*).toArray)
-      }
+    if (ordered) {
+      while (output.nonEmpty && expectedOutput.nonEmpty)
+        compareArrays[V](expectedOutput.dequeue().toArray, output.dequeue().toArray)
+    } else {
+      implicit val config = Bag.configuration.compact[V]
+      while (output.nonEmpty && expectedOutput.nonEmpty)
+        compareArrays[V](Bag(expectedOutput.dequeue(): _*).toArray, Bag(output.dequeue(): _*).toArray)
     }
 
+    assertTrue("Generated output greater than expected output", output.size <= expectedOutput.size)
     logInfo("Output verified successfully")
   }
 
@@ -122,8 +121,7 @@ class JavaStreamingSuiteBase extends JavaSuiteBase with StreamingSuiteCommon {
 
     withOutputAndStreamingContext(setupStreams[U, V](sInput, wrappedOperation)) {
       (outputStream, ssc) =>
-        val output: Seq[Seq[V]] = runStreams[V](outputStream, ssc, numBatches, expectedOutput.size)
-        verifyOutput[V](output, sExpectedOutput, ordered)
+      runStreams[V](outputStream, ssc, numBatches, sExpectedOutput, verifyOutput(ordered))
     }
   }
 
@@ -183,8 +181,7 @@ class JavaStreamingSuiteBase extends JavaSuiteBase with StreamingSuiteCommon {
 
     withOutputAndStreamingContext(setupStreams[U, V, W](sInput1, sInput2, wrappedOperation)) {
       (outputStream, ssc) =>
-        val output = runStreams[W](outputStream, ssc, numBatches, expectedOutput.size)
-        verifyOutput[W](output, sExpectedOutput, ordered)
+        runStreams[W](outputStream, ssc, numBatches, sExpectedOutput, verifyOutput(ordered))
     }
   }
 
