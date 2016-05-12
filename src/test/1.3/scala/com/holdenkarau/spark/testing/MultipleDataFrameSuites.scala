@@ -1,6 +1,8 @@
 package com.holdenkarau.spark.testing
 
-class MultipleDataFrameSuites extends DataFrameSuiteBase {
+import org.scalatest.FunSuite
+
+class MultipleDataFrameSuites extends FunSuite with DataFrameSuiteBase {
   test("test nothing") {
     assert(1 === 1)
   }

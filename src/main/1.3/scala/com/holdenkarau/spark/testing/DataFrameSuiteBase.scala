@@ -19,6 +19,8 @@ package com.holdenkarau.spark.testing
 
 import java.io.File
 
+import org.scalatest.Suite
+
 import scala.math.abs
 import scala.collection.mutable.HashMap
 
@@ -33,7 +35,7 @@ import org.apache.hadoop.hive.conf.HiveConf.ConfVars
  * Base class for testing Spark DataFrames.
  */
 
-trait DataFrameSuiteBase extends TestSuite with SharedSparkContext with DataFrameSuiteBaseLike {
+trait DataFrameSuiteBase extends TestSuite with SharedSparkContext with DataFrameSuiteBaseLike { self: Suite =>
   override def beforeAll() {
     super.beforeAll()
     super.sqlBeforeAllTestCases()

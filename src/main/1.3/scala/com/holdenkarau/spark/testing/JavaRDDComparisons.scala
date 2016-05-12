@@ -2,7 +2,7 @@ package com.holdenkarau.spark.testing
 
 import org.apache.spark.api.java.JavaRDD
 
-object JavaRDDComparisons extends JavaTestSuite {
+object JavaRDDComparisons extends RDDComparisonsLike with JavaTestSuite {
 
   /**
    * Asserts two RDDs are equal (with the same order).
@@ -18,7 +18,7 @@ object JavaRDDComparisons extends JavaTestSuite {
    */
   def compareWithOrder[T](expected: JavaRDD[T], result: JavaRDD[T]): Option[(Option[T], Option[T])] = {
     implicit val ctag = Utils.fakeClassTag[T]
-    RDDComparisons.compareWithOrder(expected.rdd, result.rdd)
+    compareWithOrder(expected.rdd, result.rdd)
   }
 
   /**
@@ -39,8 +39,7 @@ object JavaRDDComparisons extends JavaTestSuite {
    */
   def compare[T](expected: JavaRDD[T], result: JavaRDD[T]): Option[(T, Integer, Integer)] = {
     implicit val ctag = Utils.fakeClassTag[T]
-    RDDComparisons.compare(expected.rdd, result.rdd)
-      .map(x => (x._1, Integer.valueOf(x._2), Integer.valueOf(x._3)))
+    compare(expected.rdd, result.rdd).map(x => (x._1, Integer.valueOf(x._2), Integer.valueOf(x._3)))
   }
 
 }

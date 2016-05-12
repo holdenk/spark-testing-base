@@ -21,12 +21,15 @@
 package com.holdenkarau.spark.testing
 
 import org.apache.spark.rdd._
+import org.scalatest.Suite
 
 import scala.reflect.ClassTag
 
 
-object RDDComparisons extends TestSuite {
+trait RDDComparisons extends RDDComparisonsLike with TestSuite { self: Suite =>
+}
 
+trait RDDComparisonsLike extends TestSuiteLike {
   // tag::PANDA_ORDERED[]
   /**
    * Asserts two RDDs are equal (with the same order).

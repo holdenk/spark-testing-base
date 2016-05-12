@@ -21,7 +21,7 @@ import scala.util.Random
 import org.apache.spark.rdd.RDD
 import org.scalatest.FunSuite
 
-class SampleRDDTest extends FunSuite with SharedSparkContext {
+class SampleRDDTest extends FunSuite with SharedSparkContext with RDDComparisons {
   test("really simple transformation") {
     val input = List("hi", "hi holden", "bye")
     val expected = List(List("hi"), List("hi", "holden"), List("bye"))
@@ -39,7 +39,7 @@ class SampleRDDTest extends FunSuite with SharedSparkContext {
     val expectedList = List(List("hi"), List("hi", "holden"), List("bye"))
     val expectedRDD = sc.parallelize(expectedList)
 
-    assert(None === RDDComparisons.compare(expectedRDD, inputRDD))
+    assert(None === compare(expectedRDD, inputRDD))
   }
 
   test("RDD comparision with order same partitioner") {
@@ -49,7 +49,7 @@ class SampleRDDTest extends FunSuite with SharedSparkContext {
     val ordered1 = tokenizedRDD.sortBy(x => x.head)
     val ordered2 = tokenizedRDD.sortBy(x => x.head)
 
-    assert(None === RDDComparisons.compareWithOrder(ordered1, ordered2))
+    assert(None === compareWithOrder(ordered1, ordered2))
   }
 
   test("RDD comparision with order without known partitioner") {
@@ -64,20 +64,20 @@ class SampleRDDTest extends FunSuite with SharedSparkContext {
     val diffExpectedRDD = sc.parallelize(expectedList).sortBy(x => x.head.reverse)
 
     assert(ordered.partitioner.isEmpty && expectedRDD.partitioner.isEmpty)
-    assert(None === RDDComparisons.compareWithOrder(expectedRDD, ordered))
+    assert(None === compareWithOrder(expectedRDD, ordered))
     // Different order
-    assert(RDDComparisons.compareWithOrder(diffExpectedRDD, ordered).isDefined)
+    assert(compareWithOrder(diffExpectedRDD, ordered).isDefined)
     // Different sizes
     val fakeTokenized = inputRDD.map(x => List(x))
-    assert(RDDComparisons.compareWithOrder(diffExpectedRDD, fakeTokenized).isDefined)
-    assert(RDDComparisons.compareWithOrder(expectedRDD, fakeTokenized).isDefined)
+    assert(compareWithOrder(diffExpectedRDD, fakeTokenized).isDefined)
+    assert(compareWithOrder(expectedRDD, fakeTokenized).isDefined)
   }
 
   test("empty RDD compare") {
     val inputList = List[String]()
     val inputRDD = sc.parallelize(inputList)
 
-    assert(None === RDDComparisons.compare(inputRDD, inputRDD))
+    assert(None === compare(inputRDD, inputRDD))
   }
 
   test("simple equal compare") {
@@ -87,7 +87,7 @@ class SampleRDDTest extends FunSuite with SharedSparkContext {
     val expected = Random.shuffle(inputList)
     val expectedRDD = sc.parallelize(expected)
 
-    assert(None === RDDComparisons.compare(expectedRDD, inputRDD))
+    assert(None === compare(expectedRDD, inputRDD))
   }
 
   test("complex equal compare") {
@@ -97,7 +97,7 @@ class SampleRDDTest extends FunSuite with SharedSparkContext {
     val expected = Random.shuffle(inputList)
     val expectedRDD = sc.parallelize(expected)
 
-    assert(None === RDDComparisons.compare(expectedRDD, inputRDD))
+    assert(None === compare(expectedRDD, inputRDD))
   }
 
   test("not equal compare") {
@@ -107,14 +107,14 @@ class SampleRDDTest extends FunSuite with SharedSparkContext {
     val expectedList = List("ab", -1)
     val expectedRDD = sc.parallelize(expectedList)
 
-    assert(None !== RDDComparisons.compare(expectedRDD, inputRDD))
+    assert(None !== compare(expectedRDD, inputRDD))
   }
 
   test("empty RDD compareWithOrder") {
     val inputList = List[String]()
     val inputRDD = sc.parallelize(inputList)
 
-    assert(None === RDDComparisons.compareWithOrder(inputRDD, inputRDD))
+    assert(None === compareWithOrder(inputRDD, inputRDD))
   }
 
   test("equal compareWithOrder") {
@@ -123,7 +123,7 @@ class SampleRDDTest extends FunSuite with SharedSparkContext {
 
     val expectedRDD = sc.parallelize(inputList)
 
-    assert(None === RDDComparisons.compareWithOrder(inputRDD, expectedRDD))
+    assert(None === compareWithOrder(inputRDD, expectedRDD))
   }
 
   test("not equal compareWithOrder") {
@@ -133,26 +133,26 @@ class SampleRDDTest extends FunSuite with SharedSparkContext {
     val expectedList = List(2, 1, 3, 4)
     val expectedRDD = sc.parallelize(expectedList)
 
-    assert(None !== RDDComparisons.compareWithOrder(inputRDD, expectedRDD))
+    assert(None !== compareWithOrder(inputRDD, expectedRDD))
   }
 
   test("assertEqualsWithOrder Success") {
     val rdd = sc.parallelize(List(1, 2, 3, 4))
-    RDDComparisons.assertRDDEqualsWithOrder(rdd, rdd)
+    assertRDDEqualsWithOrder(rdd, rdd)
   }
 
   test("assertEqualsWithoutOrder Success") {
     val rdd1 = sc.parallelize(List(1, 2, 3, 4))
     val rdd2 = sc.parallelize(List(4, 3, 2, 1))
 
-    RDDComparisons.assertRDDEquals(rdd1, rdd2)
+    assertRDDEquals(rdd1, rdd2)
   }
 
   test("assertEqualsWithOrder Failure") {
     val rdd1 = sc.parallelize(List(1, 2, 3, 4))
     val rdd2 = sc.parallelize(List(2, 2, 3, 4))
     intercept[org.scalatest.exceptions.TestFailedException] {
-      RDDComparisons.assertRDDEqualsWithOrder(rdd1, rdd2)
+      assertRDDEqualsWithOrder(rdd1, rdd2)
     }
   }
 
@@ -161,7 +161,7 @@ class SampleRDDTest extends FunSuite with SharedSparkContext {
     val rdd2 = sc.parallelize(List(1, 2, 3, 5))
 
     intercept[org.scalatest.exceptions.TestFailedException] {
-      RDDComparisons.assertRDDEquals(rdd1, rdd2)
+      assertRDDEquals(rdd1, rdd2)
     }
   }
 

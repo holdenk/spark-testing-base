@@ -1,10 +1,10 @@
 package com.holdenkarau.spark.testing
 
-import org.scalatest.FunSuiteLike
+import org.scalatest.Suite
 
 import scala.reflect.ClassTag
 
-trait TestSuite extends TestSuiteLike with FunSuiteLike {
+trait TestSuite extends TestSuiteLike { self: Suite =>
 
   override def assertEmpty[U](arr: Array[U])(implicit CT: ClassTag[U]) =
     org.scalatest.Assertions.assert(arr.isEmpty)

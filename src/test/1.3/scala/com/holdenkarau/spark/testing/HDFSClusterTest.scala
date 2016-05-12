@@ -8,7 +8,7 @@ import org.apache.hadoop.fs.{FileSystem, Path}
 import org.apache.spark.rdd.RDD
 import org.scalatest.FunSuite
 
-class HDFSClusterTest extends FunSuite with SharedSparkContext {
+class HDFSClusterTest extends FunSuite with SharedSparkContext with RDDComparisons {
 
   var hdfsCluster: HDFSCluster = null
 
@@ -31,7 +31,7 @@ class HDFSClusterTest extends FunSuite with SharedSparkContext {
     numRDD.saveAsTextFile(path)
 
     val loadedRDD: RDD[Int] = sc.textFile(path).map(_.toInt)
-    RDDComparisons.assertRDDEquals(numRDD, loadedRDD)
+    assertRDDEquals(numRDD, loadedRDD)
   }
 
   test("test creating local file to hdfs") {
