@@ -35,8 +35,9 @@ import scala.collection.JavaConversions._
   * Further more if this is used, all Spark tests must run against the yarn mini cluster
   * (see https://issues.apache.org/jira/browse/SPARK-10812 for details).
   */
-class YARNCluster {
+class YARNCluster extends YARNClusterLike
 
+trait YARNClusterLike {
   // log4j configuration for the YARN containers, so that their output is collected
   // by YARN instead of trying to overwrite unit-tests.log.
   private val LOG4J_CONF =
@@ -56,7 +57,7 @@ class YARNCluster {
   private var tempDir: File = _
   private var logConfDir: File = _
 
-  def start() {
+  def startYARN() {
     tempDir = Utils.createTempDir()
     logConfDir = new File(tempDir, "log4j")
     logConfDir.mkdir()
@@ -165,7 +166,7 @@ class YARNCluster {
     ).map(_.getAbsolutePath).filter(_ != null)
   }
 
-  def shutdown() {
+  def shutdownYARN() {
     if (yarnCluster != null) {
       yarnCluster.stop()
     }

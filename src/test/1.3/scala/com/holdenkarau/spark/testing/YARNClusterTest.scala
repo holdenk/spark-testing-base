@@ -11,7 +11,7 @@ class YARNClusterTest extends FunSuite with BeforeAndAfterAll {
   override def beforeAll(): Unit = {
     super.beforeAll()
     yarnCluster = new YARNCluster()
-    yarnCluster.start()
+    yarnCluster.startYARN()
 
     val sparkConf = new SparkConf().setMaster("yarn-client").setAppName("test")
     sc = new SparkContext(sparkConf)
@@ -37,7 +37,7 @@ class YARNClusterTest extends FunSuite with BeforeAndAfterAll {
 
   override def afterAll(): Unit = {
     sc.stop()
-    yarnCluster.shutdown()
+    yarnCluster.shutdownYARN()
     super.afterAll()
   }
 }

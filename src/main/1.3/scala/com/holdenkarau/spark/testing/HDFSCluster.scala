@@ -6,10 +6,12 @@ import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.hdfs.MiniDFSCluster
 import org.apache.hadoop.test.PathUtils
 
-class HDFSCluster {
+class HDFSCluster extends HDFSClusterLike
+
+trait HDFSClusterLike {
   @transient private var hdfsCluster: MiniDFSCluster = null
 
-  def startCluster() = {
+  def startHDFS() = {
     println("Starting HDFS Cluster...")
     val baseDir = new File(PathUtils.getTestDir(getClass()), "miniHDFS")
 
@@ -25,7 +27,7 @@ class HDFSCluster {
     "hdfs://localhost:" + hdfsCluster.getNameNodePort()
   }
 
-  def shutdown(): Unit = {
+  def shutdownHDFS(): Unit = {
     hdfsCluster.shutdown()
   }
 }
