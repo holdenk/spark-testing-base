@@ -47,7 +47,7 @@ trait DataFrameSuiteBase extends TestSuite with SharedSparkContext with DataFram
 
 trait DataFrameSuiteBaseLike extends SparkContextProvider with TestSuiteLike with Serializable {
   val maxUnequalRowsToShow = 10
-  def sqlContext: HiveContext = SQLContextProvider._sqlContext
+  lazy val sqlContext: HiveContext = SQLContextProvider._sqlContext
 
   def sqlBeforeAllTestCases() {
     /** Constructs a configuration for hive, where the metastore is located in a temp directory. */
