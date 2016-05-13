@@ -21,20 +21,17 @@ import org.apache.spark.sql.Row
 class SampleDataFrameTest extends DataFrameSuiteBase {
   val byteArray = new Array[Byte](1)
   val diffByteArray = Array[Byte](192.toByte)
-  val inputList = List(Magic("panda", 9001.0, byteArray),
-    Magic("coffee", 9002.0, byteArray))
-  val inputList2 = List(Magic("panda", 9001.0 + 1E-6, byteArray),
-    Magic("coffee", 9002.0, byteArray))
+  val inputList = List(Magic("panda", 9001.0, byteArray), Magic("coffee", 9002.0, byteArray))
+  val inputList2 = List(Magic("panda", 9001.0 + 1E-6, byteArray), Magic("coffee", 9002.0, byteArray))
+
   test("dataframe should be equal to its self") {
-    val sqlCtx = sqlContext
-    import sqlCtx.implicits._
+    import sqlContext.implicits._
     val input = sc.parallelize(inputList).toDF
     assertDataFrameEquals(input, input)
   }
 
   test("unequal dataframes should not be equal") {
-    val sqlCtx = sqlContext
-    import sqlCtx.implicits._
+    import sqlContext.implicits._
     val input = sc.parallelize(inputList).toDF
     val input2 = sc.parallelize(inputList2).toDF
     intercept[org.scalatest.exceptions.TestFailedException] {
@@ -43,8 +40,7 @@ class SampleDataFrameTest extends DataFrameSuiteBase {
   }
 
   test("dataframe approx expected") {
-    val sqlCtx = sqlContext
-    import sqlCtx.implicits._
+    import sqlContext.implicits._
     val input = sc.parallelize(inputList).toDF
     val input2 = sc.parallelize(inputList2).toDF
     assertDataFrameApproximateEquals(input, input2, 1E-5)
@@ -54,8 +50,7 @@ class SampleDataFrameTest extends DataFrameSuiteBase {
   }
 
   test("dataframe approxEquals on rows") {
-    val sqlCtx = sqlContext
-    import sqlCtx.implicits._
+    import sqlContext.implicits._
     val row = sc.parallelize(inputList).toDF.collect()(0)
     val row2 = sc.parallelize(inputList2).toDF.collect()(0)
     val row3 = Row()
@@ -77,8 +72,7 @@ class SampleDataFrameTest extends DataFrameSuiteBase {
   }
 
   test("unequal dataframes should not be equal when length differs") {
-    val sqlCtx = sqlContext
-    import sqlCtx.implicits._
+    import sqlContext.implicits._
     val input = sc.parallelize(inputList).toDF
     val input2 = sc.parallelize(inputList.headOption.toSeq).toDF
     intercept[org.scalatest.exceptions.TestFailedException] {
@@ -90,8 +84,7 @@ class SampleDataFrameTest extends DataFrameSuiteBase {
   }
 
   test("unequal dataframes should not be equal when byte array differs") {
-    val sqlCtx = sqlContext
-    import sqlCtx.implicits._
+    import sqlContext.implicits._
     val input = sc.parallelize(inputList).toDF
     val diffInputList = List(Magic("panda", 9001.0, byteArray),
       Magic("coffee", 9002.0, diffByteArray))
