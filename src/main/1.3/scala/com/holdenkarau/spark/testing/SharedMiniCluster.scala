@@ -17,6 +17,7 @@
 
 package com.holdenkarau.spark.testing
 
+import org.apache.spark.{SparkConf, SparkContext}
 import org.scalatest.{BeforeAndAfterAll, Suite}
 
 /**
@@ -25,25 +26,41 @@ import org.scalatest.{BeforeAndAfterAll, Suite}
  * Further more if this is used, all Spark tests must run against the yarn mini cluster
  * (see https://issues.apache.org/jira/browse/SPARK-10812 for details).
  */
-trait SharedMiniCluster extends BeforeAndAfterAll with HDFSClusterLike with YARNClusterLike { self: Suite =>
+trait SharedMiniCluster extends BeforeAndAfterAll with HDFSClusterLike with YARNClusterLike {
+  self: Suite =>
+  @transient private var _sc: SparkContext = _
+
+  def sc: SparkContext = _sc
+
+  val master = "yarn-client"
 
   override def beforeAll() {
     // Try and do setup, and in-case we fail shutdown
     try {
       super.startHDFS()
       super.startYARN()
+
+      val sparkConf = new SparkConf().setMaster(master).setAppName("test")
+      _sc = new SparkContext(sparkConf)
+
     } catch {
       case e: Exception =>
-		super.shutdownYARN()
-		super.shutdownHDFS()
+        super.shutdownYARN()
+        super.shutdownHDFS()
         throw e
     }
     super.beforeAll()
   }
 
   override def afterAll() {
+    if (_sc != null) {
+      _sc.stop()
+    }
+    _sc = null
+
     super.shutdownYARN()
     super.shutdownHDFS()
+
     super.afterAll()
   }
 }
