@@ -9,16 +9,16 @@ object JavaRDDComparisons extends RDDComparisonsLike with JavaTestSuite {
    * If they are equal assertion succeeds, otherwise assertion fails.
    */
   def assertRDDEqualsWithOrder[T](expected: JavaRDD[T], result: JavaRDD[T]): Unit = {
-    assertTrue(compareWithOrder(expected, result).isEmpty)
+    assertTrue(compareRDDWithOrder(expected, result).isEmpty)
   }
 
   /**
    * Compare two RDDs. If they are equal returns None, otherwise
    * returns Some with the first mismatch. Assumes we have the same partitioner.
    */
-  def compareWithOrder[T](expected: JavaRDD[T], result: JavaRDD[T]): Option[(Option[T], Option[T])] = {
+  def compareRDDWithOrder[T](expected: JavaRDD[T], result: JavaRDD[T]): Option[(Option[T], Option[T])] = {
     implicit val ctag = Utils.fakeClassTag[T]
-    compareWithOrder(expected.rdd, result.rdd)
+    compareRDDWithOrder(expected.rdd, result.rdd)
   }
 
   /**
@@ -26,7 +26,7 @@ object JavaRDDComparisons extends RDDComparisonsLike with JavaTestSuite {
    * If they are equal assertion succeeds, otherwise assertion fails.
    */
   def assertRDDEquals[T](expected: JavaRDD[T], result: JavaRDD[T]): Unit = {
-    assertTrue(compare(expected, result).isEmpty)
+    assertTrue(compareRDD(expected, result).isEmpty)
   }
 
   /**
@@ -37,9 +37,9 @@ object JavaRDDComparisons extends RDDComparisonsLike with JavaTestSuite {
    *         Mismatch information will be Tuple3 of: (key, number of times this key occur in expected RDD,
    *         number of times this key occur in result RDD)
    */
-  def compare[T](expected: JavaRDD[T], result: JavaRDD[T]): Option[(T, Integer, Integer)] = {
+  def compareRDD[T](expected: JavaRDD[T], result: JavaRDD[T]): Option[(T, Integer, Integer)] = {
     implicit val ctag = Utils.fakeClassTag[T]
-    compare(expected.rdd, result.rdd).map(x => (x._1, Integer.valueOf(x._2), Integer.valueOf(x._3)))
+    compareRDD(expected.rdd, result.rdd).map(x => (x._1, Integer.valueOf(x._2), Integer.valueOf(x._3)))
   }
 
 }

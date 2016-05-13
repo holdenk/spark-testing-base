@@ -41,7 +41,7 @@ class SampleScalaCheckTest extends FunSuite with SharedSparkContext with RDDComp
   test("assert that two methods on the RDD have the same results") {
     val property =
       forAll(RDDGenerator.genRDD[String](sc)(Arbitrary.arbitrary[String])) {
-        rdd => compare(filterOne(rdd), filterOther(rdd)).isEmpty
+        rdd => compareRDD(filterOne(rdd), filterOther(rdd)).isEmpty
       }
 
     check(property)
