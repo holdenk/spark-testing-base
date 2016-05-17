@@ -15,7 +15,7 @@ class HDFSClusterTest extends FunSuite with SharedSparkContext {
   override def beforeAll(): Unit = {
     super.beforeAll()
     hdfsCluster = new HDFSCluster
-    hdfsCluster.startCluster()
+    hdfsCluster.startHDFS()
   }
 
   test("get the namenode uri") {
@@ -51,7 +51,7 @@ class HDFSClusterTest extends FunSuite with SharedSparkContext {
   }
 
   override def afterAll() {
-    hdfsCluster.shutdown()
+    hdfsCluster.shutdownHDFS()
     super.afterAll()
   }
 }
