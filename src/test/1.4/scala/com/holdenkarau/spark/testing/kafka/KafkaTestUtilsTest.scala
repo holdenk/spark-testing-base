@@ -16,23 +16,16 @@
  */
 package com.holdenkarau.spark.testing.kafka
 
-import org.scalatest.{FunSuite, BeforeAndAfterAll}
-
 import java.util.Properties
-import java.util.UUID
 
 import kafka.consumer.ConsumerConfig
-import kafka.consumer.ConsumerIterator
-import kafka.consumer.KafkaStream
-import kafka.javaapi.consumer.ConsumerConnector
-
+import org.apache.spark.streaming.kafka.KafkaTestUtils
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
-import org.apache.spark.streaming.kafka.KafkaTestUtils
+import org.scalatest.{BeforeAndAfterAll, FunSuite}
 
 @RunWith(classOf[JUnitRunner])
-class KafkaTestUtilsTest
-extends FunSuite with BeforeAndAfterAll{
+class KafkaTestUtilsTest extends FunSuite with BeforeAndAfterAll {
 
   private var kafkaTestUtils: KafkaTestUtils = _
 
@@ -46,7 +39,7 @@ extends FunSuite with BeforeAndAfterAll{
     kafkaTestUtils = null
   }
 
-  test("Kafka send and receive message"){
+  test("Kafka send and receive message") {
     val topic = "test-topic"
     val message = "HelloWorld!"
     kafkaTestUtils.createTopic(topic)
@@ -62,18 +55,20 @@ extends FunSuite with BeforeAndAfterAll{
     consumerProps.put("zookeeper.sync.time.ms", "2000")
     consumerProps.put("auto.commit.interval.ms", "2000")
 
-    val consumer = kafka.consumer.Consumer
-                    .createJavaConsumerConnector(
-                      new ConsumerConfig(consumerProps))
+    val consumer = kafka.consumer.Consumer.createJavaConsumerConnector(new ConsumerConfig(consumerProps))
 
-    import scala.collection.JavaConversions._
+    try {
+      import scala.collection.JavaConversions._
 
-    val topicCountMap = Map(topic -> new Integer(1))
-    val consumerMap = consumer.createMessageStreams(topicCountMap)
-    val stream =  consumerMap.get(topic).get(0)
-    val it = stream.iterator()
-    val mess = it.next
-    assert( new String(mess.message().map(_.toChar)) === message)
+      val topicCountMap = Map(topic -> new Integer(1))
+      val consumerMap = consumer.createMessageStreams(topicCountMap)
+      val stream = consumerMap.get(topic).get(0)
+      val it = stream.iterator()
+      val mess = it.next
+      assert(new String(mess.message().map(_.toChar)) === message)
+    } finally {
+      consumer.shutdown()
+    }
   }
 
 }
