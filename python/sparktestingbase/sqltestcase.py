@@ -61,9 +61,11 @@ class SQLTestCase(SparkTestingBaseReuse):
         try:
             expectedRDD = expected.rdd.cache()
             resultRDD = result.rdd.cache()
+
             def zipWithIndex(rdd):
                 """Zip with index (idx, data)"""
                 return rdd.zipWithIndex().map(lambda x: (x[1], x[0]))
+
             def equal(x, y):
                 if (len(x) != len(y)):
                     return False
@@ -83,7 +85,8 @@ class SQLTestCase(SparkTestingBaseReuse):
             expectedIndexed = zipWithIndex(expectedRDD)
             resultIndexed = zipWithIndex(resultRDD)
             joinedRDD = expectedIndexed.join(resultIndexed)
-            unequalRDD = joinedRDD.filter(lambda x: not equal(x[1][0], x[1][1]))
+            unequalRDD = joinedRDD.filter(
+                lambda x: not equal(x[1][0], x[1][1]))
             differentRows = unequalRDD.take(10)
             self.assertEqual([], differentRows)
         finally:
