@@ -24,7 +24,7 @@ import org.scalacheck.Prop.forAll
 import org.scalatest.FunSuite
 import org.scalatest.prop.Checkers
 
-class SampleScalaCheckTest extends FunSuite with SharedSparkContext with Checkers {
+class SampleScalaCheckTest extends FunSuite with SharedSparkContext with RDDComparisons with Checkers {
   // tag::propertySample[]
   // A trivial property that the map doesn't change the number of elements
   test("map should not change number of elements") {
@@ -41,7 +41,7 @@ class SampleScalaCheckTest extends FunSuite with SharedSparkContext with Checker
   test("assert that two methods on the RDD have the same results") {
     val property =
       forAll(RDDGenerator.genRDD[String](sc)(Arbitrary.arbitrary[String])) {
-        rdd => RDDComparisons.compare(filterOne(rdd), filterOther(rdd)).isEmpty
+        rdd => compareRDD(filterOne(rdd), filterOther(rdd)).isEmpty
       }
 
     check(property)

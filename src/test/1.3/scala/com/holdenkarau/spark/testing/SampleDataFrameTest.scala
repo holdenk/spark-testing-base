@@ -17,8 +17,9 @@
 package com.holdenkarau.spark.testing
 
 import org.apache.spark.sql.Row
+import org.scalatest.FunSuite
 
-class SampleDataFrameTest extends DataFrameSuiteBase {
+class SampleDataFrameTest extends FunSuite with DataFrameSuiteBase {
   val byteArray = new Array[Byte](1)
   val diffByteArray = Array[Byte](192.toByte)
   val inputList = List(Magic("panda", 9001.0, byteArray), Magic("coffee", 9002.0, byteArray))

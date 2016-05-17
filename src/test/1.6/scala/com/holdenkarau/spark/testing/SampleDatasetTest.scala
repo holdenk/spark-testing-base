@@ -1,6 +1,8 @@
 package com.holdenkarau.spark.testing
 
-class SampleDatasetTest extends DatasetSuiteBase {
+import org.scalatest.FunSuite
+
+class SampleDatasetTest extends FunSuite with DatasetSuiteBase {
 
   test("equal empty dataset") {
     import sqlContext.implicits._

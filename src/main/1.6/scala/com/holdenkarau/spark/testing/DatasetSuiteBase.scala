@@ -1,12 +1,13 @@
 package com.holdenkarau.spark.testing
 
 import org.apache.spark.rdd.RDD
+import org.scalatest.Suite
 
 import scala.reflect.ClassTag
 
 import org.apache.spark.sql.Dataset
 
-class DatasetSuiteBase extends DataFrameSuiteBase with DatasetSuiteBaseLike {
+trait DatasetSuiteBase extends DataFrameSuiteBase with DatasetSuiteBaseLike { self: Suite =>
 
 }
 

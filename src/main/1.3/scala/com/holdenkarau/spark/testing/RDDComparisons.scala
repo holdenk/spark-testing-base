@@ -21,19 +21,22 @@
 package com.holdenkarau.spark.testing
 
 import org.apache.spark.rdd._
+import org.scalatest.Suite
 
 import scala.reflect.ClassTag
 
 
-object RDDComparisons extends TestSuite {
+trait RDDComparisons extends RDDComparisonsLike with TestSuite { self: Suite =>
+}
 
+trait RDDComparisonsLike extends TestSuiteLike {
   // tag::PANDA_ORDERED[]
   /**
    * Asserts two RDDs are equal (with the same order).
    * If they are equal assertion succeeds, otherwise assertion fails.
    */
   def assertRDDEqualsWithOrder[T: ClassTag](expected: RDD[T], result: RDD[T]): Unit = {
-    assertTrue(compareWithOrder(expected, result).isEmpty)
+    assertTrue(compareRDDWithOrder(expected, result).isEmpty)
   }
 
   /**
@@ -43,10 +46,10 @@ object RDDComparisons extends TestSuite {
    * If they are equal returns None, otherwise returns Some with the first mismatch.
    * If the lengths are not equal, one of the two components may be None.
    */
-  def compareWithOrder[T: ClassTag](expected: RDD[T], result: RDD[T]): Option[(Option[T], Option[T])] = {
+  def compareRDDWithOrder[T: ClassTag](expected: RDD[T], result: RDD[T]): Option[(Option[T], Option[T])] = {
     // If there is a known partitioner just zip
     if (result.partitioner.map(_ == expected.partitioner.get).getOrElse(false)) {
-      compareWithOrderSamePartitioner(expected, result)
+      compareRDDWithOrderSamePartitioner(expected, result)
     } else {
       // Otherwise index every element
       def indexRDD[T](rdd: RDD[T]): RDD[(Long, T)] = {
@@ -65,7 +68,7 @@ object RDDComparisons extends TestSuite {
    * Compare two RDDs. If they are equal returns None, otherwise
    * returns Some with the first mismatch. Assumes we have the same partitioner.
    */
-  def compareWithOrderSamePartitioner[T: ClassTag](expected: RDD[T], result: RDD[T]): Option[(Option[T], Option[T])] = {
+  def compareRDDWithOrderSamePartitioner[T: ClassTag](expected: RDD[T], result: RDD[T]): Option[(Option[T], Option[T])] = {
     // Handle mismatched lengths by converting into options and padding with Nones
     expected.zipPartitions(result) {
       (thisIter, otherIter) =>
@@ -92,7 +95,7 @@ object RDDComparisons extends TestSuite {
    * If they are equal assertion succeeds, otherwise assertion fails.
    */
   def assertRDDEquals[T: ClassTag](expected: RDD[T], result: RDD[T]): Unit = {
-    assertTrue(compare(expected, result).isEmpty)
+    assertTrue(compareRDD(expected, result).isEmpty)
   }
 
   /**
@@ -103,7 +106,7 @@ object RDDComparisons extends TestSuite {
    *         Mismatch information will be Tuple3 of: (key, number of times this key occur in expected RDD,
    *         number of times this key occur in result RDD)
    */
-  def compare[T: ClassTag](expected: RDD[T], result: RDD[T]): Option[(T, Int, Int)] = {
+  def compareRDD[T: ClassTag](expected: RDD[T], result: RDD[T]): Option[(T, Int, Int)] = {
     // Key the values and count the number of each unique element
     val expectedKeyed = expected.map(x => (x, 1)).reduceByKey(_ + _)
     val resultKeyed = result.map(x => (x, 1)).reduceByKey(_ + _)
