@@ -88,8 +88,8 @@ object DataframeGenerator {
       case StringType => Arbitrary.arbitrary[String]
       case BinaryType => Arbitrary.arbitrary[Array[Byte]]
       case BooleanType => Arbitrary.arbitrary[Boolean]
-      case TimestampType => Arbitrary.arbDate.arbitrary.map(time => new Timestamp(time.getTime))
-      case DateType => Arbitrary.arbDate.arbitrary.map(time => new Date(time.getTime))
+      case TimestampType => Arbitrary.arbLong.arbitrary.map(new Timestamp(_))
+      case DateType => Arbitrary.arbLong.arbitrary.map(new Date(_))
       case arr: ArrayType => {
         val elementGenerator = getGenerator(arr.elementType)
         return Gen.listOf(elementGenerator)
