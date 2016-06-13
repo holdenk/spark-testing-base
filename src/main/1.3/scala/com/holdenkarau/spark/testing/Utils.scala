@@ -30,7 +30,7 @@ import org.apache.spark.{Logging, SparkConf, SparkException}
 import scala.reflect.ClassTag
 
 
-object Utils extends Logging{
+object Utils extends Logging {
   private val shutdownDeletePaths = new scala.collection.mutable.HashSet[String]()
 
   // Add a shutdown hook to delete the temp dirs when the JVM exits
