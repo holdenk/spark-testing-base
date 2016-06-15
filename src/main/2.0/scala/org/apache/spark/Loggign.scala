@@ -15,20 +15,12 @@
  * limitations under the License.
  */
 
-package com.holdenkarau.spark.testing
+package org.apache.spark
 
-import org.apache.spark.SparkContext
-import org.apache.spark.rdd.RDD
-import org.apache.spark.sql._
-import org.apache.spark.sql.hive._
-import org.apache.spark.sql.types.StructType
-import org.apache.hadoop.hive.conf.HiveConf
-import org.apache.hadoop.hive.conf.HiveConf.ConfVars
+import org.apache.spark.internal.{Logging => ILogging}
 
-
-private[testing] class TestHiveContext(sc: SparkContext, config: Map[String, String],
-  localMetastorePath: String, localWarehousePath: String) extends HiveContext(sc) {
-  setConf("javax.jdo.option.ConnectionURL",
-    s"jdbc:derby:;databaseName=$localMetastorePath;create=true")
-  setConf("hive.metastore.warehouse.dir", localWarehousePath)
+/**
+ * Extension of Logging class - buyer beware.
+ */
+trait Logging extends ILogging {
 }
