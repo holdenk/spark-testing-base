@@ -4,7 +4,7 @@ name := "spark-testing-base"
 
 publishMavenStyle := true
 
-version := "0.4.0-preview"
+version := "1.4.0_0.4.0-preview"
 
 scalaVersion := "2.10.4"
 
@@ -14,7 +14,7 @@ javacOptions ++= Seq("-source", "1.7", "-target", "1.7")
 
 spName := "holdenk/spark-testing-base"
 
-sparkVersion := "2.0.0-preview"
+sparkVersion := "1.4.0"
 
 sparkComponents := {
   if (sparkVersion.value > "2.0.0") Seq("core", "streaming", "sql", "catalyst", "hive", "yarn", "mllib", "hivecontext-compatibility")
