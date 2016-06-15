@@ -189,5 +189,3 @@ pomExtra := (
 credentials ++= Seq(Credentials(Path.userHome / ".ivy2" / ".sbtcredentials"), Credentials(Path.userHome / ".ivy2" / ".sparkcredentials"))
 
 spIncludeMaven := true
-
-useGpg := true
