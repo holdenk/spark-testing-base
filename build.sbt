@@ -52,6 +52,7 @@ unmanagedSourceDirectories in Compile  := {
     (sourceDirectory in Compile)(_ / "1.3/scala"), (sourceDirectory in Compile)(_ / "1.3/java")
   ).join.value
   else if (sparkVersion.value >= "1.6") Seq(
+    (sourceDirectory in Compile)(_ / "pre-2.0/scala"),
     (sourceDirectory in Compile)(_ / "1.6/scala"),
     (sourceDirectory in Compile)(_ / "1.5/scala"),
     (sourceDirectory in Compile)(_ / "1.4/scala"),
@@ -59,18 +60,21 @@ unmanagedSourceDirectories in Compile  := {
     (sourceDirectory in Compile)(_ / "1.3/scala"), (sourceDirectory in Compile)(_ / "1.3/java")
   ).join.value
   else if (sparkVersion.value >= "1.5") Seq(
+    (sourceDirectory in Compile)(_ / "pre-2.0/scala"),
     (sourceDirectory in Compile)(_ / "1.5/scala"),
     (sourceDirectory in Compile)(_ / "1.4/scala"),
     (sourceDirectory in Compile)(_ / "kafka/scala"),
     (sourceDirectory in Compile)(_ / "1.3/scala"), (sourceDirectory in Compile)(_ / "1.3/java")
   ).join.value
   else if (sparkVersion.value >= "1.4") Seq(
+    (sourceDirectory in Compile)(_ / "pre-2.0/scala"),
     (sourceDirectory in Compile)(_ / "pre-1.5/scala"),
     (sourceDirectory in Compile)(_ / "1.4/scala"),
     (sourceDirectory in Compile)(_ / "kafka/scala"),
     (sourceDirectory in Compile)(_ / "1.3/scala"), (sourceDirectory in Compile)(_ / "1.3/java")
   ).join.value
   else Seq(
+    (sourceDirectory in Compile)(_ / "pre-2.0/scala"),
     (sourceDirectory in Compile)(_ / "pre-1.5/scala"),
     (sourceDirectory in Compile)(_ / "1.3/scala"), (sourceDirectory in Compile)(_ / "1.3/java"),
     (sourceDirectory in Compile)(_ / "1.3-only/scala")
@@ -185,3 +189,5 @@ pomExtra := (
 credentials ++= Seq(Credentials(Path.userHome / ".ivy2" / ".sbtcredentials"), Credentials(Path.userHome / ".ivy2" / ".sparkcredentials"))
 
 spIncludeMaven := true
+
+useGpg := true
