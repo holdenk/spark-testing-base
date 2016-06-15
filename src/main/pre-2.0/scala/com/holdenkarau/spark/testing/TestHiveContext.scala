@@ -27,5 +27,8 @@ import org.apache.hadoop.hive.conf.HiveConf.ConfVars
 
 private[testing] class TestHiveContext(sc: SparkContext, config: Map[String, String],
   localMetastorePath: String, localWarehousePath: String) extends HiveContext(sc) {
+  setConfString("javax.jdo.option.ConnectionURL",
+    s"jdbc:derby:;databaseName=$localMetastorePath;create=true")
+  setConfString("hive.metastore.warehouse.dir", localWarehousePath)
   def configure(): Map[String, String] = config
 }

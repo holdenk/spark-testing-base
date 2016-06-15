@@ -33,7 +33,7 @@ class SampleStreamingActionTest extends FunSuite with StreamingActionBase {
 
   def countWordsLength(acc: Accumulator[Int]): (DStream[String] => Unit) = {
     def c(input: DStream[String]): Unit = {
-      input.foreach{r: RDD[String] =>
+      input.foreachRDD{r: RDD[String] =>
         r.foreach{e: String => acc += e.length()}}
     }
     c _

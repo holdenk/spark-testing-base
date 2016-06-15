@@ -144,7 +144,7 @@ class SampleScalaCheckTest extends FunSuite with SharedSparkContext with RDDComp
     val property =
       forAll(dataframeGen.arbitrary) {
         dataframe => dataframe.schema === schema &&
-          dataframe.select("pandas.attributes").map(_.getSeq(0)).count() >= 0
+          dataframe.select("pandas.attributes").rdd.map(_.getSeq(0)).count() >= 0
       }
 
     check(property)
