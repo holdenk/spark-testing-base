@@ -49,7 +49,8 @@ trait DataFrameSuiteBase extends TestSuite with SharedSparkContext with DataFram
 
 trait DataFrameSuiteBaseLike extends SparkContextProvider with TestSuiteLike with Serializable {
   val maxUnequalRowsToShow = 10
-  lazy val sqlContext: SparkSession = SparkSessionProvider._sparkSession
+  @transient lazy val spark: SparkSession = SparkSessionProvider._sparkSession
+  @transient lazy val sqlContext: SQLContext = SparkSessionProvider.sqlContext
 
   def sqlBeforeAllTestCases() {
     /** Constructs a configuration for hive, where the metastore is located in a temp directory. */
@@ -183,5 +184,6 @@ object DataFrameSuiteBase {
 
 object SparkSessionProvider {
   @transient var _sparkSession: SparkSession = _
-  def _sqlContext = _sparkSession
+  def sqlContext = EvilSessionTools.extractSQLContext(_sparkSession)
+  def sparkSession = _sparkSession
 }
