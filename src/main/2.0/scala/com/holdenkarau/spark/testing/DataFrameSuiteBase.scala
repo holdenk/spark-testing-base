@@ -52,6 +52,9 @@ trait DataFrameSuiteBaseLike extends SparkContextProvider with TestSuiteLike wit
   @transient lazy val spark: SparkSession = SparkSessionProvider._sparkSession
   @transient lazy val sqlContext: SQLContext = SparkSessionProvider.sqlContext
 
+  protected implicit def impSqlContext: SQLContext = sqlContext
+
+
   def sqlBeforeAllTestCases() {
     /** Constructs a configuration for hive, where the metastore is located in a temp directory. */
     val tempDir = Utils.createTempDir()
@@ -71,6 +74,8 @@ trait DataFrameSuiteBaseLike extends SparkContextProvider with TestSuiteLike wit
       builder.config("datanucleus.rdbms.datastoreAdapterClassName",
         "org.datanucleus.store.rdbms.adapter.DerbyAdapter")
       builder.config(ConfVars.METASTOREURIS.varname, "")
+      builder.config("spark.sql.streaming.checkpointLocation",
+        Utils.createTempDir().toPath().toString)
     }
 
     SparkSessionProvider._sparkSession = newBuilder().getOrCreate()
