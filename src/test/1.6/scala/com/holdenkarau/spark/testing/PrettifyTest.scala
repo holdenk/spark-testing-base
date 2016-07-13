@@ -2,7 +2,7 @@ package com.holdenkarau.spark.testing
 
 import org.apache.spark.sql.SQLContext
 import org.apache.spark.sql.types.{IntegerType, StringType, StructField, StructType}
-import org.scalacheck.Gen
+import org.scalacheck.{Arbitrary, Gen}
 import org.scalacheck.Prop._
 import org.scalatest.FunSuite
 import org.scalatest.prop.Checkers
@@ -22,6 +22,25 @@ class PrettifyTest extends FunSuite with SharedSparkContext with Checkers with P
     val property =
       forAll(dataframeGen.arbitrary) {
         dataframe => false
+      }
+    val e = intercept[org.scalatest.exceptions.GeneratorDrivenPropertyCheckFailedException] {
+      check(property)
+    }
+    val expected =
+      Some("arg0 = <DataFrame: schema = [name: string, age: int], size = 2, values = ([Holden Hanafy,20], [Holden Hanafy,20])>")
+    assert(takeSecondToLastLine(e.message) == expected)
+  }
+
+  test("pretty output of RDD's check") {
+    implicit val generatorDrivenConfig =
+      PropertyCheckConfig(minSize = 2, maxSize = 2)
+    val property =
+      forAll(RDDGenerator.genRDD[String](sc)(Arbitrary.arbitrary[String])) {
+        rdd => {
+          println(rdd.take(10).mkString(","))
+          println(rdd.getNumPartitions)
+          false
+        }
       }
     val e = intercept[org.scalatest.exceptions.GeneratorDrivenPropertyCheckFailedException] {
       check(property)
