@@ -12,7 +12,7 @@ import org.scalatest.prop.Checkers
 class PrettifyTest extends FunSuite with SharedSparkContext with Checkers with Prettify {
   implicit val propertyCheckConfig = PropertyCheckConfig(minSize = 2, maxSize = 2)
 
-  test("pretty output of Dataframe's check") {
+  test("pretty output of DataFrame's check") {
     val schema = StructType(List(StructField("name", StringType), StructField("age", IntegerType)))
     val sqlContext = new SQLContext(sc)
     val nameGenerator = new ColumnGenerator("name", Gen.const("Holden Hanafy"))
@@ -36,7 +36,24 @@ class PrettifyTest extends FunSuite with SharedSparkContext with Checkers with P
 
     val actual = runFailingCheck(rddGen)
     val expected =
-      Some("""arg0 = <RDD: size = 2, values = ("(Holden Hanafy,20)", "(Holden Hanafy,20)")>""")
+      Some("""arg0 = <RDD: size = 2, values = ((Holden Hanafy,20), (Holden Hanafy,20))>""")
+    assert(actual == expected)
+  }
+
+  test("pretty output of Dataset's check") {
+    val sqlContext = new SQLContext(sc)
+    import sqlContext.implicits._
+
+    val datasetGen = DatasetGenerator.genDataset[(String, Int)](sqlContext) {
+      for {
+        name <- Gen.const("Holden Hanafy")
+        age <- Gen.const(20)
+      } yield name -> age
+    }
+
+    val actual = runFailingCheck(datasetGen)
+    val expected =
+      Some("""arg0 = <Dataset: schema = [_1: string, _2: int], size = 2, values = ((Holden Hanafy,20), (Holden Hanafy,20))>""")
     assert(actual == expected)
   }
 
