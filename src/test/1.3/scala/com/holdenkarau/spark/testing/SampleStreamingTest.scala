@@ -138,6 +138,14 @@ class SampleStreamingTest extends FunSuite with StreamingSuiteBase {
     testOperation(input1, multiply _, output, ordered = false)
   }
 
+  test("stream and batch transformation") {
+    def intersection(f1: DStream[String], f2: RDD[String]) = f1.transform(_.intersection(f2))
+
+    val stream = List(List("hi"), List("holden"), List("bye"))
+    val batch = List("holden")
+    val expected = List(List(), List("holden"), List())
+    testOperationWithRDD[String, String, String](stream, batch, intersection _, expected, ordered = false)
+  }
 }
 
 object SampleStreamingTest {

@@ -21,6 +21,7 @@ import scala.language.implicitConversions
 import scala.reflect.ClassTag
 
 import org.apache.spark.Logging
+import org.apache.spark.rdd.RDD
 import org.apache.spark.streaming.dstream.DStream
 import org.scalactic.Equality
 import org.scalatest.{BeforeAndAfterAll, Suite}
@@ -177,6 +178,36 @@ trait StreamingSuiteBase extends BeforeAndAfterAll with Logging
     val numBatches = input1.size
 
     withOutputAndStreamingContext(setupStreams[U, V, W](input1, input2, operation)) {
+      (outputStream, ssc) =>
+        val output = runStreams[W](outputStream, ssc, numBatches, expectedOutput.size)
+        verifyOutput[W](output, expectedOutput, ordered)
+    }
+  }
+
+  /**
+    * Test binary DStream and RDD operation with two lists of inputs, with number of
+    * batches to run same as the number of input values corresponding to the DStream.
+    * You can simulate the input batch as a List of values or as null to simulate empty batch.
+    *
+    * @param input1         Sequence of input collections corresponding to the DStream
+    * @param input2         Sequence of input values corresponding to the RDD
+    * @param operation      Binary DStream and RDD operation to be applied to the 2 inputs
+    * @param expectedOutput Sequence of expected output collections
+    * @param ordered        Compare output values with expected output values
+    *                       within the same output batch ordered or unOrdered.
+    *                       Comparing doubles may not work well in case of unordered.
+    */
+  def testOperationWithRDD[U: ClassTag, V: ClassTag, W: ClassTag](
+      input1: Seq[Seq[U]],
+      input2: Seq[V],
+      operation: (DStream[U], RDD[V]) => DStream[W],
+      expectedOutput: Seq[Seq[W]],
+      ordered: Boolean
+    ) (implicit equality: Equality[W]): Unit = {
+
+    val numBatches = input1.size
+
+    withOutputAndStreamingContext(setupStreamAndRDD[U, V, W](input1, input2, operation)) {
       (outputStream, ssc) =>
         val output = runStreams[W](outputStream, ssc, numBatches, expectedOutput.size)
         verifyOutput[W](output, expectedOutput, ordered)
