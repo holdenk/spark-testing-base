@@ -6,10 +6,10 @@ publishMavenStyle := true
 
 version := "0.4.3-preview"
 
-sparkVersion := "2.0.0-preview"
+sparkVersion := "2.0.0"
 
 scalaVersion := {
-  if (sparkVersion.value > "2.0.0") {
+  if (sparkVersion.value >= "2.0.0") {
     "2.11.6"
   } else {
     "2.10.4"
@@ -29,7 +29,7 @@ javacOptions ++= Seq("-source", "1.7", "-target", "1.7")
 spName := "holdenk/spark-testing-base"
 
 sparkComponents := {
-  if (sparkVersion.value > "2.0.0") Seq("core", "streaming", "sql", "catalyst", "hive", "yarn", "mllib", "hivecontext-compatibility")
+  if (sparkVersion.value >= "2.0.0") Seq("core", "streaming", "sql", "catalyst", "hive", "yarn", "mllib")
   else Seq("core", "streaming", "sql", "catalyst", "hive", "streaming-kafka", "yarn", "mllib")
 }
 
