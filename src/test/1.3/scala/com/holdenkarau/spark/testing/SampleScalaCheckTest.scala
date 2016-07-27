@@ -180,6 +180,39 @@ class SampleScalaCheckTest extends FunSuite with SharedSparkContext with RDDComp
     check(property)
   }
 
+  test("second dataframe's evaluation has the same values as first") {
+    implicit val generatorDrivenConfig =
+      PropertyCheckConfig(minSize = 1, maxSize = 1)
+    val fields = StructField("byteType", ByteType) ::
+      StructField("shortType", ShortType) ::
+      StructField("intType", IntegerType) ::
+      StructField("longType", LongType) ::
+      StructField("doubleType", DoubleType) ::
+      StructField("stringType", StringType) ::
+      StructField("binaryType", BinaryType) ::
+      StructField("booleanType", BooleanType) ::
+      StructField("timestampType", TimestampType) ::
+      StructField("dateType", DateType) ::
+      StructField("arrayType", ArrayType(TimestampType)) ::
+      StructField("mapType", MapType(LongType, TimestampType, valueContainsNull = true)) ::
+      StructField("structType", StructType(StructField("timestampType", TimestampType) :: Nil)) :: Nil
+
+    val sqlContext = new SQLContext(sc)
+    val dataframeGen = DataframeGenerator.arbitraryDataFrame(sqlContext, StructType(fields))
+
+    val property =
+      forAll(dataframeGen.arbitrary) {
+        dataframe => {
+          val firstEvaluation = dataframe.collect()
+          val secondEvaluation = dataframe.collect()
+          val zipped = firstEvaluation.zip(secondEvaluation)
+          zipped.forall { case (r1, r2) => DataFrameSuiteBase.approxEquals(r1, r2, 0.0) }
+        }
+      }
+
+    check(property)
+  }
+
   private def filterOne(rdd: RDD[String]): RDD[Int] = {
     rdd.filter(_.length > 2).map(_.length)
   }
