@@ -15,7 +15,7 @@ addons:
       - axel
 before_install:
   - export PATH=$HOME/.local/bin:$PATH
-  - pip install codecov coverage unittest2
+  - pip install --user codecov coverage unittest2
 install:
   # Download spark 2.0.0
   - "[ -f spark] || mkdir spark && cd spark && axel http://d3kbcqa49mib13.cloudfront.net/spark-2.0.0-bin-hadoop2.7.tgz && cd .."
