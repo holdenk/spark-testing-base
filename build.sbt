@@ -4,22 +4,38 @@ name := "spark-testing-base"
 
 publishMavenStyle := true
 
-version := "0.3.3"
+version := "0.4.4"
 
-scalaVersion := "2.10.4"
+sparkVersion := "2.0.0"
 
-crossScalaVersions := Seq("2.10.4", "2.11.6")
+scalaVersion := {
+  if (sparkVersion.value >= "2.0.0") {
+    "2.11.6"
+  } else {
+    "2.10.4"
+  }
+}
+
+crossScalaVersions := {
+  if (sparkVersion.value > "2.0.0") {
+    Seq("2.11.6")
+  } else {
+    Seq("2.10.4", "2.11.6")
+  }
+}
 
 javacOptions ++= Seq("-source", "1.7", "-target", "1.7")
 
 spName := "holdenk/spark-testing-base"
 
-sparkVersion := "1.6.0"
-
-sparkComponents ++= Seq("core", "streaming", "sql", "catalyst", "hive", "streaming-kafka", "yarn", "mllib")
+sparkComponents := {
+  if (sparkVersion.value >= "2.0.0") Seq("core", "streaming", "sql", "catalyst", "hive", "yarn", "mllib")
+  else Seq("core", "streaming", "sql", "catalyst", "hive", "streaming-kafka", "yarn", "mllib")
+}
 
 parallelExecution in Test := false
 fork := true
+
 
 coverageHighlighting := {
   if (scalaBinaryVersion.value == "2.10") false
@@ -28,23 +44,37 @@ coverageHighlighting := {
 
 // Allow kafka (and other) utils to have version specific files
 unmanagedSourceDirectories in Compile  := {
-  if (sparkVersion.value >= "1.6") Seq(
+  if (sparkVersion.value >= "2.0.0") Seq(
+    (sourceDirectory in Compile)(_ / "2.0/scala"),
     (sourceDirectory in Compile)(_ / "1.6/scala"),
     (sourceDirectory in Compile)(_ / "1.5/scala"),
     (sourceDirectory in Compile)(_ / "1.4/scala"),
     (sourceDirectory in Compile)(_ / "1.3/scala"), (sourceDirectory in Compile)(_ / "1.3/java")
   ).join.value
-  else if (sparkVersion.value >= "1.5") Seq(
+  else if (sparkVersion.value >= "1.6") Seq(
+    (sourceDirectory in Compile)(_ / "pre-2.0/scala"),
+    (sourceDirectory in Compile)(_ / "1.6/scala"),
     (sourceDirectory in Compile)(_ / "1.5/scala"),
     (sourceDirectory in Compile)(_ / "1.4/scala"),
+    (sourceDirectory in Compile)(_ / "kafka/scala"),
+    (sourceDirectory in Compile)(_ / "1.3/scala"), (sourceDirectory in Compile)(_ / "1.3/java")
+  ).join.value
+  else if (sparkVersion.value >= "1.5") Seq(
+    (sourceDirectory in Compile)(_ / "pre-2.0/scala"),
+    (sourceDirectory in Compile)(_ / "1.5/scala"),
+    (sourceDirectory in Compile)(_ / "1.4/scala"),
+    (sourceDirectory in Compile)(_ / "kafka/scala"),
     (sourceDirectory in Compile)(_ / "1.3/scala"), (sourceDirectory in Compile)(_ / "1.3/java")
   ).join.value
   else if (sparkVersion.value >= "1.4") Seq(
+    (sourceDirectory in Compile)(_ / "pre-2.0/scala"),
     (sourceDirectory in Compile)(_ / "pre-1.5/scala"),
     (sourceDirectory in Compile)(_ / "1.4/scala"),
+    (sourceDirectory in Compile)(_ / "kafka/scala"),
     (sourceDirectory in Compile)(_ / "1.3/scala"), (sourceDirectory in Compile)(_ / "1.3/java")
   ).join.value
   else Seq(
+    (sourceDirectory in Compile)(_ / "pre-2.0/scala"),
     (sourceDirectory in Compile)(_ / "pre-1.5/scala"),
     (sourceDirectory in Compile)(_ / "1.3/scala"), (sourceDirectory in Compile)(_ / "1.3/java"),
     (sourceDirectory in Compile)(_ / "1.3-only/scala")
@@ -52,16 +82,26 @@ unmanagedSourceDirectories in Compile  := {
 }
 
 unmanagedSourceDirectories in Test  := {
-  if (sparkVersion.value >= "1.6") Seq(
+  if (sparkVersion.value >= "2.0.0") Seq(
     (sourceDirectory in Test)(_ / "1.6/scala"), (sourceDirectory in Test)(_ / "1.6/java"),
     (sourceDirectory in Test)(_ / "1.4/scala"),
     (sourceDirectory in Test)(_ / "1.3/scala"), (sourceDirectory in Test)(_ / "1.3/java")
   ).join.value
-  else if (sparkVersion.value >= "1.4") Seq(
+  else if (sparkVersion.value >= "1.6") Seq(
+    (sourceDirectory in Test)(_ / "pre-2.0/scala"), (sourceDirectory in Test)(_ / "pre-2.0/java"),
+    (sourceDirectory in Test)(_ / "1.6/scala"), (sourceDirectory in Test)(_ / "1.6/java"),
     (sourceDirectory in Test)(_ / "1.4/scala"),
+    (sourceDirectory in Test)(_ / "kafka/scala"),
+    (sourceDirectory in Test)(_ / "1.3/scala"), (sourceDirectory in Test)(_ / "1.3/java")
+  ).join.value
+  else if (sparkVersion.value >= "1.4") Seq(
+    (sourceDirectory in Test)(_ / "pre-2.0/scala"), (sourceDirectory in Test)(_ / "pre-2.0/java"),
+    (sourceDirectory in Test)(_ / "1.4/scala"),
+    (sourceDirectory in Test)(_ / "kafka/scala"),
     (sourceDirectory in Test)(_ / "1.3/scala"), (sourceDirectory in Test)(_ / "1.3/java")
   ).join.value
   else Seq(
+    (sourceDirectory in Test)(_ / "pre-2.0/scala"), (sourceDirectory in Test)(_ / "pre-2.0/java"),
     (sourceDirectory in Test)(_ / "1.3/scala"), (sourceDirectory in Test)(_ / "1.3/java")
   ).join.value
 }

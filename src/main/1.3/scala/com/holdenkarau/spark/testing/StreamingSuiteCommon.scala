@@ -39,7 +39,7 @@ import scala.reflect.ClassTag
 // tag::collectResults[]
 class TestOutputStream[T: ClassTag](parent: DStream[T],
   val output: ArrayBuffer[Seq[T]] = ArrayBuffer[Seq[T]]()) extends Serializable {
-  
+
   parent.foreachRDD{(rdd: RDD[T], time) =>
     val collected = rdd.collect()
     output += collected

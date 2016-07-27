@@ -85,9 +85,14 @@ trait YARNClusterLike {
 
     val sparkAssemblyJar = getAssemblyJar()
     println("Spark assembly Jar: " + sparkAssemblyJar)
+    val sparkAssemblyPath = getSparkAssemblyPath()
+    println("Spark assembly path: " + sparkAssemblyPath)
 
     // Set some yarn props
-    sys.props += ("spark.yarn.jar" -> ("local:" + sparkAssemblyJar))
+    sparkAssemblyJar.foreach{jar =>
+      sys.props += ("spark.yarn.jar" -> ("local:" + jar))}
+    sparkAssemblyPath.foreach{path =>
+      sys.props += ("spark.yarn.jars" -> ("local:" + path + "*"))}
     sys.props += ("spark.executor.instances" -> "1")
     // Figure out our class path
     val childClasspath = generateClassPath()
@@ -115,23 +120,35 @@ trait YARNClusterLike {
     writer.close()
   }
 
-  def getAssemblyJar() = {
-    val sparkAssemblyDir = sys.env("SPARK_HOME") + "/assembly/target/scala-2.10/"
+  // For old style (pre 2.0)
+  def getAssemblyJar(): Option[String] = {
+    val sparkAssemblyDirs = List(
+      sys.env("SPARK_HOME") + "/assembly/target/scala-2.10/",
+      sys.env("SPARK_HOME") + "/assembly/target/scala-2.11/")
 
-    val sparkLibDir = sys.env("SPARK_HOME") + "/lib/"
+    val sparkLibDir = List(sys.env("SPARK_HOME") + "/lib/")
 
-    val candidates = List(new File(sparkAssemblyDir).listFiles,
-      new File(sparkLibDir).listFiles).filter(_ != null).flatMap(_.toSeq)
+    val candidateDirs = sparkAssemblyDirs ++ sparkLibDir
+    val candidates = candidateDirs.map(dir => new File(dir)).filter(_.exists()).flatMap(_.listFiles)
 
     val sparkAssemblyJar = candidates.find { f =>
       val name = f.getName
       name.endsWith(".jar") && name.startsWith("spark-assembly")
-    }
-      .getOrElse(throw new Exception(
-        "Failed to find spark assembly jar, make sure SPARK_HOME is set correctly"))
-      .getAbsolutePath()
+    }.map(f => f.getAbsolutePath())
 
     sparkAssemblyJar
+  }
+
+  def getSparkAssemblyPath(): Option[String] = {
+    val sparkAssemblyDirs = List(
+      sys.env("SPARK_HOME") + "/assembly/target/scala-2.10/",
+      sys.env("SPARK_HOME") + "/assembly/target/scala-2.11/")
+
+    val sparkLibDir = List(sys.env("SPARK_HOME") + "/lib/")
+
+    val candidateDirs = sparkAssemblyDirs ++ sparkLibDir
+    val candidates = candidateDirs.filter(dir => new File(dir).exists())
+    candidates.headOption
   }
 
   def generateClassPath(): String = {
