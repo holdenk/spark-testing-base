@@ -2,6 +2,10 @@ language: scala
 cache:
   directories:
     - $HOME/.ivy2
+    - $HOME/spark
+    - $HOME/.cache/pip
+    - $HOME/.pip-cache
+    - $HOME/.sbt/launchers
 scala:
    - 2.10.4
 sudo: false
@@ -11,7 +15,7 @@ addons:
       - axel
 before_install:
   - export PATH=$HOME/.local/bin:$PATH
-  - pip install codecov coverage --user `whoami`
+  - pip install --user codecov coverage unittest2
 install:
   # Download spark 2.0.0
   - "[ -f spark] || mkdir spark && cd spark && axel http://d3kbcqa49mib13.cloudfront.net/spark-2.0.0-bin-hadoop2.7.tgz && cd .."
