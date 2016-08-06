@@ -53,11 +53,33 @@ class SQLTestCase(SparkTestingBaseReuse):
     def setUp(self):
         self.sqlCtx = SQLContext(self.sc)
 
+    def assertSchemaEqual(self, expected, result):
+        """
+        Make sure that schema is as we expect it
+
+        :param expected: a schema, can be found in a dataframe with dataframe_obj.schema
+        :param result: as above
+        """
+        self.assertEqual(len(expected), len(result))
+        expected_lookup = dict((x.name, x) for x in expected)
+
+        for field in result:
+            wanted = expected_lookup.get(field.name)
+
+            self.assertIsNotNone(expected,
+                    '{0} is not in schema'.format(field.name))
+            self.assertEqual(type(wanted.dataType),
+                    type(field.dataType),
+                    'Field {0} is not the expected type'.format(field.name))
+            self.assertEqual(wanted.nullable,
+                    field.nullable,
+                    'Nullable property not as expected for {0}'.format(field.name))
+
     def assertDataFrameEqual(self, expected, result, tol=0):
         """Assert that two DataFrames contain the same data.
         When comparing inexact fields uses tol.
         """
-        self.assertEqual(expected.schema, result.schema)
+        self.assertSchemaEqual(expected.schema, result.schema)
         try:
             expectedRDD = expected.rdd.cache()
             resultRDD = result.rdd.cache()
