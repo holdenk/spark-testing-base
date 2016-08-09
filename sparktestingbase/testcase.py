@@ -25,7 +25,6 @@ from pyspark.context import SparkContext
 from pyspark import HiveContext
 
 import os
-import shutil
 
 
 class SparkTestingBaseTestCase(unittest2.TestCase):
@@ -43,7 +42,7 @@ class SparkTestingBaseTestCase(unittest2.TestCase):
         self.sc = SparkContext(self.getMaster())
         self.sql_context = HiveContext(self.sc)
         quiet_py4j()
-        
+
     def tearDown(self):
         """
         Tear down the basic panda spark test case. This stops the running
@@ -68,24 +67,25 @@ class SparkTestingBaseReuse(unittest2.TestCase):
     @classmethod
     def setUpClass(cls):
         """Setup a basic Spark context for testing"""
-        print "setting up class"
         class_name = cls.__name__
         cls.sc = SparkContext(cls.getMaster(), appName=class_name)
         quiet_logs(cls.sc)
-        cls.sql_context = HiveContext(cls.sc)
+        _scala_HiveContext =\
+            cls.sc._jvm.org.apache.spark.sql.hive.test.TestHiveContext(
+                cls.sc._jsc.sc()
+            )
+        cls.sql_context = HiveContext(cls.sc, _scala_HiveContext)
+
         quiet_py4j()
-        
+
     @classmethod
     def tearDownClass(cls):
         """
         Tear down the basic panda spark test case. This stops the running
         context and does a hack to prevent Akka rebinding on the same port.
         """
-        print "stopping class"
         cls.sc.stop()
         derby_path = os.path.join(os.getcwd(), 'metastore_db')
-        if os.path.exists(derby_path):
-            shutil.rmtree(derby_path)
         # To avoid Akka rebinding to the same port, since it doesn't unbind
         # immediately on shutdown
         cls.sc._jvm.System.clearProperty("spark.driver.port")
