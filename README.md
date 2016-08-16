@@ -10,20 +10,29 @@ This is not my beautiful code.
 
 # How?
 
-So you include com.holdenkarau.spark-testing-base [spark_version]_0.3.3 and extend one
+So you include com.holdenkarau.spark-testing-base [spark_version]_0.4.4 and extend one
 of the classes and write some simple tests instead.
-For example to include this in a project using Spark 1.6.1:
+For example to include this in a project using Spark 2.0.0:
 
-    "com.holdenkarau" %% "spark-testing-base" % "1.6.1_0.3.3"
+    "com.holdenkarau" %% "spark-testing-base" % "2.0.0_0.4.4"
 
 or
 
+        <properties>
+            <scala.binary.version>2.11</scala.binary.version>
+            <spark.version>2.0.0</spark.version>
+        </properties>
+
         <dependency>
             <groupId>com.holdenkarau</groupId>
-            <artifactId>spark-testing-base_2.10</artifactId>
-            <version>${spark.version}_0.3.3</version>
+            <artifactId>spark-testing-base_${scala.binary.version}</artifactId>
+            <version>${spark.version}_0.4.4</version>
             <scope>test</scope>
         </dependency>
+
+If necessary, you can build from source with:
+
+	> sbt clean compile package publishLocal
 
 How to use it inside your code? have a look at the [wiki](https://github.com/holdenk/spark-testing-base/wiki) page.
 
