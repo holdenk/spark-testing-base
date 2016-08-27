@@ -10,17 +10,17 @@ sparkVersion := "1.6.2"
 
 scalaVersion := {
   if (sparkVersion.value >= "2.0.0") {
-    "2.11.6"
+    "2.11.8"
   } else {
-    "2.10.4"
+    "2.10.6"
   }
 }
 
 crossScalaVersions := {
   if (sparkVersion.value > "2.0.0") {
-    Seq("2.11.6")
+    Seq("2.11.8")
   } else {
-    Seq("2.10.4", "2.11.6")
+    Seq("2.10.6", "2.11.8")
   }
 }
 
@@ -111,11 +111,11 @@ javaOptions ++= Seq("-Xms512M", "-Xmx2048M", "-XX:MaxPermSize=2048M", "-XX:+CMSC
 
 // additional libraries
 libraryDependencies ++= Seq(
-  "org.scalatest" %% "scalatest" % "2.2.1",
+  "org.scalatest" %% "scalatest" % "2.2.6",
   "io.github.nicolasstucki" %% "multisets" % "0.3",
-  "org.scalacheck" %% "scalacheck" % "1.12.4",
+  "org.scalacheck" %% "scalacheck" % "1.12.5",
   "junit" % "junit" % "4.11",
-  "org.eclipse.jetty" % "jetty-util" % "9.3.2.v20150730",
+  "org.eclipse.jetty" % "jetty-util" % "9.3.11.v20160721",
   "com.novocode" % "junit-interface" % "0.11" % "test->default")
 
 // Based on Hadoop Mini Cluster tests from Alpine's PluginSDK (Apache licensed)
@@ -127,13 +127,13 @@ def excludeJavaxServlet(items: Seq[ModuleID]) =
   excludeFromAll(items, "javax.servlet", "servlet-api")
 
 lazy val miniClusterDependencies = excludeJavaxServlet(Seq(
-  "org.apache.hadoop" % "hadoop-hdfs" % "2.6.0" % "compile,test" classifier "" classifier "tests",
-  "org.apache.hadoop" % "hadoop-common" % "2.6.0" % "compile,test" classifier "" classifier "tests" ,
-  "org.apache.hadoop" % "hadoop-client" % "2.6.0" % "compile,test" classifier "" classifier "tests" ,
-  "org.apache.hadoop" % "hadoop-mapreduce-client-jobclient" % "2.6.0" % "compile,test" classifier "" classifier "tests",
-  "org.apache.hadoop" % "hadoop-yarn-server-tests" % "2.6.0" % "compile,test" classifier "" classifier "tests",
-  "org.apache.hadoop" % "hadoop-yarn-server-web-proxy" % "2.6.0" % "compile,test" classifier "" classifier "tests",
-  "org.apache.hadoop" % "hadoop-minicluster" % "2.6.0"))
+  "org.apache.hadoop" % "hadoop-hdfs" % "2.6.4" % "compile,test" classifier "" classifier "tests",
+  "org.apache.hadoop" % "hadoop-common" % "2.6.4" % "compile,test" classifier "" classifier "tests" ,
+  "org.apache.hadoop" % "hadoop-client" % "2.6.4" % "compile,test" classifier "" classifier "tests" ,
+  "org.apache.hadoop" % "hadoop-mapreduce-client-jobclient" % "2.6.4" % "compile,test" classifier "" classifier "tests",
+  "org.apache.hadoop" % "hadoop-yarn-server-tests" % "2.6.4" % "compile,test" classifier "" classifier "tests",
+  "org.apache.hadoop" % "hadoop-yarn-server-web-proxy" % "2.6.4" % "compile,test" classifier "" classifier "tests",
+  "org.apache.hadoop" % "hadoop-minicluster" % "2.6.4"))
 
 libraryDependencies ++= miniClusterDependencies
 
@@ -186,6 +186,6 @@ pomExtra := (
 )
 
 //credentials += Credentials(Path.userHome / ".ivy2" / ".spcredentials")
-credentials ++= Seq(Credentials(Path.userHome / ".ivy2" / ".sbtcredentials"), Credentials(Path.userHome / ".ivy2" / ".sparkcredentials"))
+// credentials ++= Seq(Credentials(Path.userHome / ".ivy2" / ".sbtcredentials"), Credentials(Path.userHome / ".ivy2" / ".sparkcredentials"))
 
 spIncludeMaven := true
