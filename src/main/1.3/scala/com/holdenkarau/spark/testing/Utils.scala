@@ -41,18 +41,17 @@ object Utils extends Logging {
   })
 
   def shutDownCleanUp(): Unit = {
-    shutdownDeletePaths.foreach { dirPath =>
-      try {
-        Utils.deleteRecursively(new File(dirPath))
-      } catch {
-        // Doesn't really matter if we fail.
-        // scalastyle:off println
-        case e: Exception => println("Exception during cleanup")
-          // scalastyle:on println
-      }
+    shutdownDeletePaths.foreach(cleanupPath)
+    shutdownDeletePaths.foreach(cleanupPath)
+  }
+  private def cleanupPath(dirPath: String) = {
+    try {
+      Utils.deleteRecursively(new File(dirPath))
+    } catch {
+      // Doesn't really matter if we fail.
+      case e: Exception => println("Exception during cleanup")
     }
   }
-
   /**
     * Check to see if file is a symbolic link.
     */

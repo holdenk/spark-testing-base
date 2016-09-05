@@ -26,6 +26,7 @@ class UtilsTest extends FunSuite {
     val tempDir = Utils.createTempDir()
     val tempPath = tempDir.toPath().toAbsolutePath().toString()
     Utils.shutDownCleanUp()
+    Thread.sleep(1)
     assert(!(new File(tempPath).exists()))
   }
 
@@ -38,6 +39,7 @@ class UtilsTest extends FunSuite {
     pw.close()
     Files.createSymbolicLink(new File(tempPath +"/murh2").toPath, f.toPath)
     Utils.shutDownCleanUp()
+    Thread.sleep(1)
     assert(!(new File(tempPath).exists()))
     assert(!(new File(f.toPath().toAbsolutePath().toString()).exists()))
   }
