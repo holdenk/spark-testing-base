@@ -115,6 +115,7 @@ libraryDependencies ++= Seq(
   "io.github.nicolasstucki" %% "multisets" % "0.3",
   "org.scalacheck" %% "scalacheck" % "1.12.5",
   "junit" % "junit" % "4.11",
+  "org.eclipse.jetty" % "jetty-util" % "9.2.16.v20160414",
   "com.novocode" % "junit-interface" % "0.11" % "test->default")
 
 // Based on Hadoop Mini Cluster tests from Alpine's PluginSDK (Apache licensed)
