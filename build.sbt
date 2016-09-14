@@ -4,7 +4,7 @@ name := "spark-testing-base"
 
 publishMavenStyle := true
 
-version := "0.4.5"
+version := "0.4.6"
 
 sparkVersion := "2.0.0"
 
@@ -17,7 +17,7 @@ scalaVersion := {
 }
 
 crossScalaVersions := {
-  if (sparkVersion.value >= "2.0.0") {
+  if (sparkVersion.value > "2.0.0") {
     Seq("2.11.8")
   } else {
     Seq("2.10.6", "2.11.8")
@@ -115,7 +115,7 @@ libraryDependencies ++= Seq(
   "io.github.nicolasstucki" %% "multisets" % "0.3",
   "org.scalacheck" %% "scalacheck" % "1.12.5",
   "junit" % "junit" % "4.11",
-  "org.eclipse.jetty" % "jetty-util" % "9.2.16.v20160414",
+  "org.eclipse.jetty" % "jetty-util" % "9.3.11.v20160721",
   "com.novocode" % "junit-interface" % "0.11" % "test->default")
 
 // Based on Hadoop Mini Cluster tests from Alpine's PluginSDK (Apache licensed)
