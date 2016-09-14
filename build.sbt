@@ -26,7 +26,9 @@ crossScalaVersions := {
 
 javacOptions ++= Seq("-source", "1.7", "-target", "1.7")
 
+//tag::spName[]
 spName := "holdenk/spark-testing-base"
+//end::spName[]
 
 sparkComponents := {
   if (sparkVersion.value >= "2.0.0") Seq("core", "streaming", "sql", "catalyst", "hive", "yarn", "mllib")
