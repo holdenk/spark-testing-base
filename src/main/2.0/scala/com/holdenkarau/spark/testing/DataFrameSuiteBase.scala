@@ -76,6 +76,8 @@ trait DataFrameSuiteBaseLike extends SparkContextProvider with TestSuiteLike wit
       builder.config(ConfVars.METASTOREURIS.varname, "")
       builder.config("spark.sql.streaming.checkpointLocation",
         Utils.createTempDir().toPath().toString)
+      builder.config("spark.sql.warehouse.dir",
+        localWarehousePath)
     }
 
     SparkSessionProvider._sparkSession = newBuilder().getOrCreate()
