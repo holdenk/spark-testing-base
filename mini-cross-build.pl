@@ -31,8 +31,8 @@ foreach my $spark_version (@spark_versions) {
     print `git commit -am "Make release for $target_version"`;
     print `git push -f --set-upstream origin release-v$target_version`;
     print "building";
-    print `./sbt/sbt clean compile package publishSigned`;
-    print `./sbt/sbt +publishSigned`;
+    print `./sbt/sbt clean compile package publishSigned || ./sbt/sbt clean compile package publishSigned`;
+    print `./sbt/sbt +publishSigned || ./sbt/sbt clean compile package +publishSigned`;
     print "switch back to master";
     print `git checkout master`;
     print "built"
