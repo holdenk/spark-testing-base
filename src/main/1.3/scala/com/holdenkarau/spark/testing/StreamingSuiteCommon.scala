@@ -176,6 +176,30 @@ private[holdenkarau] trait StreamingSuiteCommon extends Logging with SparkContex
   }
 
   /**
+    * Set up required DStream and RDD to test the binary operation using the sequence
+    * of input collections and values.
+    */
+  private[holdenkarau] def setupStreamAndRDD[U: ClassTag, V: ClassTag, W: ClassTag](
+      input1: Seq[Seq[U]],
+      input2: Seq[V],
+      operation: (DStream[U], RDD[V]) => DStream[W]
+    ): (TestOutputStream[W], TestStreamingContext) = {
+    // Create StreamingContext
+    val ssc = new TestStreamingContext(sc, batchDuration)
+    if (checkpointDir != null) {
+      ssc.checkpoint(checkpointDir)
+    }
+
+    // Setup the stream computation
+    val inputStream1 = createTestInputStream(sc, ssc, input1)
+    val inputRDD2 = sc.parallelize(input2)
+    val operatedStream = operation(inputStream1, inputRDD2)
+    val outputStream = new TestOutputStream[W](operatedStream,
+      new ArrayBuffer[Seq[W]] with SynchronizedBuffer[Seq[W]])
+    (outputStream, ssc)
+  }
+
+  /**
    * Runs the streams set up in `ssc` on manual clock for `numBatches` batches and
    * returns the collected output. It will wait until `numExpectedOutput` number of
    * output data has been collected or timeout (set by `maxWaitTimeMillis`) is reached.
