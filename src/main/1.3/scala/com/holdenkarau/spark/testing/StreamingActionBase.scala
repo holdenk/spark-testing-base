@@ -80,6 +80,7 @@ trait StreamingActionBase extends StreamingSuiteBase {
 
   private def runActionStream(ssc: TestStreamingContext, numBatches: Int) {
     assert(numBatches > 0, "Number of batches to run stream computation is zero")
+    batchCountListener.batchCount = 0
 
     // Start computation
     ssc.start()
