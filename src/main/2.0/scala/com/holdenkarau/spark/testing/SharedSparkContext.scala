@@ -29,24 +29,36 @@ import org.scalatest.{BeforeAndAfterAll, Suite}
 trait SharedSparkContext extends BeforeAndAfterAll with SparkContextProvider {
   self: Suite =>
 
+  override def beforeAll() {
+    _spark = SharedSparkContext.createSparkSession()
+    super.beforeAll()
+  }
+
+  override def afterAll() {
+    try {
+      LocalSparkContext.stop(_spark)
+      _spark = null
+    } finally {
+      super.afterAll()
+    }
+  }
+
+  override val conf = SharedSparkContext.conf
+
   @transient private var _spark: SparkSession = _
 
   override lazy val sc: SparkContext = _spark.sparkContext
   lazy val spark: SparkSession = _spark
+}
 
+object SharedSparkContext {
   val appID = new Date().toString + math.floor(math.random * 10E4).toLong.toString
 
-  override val conf = new SparkConf().
+  val conf = new SparkConf().
     setMaster("local[*]").
     setAppName("test").
     set("spark.ui.enabled", "false").
     set("spark.app.id", appID)
-
-
-  override def beforeAll() {
-    _spark = createSparkSession()
-    super.beforeAll()
-  }
 
   def createSparkSession():SparkSession = {
     /** Constructs a configuration for hive, where the metastore is located in a temp directory. */
@@ -55,7 +67,7 @@ trait SharedSparkContext extends BeforeAndAfterAll with SparkContextProvider {
     val localWarehousePath = new File(tempDir, "wharehouse").getCanonicalPath
     def newBuilder() = {
       val builder = SparkSession.builder()
-      builder.config(conf)
+      builder.config(SharedSparkContext.conf)
       // We have to mask all properties in hive-site.xml that relates to metastore data source
       // as we used a local metastore here.
       HiveConf.ConfVars.values().map(WrappedConfVar(_)).foreach { confvar =>
