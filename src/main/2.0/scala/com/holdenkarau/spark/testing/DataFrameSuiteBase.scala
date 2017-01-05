@@ -17,8 +17,6 @@
 
 package com.holdenkarau.spark.testing
 
-import java.io.File
-
 import org.scalatest.Suite
 
 import scala.math.abs
@@ -36,52 +34,14 @@ import org.apache.hadoop.hive.conf.HiveConf.ConfVars
  */
 
 trait DataFrameSuiteBase extends TestSuite with SharedSparkContext with DataFrameSuiteBaseLike { self: Suite =>
-  override def beforeAll() {
-    super.beforeAll()
-    super.sqlBeforeAllTestCases()
-  }
 
-  override def afterAll() {
-    super.afterAll()
-    SparkSessionProvider._sparkSession = null
-  }
-}
-
-trait DataFrameSuiteBaseLike extends SparkContextProvider with TestSuiteLike with Serializable {
-  val maxUnequalRowsToShow = 10
-  @transient lazy val spark: SparkSession = SparkSessionProvider._sparkSession
-  @transient lazy val sqlContext: SQLContext = SparkSessionProvider.sqlContext
+  @transient lazy val sqlContext: SQLContext = spark.sqlContext
 
   protected implicit def impSqlContext: SQLContext = sqlContext
+}
 
-
-  def sqlBeforeAllTestCases() {
-    /** Constructs a configuration for hive, where the metastore is located in a temp directory. */
-    val tempDir = Utils.createTempDir()
-    val localMetastorePath = new File(tempDir, "metastore").getCanonicalPath
-    val localWarehousePath = new File(tempDir, "wharehouse").getCanonicalPath
-    def newBuilder() = {
-      val builder = SparkSession.builder()
-      // We have to mask all properties in hive-site.xml that relates to metastore data source
-      // as we used a local metastore here.
-      HiveConf.ConfVars.values().map(WrappedConfVar(_)).foreach { confvar =>
-        if (confvar.varname.contains("datanucleus") || confvar.varname.contains("jdo")) {
-          builder.config(confvar.varname, confvar.getDefaultExpr())
-        }
-      }
-      builder.config("javax.jdo.option.ConnectionURL",
-        s"jdbc:derby:;databaseName=$localMetastorePath;create=true")
-      builder.config("datanucleus.rdbms.datastoreAdapterClassName",
-        "org.datanucleus.store.rdbms.adapter.DerbyAdapter")
-      builder.config(ConfVars.METASTOREURIS.varname, "")
-      builder.config("spark.sql.streaming.checkpointLocation",
-        Utils.createTempDir().toPath().toString)
-      builder.config("spark.sql.warehouse.dir",
-        localWarehousePath)
-    }
-
-    SparkSessionProvider._sparkSession = newBuilder().getOrCreate()
-  }
+trait DataFrameSuiteBaseLike extends TestSuiteLike with Serializable {
+  val maxUnequalRowsToShow = 10
 
   /**
    * Compares if two [[DataFrame]]s are equal, checks the schema and then if that matches
@@ -187,10 +147,4 @@ object DataFrameSuiteBase {
     }
     true
   }
-}
-
-object SparkSessionProvider {
-  @transient var _sparkSession: SparkSession = _
-  def sqlContext = EvilSessionTools.extractSQLContext(_sparkSession)
-  def sparkSession = _sparkSession
 }
