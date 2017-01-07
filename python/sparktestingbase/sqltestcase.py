@@ -50,8 +50,17 @@ class SQLTestCase(SparkTestingBaseReuse):
     def tearDownClass(cls):
         super(SQLTestCase, cls).tearDownClass()
 
+    def getConf(self):
+        """Override this to specify any custom configuration."""
+        return {}
+
     def setUp(self):
-        self.sqlCtx = SQLContext(self.sc)
+        try:
+            from pyspark.sql import Session
+            self.session = Session.Builder.config(self.getConf())
+            self.sqlCtx = self.session._wrapped
+        except:
+            self.sqlCtx = SQLContext(self.sc)
 
     def assertDataFrameEqual(self, expected, result, tol=0):
         """Assert that two DataFrames contain the same data.
