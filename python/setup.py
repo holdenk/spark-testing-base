@@ -2,7 +2,7 @@ from setuptools import setup
 
 setup(
     name='sparktestingbase',
-    version='0.3.3',
+    version='0.6.0',
     author='Holden Karau',
     author_email='holden@pigscanfly.ca',
     packages=['sparktestingbase', 'sparktestingbase.test'],
@@ -13,8 +13,7 @@ setup(
     install_requires=[
         'unittest2',
         'findspark',
-        'pytest',
-        'hypothesis'
+        'pytest'
     ],
     test_requires=[
         'nose',
