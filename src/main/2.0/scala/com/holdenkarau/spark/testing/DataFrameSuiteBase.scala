@@ -78,6 +78,13 @@ trait DataFrameSuiteBaseLike extends SparkContextProvider with TestSuiteLike wit
         Utils.createTempDir().toPath().toString)
       builder.config("spark.sql.warehouse.dir",
         localWarehousePath)
+      // Enable hive support if available
+      try {
+        builder.enableHiveSupport()
+      } catch {
+        case e: IllegalArgumentException => // Exception is thrown in Spakr if hive is not present
+      }
+      builder
     }
 
     SparkSessionProvider._sparkSession = newBuilder().getOrCreate()

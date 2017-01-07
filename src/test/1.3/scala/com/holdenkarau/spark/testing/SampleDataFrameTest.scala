@@ -72,6 +72,14 @@ class SampleDataFrameTest extends FunSuite with DataFrameSuiteBase {
     assert(false === approxEquals(row6, row6a, 1E-5))
   }
 
+  test("verify hive function support") {
+    import sqlContext.implicits._
+    val df = sc.parallelize(inputList).toDF
+    df.registerTempTable("pandaTemp")
+    val df2 = sqlContext.sql("select percentile(power, 0.5) from pandaTemp group by name")
+    val result = df2.collect()
+  }
+
   test("unequal dataframes should not be equal when length differs") {
     import sqlContext.implicits._
     val input = sc.parallelize(inputList).toDF
