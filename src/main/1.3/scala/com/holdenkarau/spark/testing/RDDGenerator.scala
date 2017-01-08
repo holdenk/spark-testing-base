@@ -88,17 +88,24 @@ object RDDGenerator {
  * A WrappedGenerator wraps a ScalaCheck generator to allow Spark's RandomRDD to use it
  */
 private[testing] class WrappedGenerator[T](getGenerator: => Gen[T]) extends RandomDataGenerator[T] {
-  lazy val random = new scala.util.Random()
-  lazy val params = Gen.Parameters.default.withRng(random)
   lazy val generator: Gen[T] = getGenerator
+  lazy val params = Gen.Parameters.default
+  lazy val random = new scala.util.Random()
+  var seed: Option[rng.Seed] = None
 
   def nextValue(): T = {
-    generator(params).get
+    if (seed == None) {
+      setSeed(random.nextLong())
+    }
+    generator(params, seed.get).get
   }
 
   def copy() = {
     new WrappedGenerator(getGenerator)
   }
 
-  override def setSeed(seed: Long): Unit = random.setSeed(seed)
+  override def setSeed(newSeed: Long): Unit = {
+    seed = Some(rng.Seed.apply(newSeed))
+    scala.util.Random.setSeed(newSeed)
+  }
 }

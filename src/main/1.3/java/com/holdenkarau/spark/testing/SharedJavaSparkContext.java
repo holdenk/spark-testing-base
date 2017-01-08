@@ -25,10 +25,18 @@ public class SharedJavaSparkContext implements SparkContextProvider {
   private static transient SparkContext _sc;
   private static transient JavaSparkContext _jsc;
   protected boolean initialized = false;
-  private static SparkConf _conf = new SparkConf().setMaster("local[4]").setAppName("magic");
 
-  public SparkConf conf() {
-    return _conf;
+  // Since we want to support java 7 for now we can't use the default method from the trait directly.
+  @Override public void setup(SparkContext sc) {
+    SparkContextProvider$class.setup(this, sc);
+  }
+
+  @Override public String appID() {
+    return SparkContextProvider$class.appID(this);
+  }
+
+  @Override public SparkConf conf() {
+    return SparkContextProvider$class.conf(this);
   }
 
   public SparkContext sc() {

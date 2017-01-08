@@ -114,9 +114,9 @@ javaOptions ++= Seq("-Xms512M", "-Xmx2048M", "-XX:MaxPermSize=2048M", "-XX:+CMSC
 // additional libraries
 libraryDependencies ++= Seq(
   "org.scalatest" %% "scalatest" % "3.0.1",
-  "io.github.nicolasstucki" %% "multisets" % "0.3",
-  "org.scalacheck" %% "scalacheck" % "1.12.5",
-  "junit" % "junit" % "4.11",
+  "io.github.nicolasstucki" %% "multisets" % "0.4",
+  "org.scalacheck" %% "scalacheck" % "1.13.4",
+  "junit" % "junit" % "4.12",
   "org.eclipse.jetty" % "jetty-util" % "9.3.11.v20160721",
   "com.novocode" % "junit-interface" % "0.11" % "test->default")
 

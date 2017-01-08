@@ -30,17 +30,9 @@ trait SharedSparkContext extends BeforeAndAfterAll with SparkContextProvider {
 
   override def sc: SparkContext = _sc
 
-  val appID = new Date().toString + math.floor(math.random * 10E4).toLong.toString
-
-  override val conf = new SparkConf().
-    setMaster("local[*]").
-    setAppName("test").
-    set("spark.ui.enabled", "false").
-    set("spark.app.id", appID)
-
-
   override def beforeAll() {
     _sc = new SparkContext(conf)
+    setup(_sc)
     super.beforeAll()
   }
 

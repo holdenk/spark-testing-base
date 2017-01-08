@@ -26,7 +26,8 @@ import org.scalatest.{BeforeAndAfterAll, Suite}
  * Further more if this is used, all Spark tests must run against the yarn mini cluster
  * (see https://issues.apache.org/jira/browse/SPARK-10812 for details).
  */
-trait SharedMiniCluster extends BeforeAndAfterAll with HDFSClusterLike with YARNClusterLike {
+trait SharedMiniCluster extends BeforeAndAfterAll with HDFSClusterLike with YARNClusterLike
+    with SparkContextProvider{
   self: Suite =>
   @transient private var _sc: SparkContext = _
 
@@ -42,7 +43,7 @@ trait SharedMiniCluster extends BeforeAndAfterAll with HDFSClusterLike with YARN
 
       val sparkConf = new SparkConf().setMaster(master).setAppName("test")
       _sc = new SparkContext(sparkConf)
-
+      setup(_sc)
     } catch {
       case e: Exception =>
         super.shutdownYARN()
