@@ -113,7 +113,7 @@ javaOptions ++= Seq("-Xms512M", "-Xmx2048M", "-XX:MaxPermSize=2048M", "-XX:+CMSC
 
 // additional libraries
 libraryDependencies ++= Seq(
-  "org.scalatest" %% "scalatest" % "2.2.6",
+  "org.scalatest" %% "scalatest" % "3.0.1",
   "io.github.nicolasstucki" %% "multisets" % "0.3",
   "org.scalacheck" %% "scalacheck" % "1.12.5",
   "junit" % "junit" % "4.11",
