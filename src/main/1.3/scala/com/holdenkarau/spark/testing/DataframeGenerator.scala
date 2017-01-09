@@ -35,7 +35,7 @@ object DataframeGenerator {
    * @return Arbitrary DataFrames generator of the required schema.
    */
   def arbitraryDataFrameWithCustomFields(sqlContext: SQLContext, schema: StructType, minPartitions: Int = 1)
-                                        (userGenerators: ColumnGenerator*): Arbitrary[DataFrame] = {
+                                        (userGenerators: Any*): Arbitrary[DataFrame] = {
 
     val arbitraryRDDs = RDDGenerator.genRDD(sqlContext.sparkContext, minPartitions)(getRowGenerator(schema, userGenerators))
     Arbitrary {
@@ -63,21 +63,33 @@ object DataframeGenerator {
    *                         Control specific columns generation.
    * @return Gen[Row]
    */
-  def getRowGenerator(schema: StructType, customGenerators: Seq[ColumnGenerator]): Gen[Row] = {
+  def getRowGenerator(schema: StructType, customGenerators: Seq[Any]): Gen[Row] = {
     val generators: List[Gen[Any]] = createGenerators(schema.fields, customGenerators)
     val listGen: Gen[List[Any]] = Gen.sequence[List[Any], Any](generators)
     val generator: Gen[Row] = listGen.map(list => Row.fromSeq(list))
     generator
   }
 
-  private def createGenerators(fields: Array[StructField], userGenerators: Seq[ColumnGenerator]): List[Gen[Any]] = {
-    val generatorMap = userGenerators.map(generator => (generator.columnName -> generator)).toMap
-    (0 until fields.length).toList.map(index =>
-      if (generatorMap.contains(fields(index).name)) generatorMap.get(fields(index).name).get.gen
-      else getGenerator(fields(index).dataType))
+  private def createGenerators(fields: Array[StructField], userGenerators: Seq[Any]): List[Gen[Any]] = {
+    val generatorMap = userGenerators.map(generator =>
+      generator match {
+        case gen: ColumnGenerator => (gen.columnName -> gen)
+        case list: ColumnGeneratorList => (list.columnName -> list)
+        case _ => throw new ClassCastException
+      }
+    ).toMap
+    (0 until fields.length).toList.map(index => {
+      if (generatorMap.contains(fields(index).name)) {
+        generatorMap.get(fields(index).name).get match {
+          case gen: ColumnGenerator => gen.gen
+          case list: ColumnGeneratorList => getGenerator(fields(index).dataType, list.gen)
+        }
+      }
+      else getGenerator(fields(index).dataType)
+    })
   }
 
-  private def getGenerator(dataType: DataType): Gen[Any] = {
+  private def getGenerator(dataType: DataType, generators: Seq[ColumnGenerator] = Seq()): Gen[Any] = {
     dataType match {
       case ByteType => Arbitrary.arbitrary[Byte]
       case ShortType => Arbitrary.arbitrary[Short]
@@ -104,7 +116,7 @@ object DataframeGenerator {
 
         return Gen.mapOf(keyValueGenerator)
       }
-      case row: StructType => return getRowGenerator(row)
+      case row: StructType => return getRowGenerator(row, generators)
       case _ => throw new UnsupportedOperationException(s"Type: $dataType not supported")
     }
   }
@@ -113,4 +125,8 @@ object DataframeGenerator {
 
 class ColumnGenerator(val columnName: String, generator: => Gen[Any]) extends java.io.Serializable {
   lazy val gen = generator
+}
+
+class ColumnGeneratorList(val columnName: String, generators: => Seq[ColumnGenerator]) extends java.io.Serializable {
+  lazy val gen = generators
 }
