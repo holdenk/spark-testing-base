@@ -75,7 +75,7 @@ object DataframeGenerator {
       generator match {
         case gen: ColumnGenerator => (gen.columnName -> gen)
         case list: ColumnGeneratorList => (list.columnName -> list)
-        case _ => throw new ClassCastException
+        case _ => throw new UnsupportedOperationException(s"Type: Only ColumnGenerator and ColumnGeneratorList are supported types")
       }
     ).toMap
     (0 until fields.length).toList.map(index => {
@@ -89,7 +89,7 @@ object DataframeGenerator {
     })
   }
 
-  private def getGenerator(dataType: DataType, generators: Seq[ColumnGenerator] = Seq()): Gen[Any] = {
+  private def getGenerator(dataType: DataType, generators: Seq[Any] = Seq()): Gen[Any] = {
     dataType match {
       case ByteType => Arbitrary.arbitrary[Byte]
       case ShortType => Arbitrary.arbitrary[Short]
@@ -127,6 +127,6 @@ class ColumnGenerator(val columnName: String, generator: => Gen[Any]) extends ja
   lazy val gen = generator
 }
 
-class ColumnGeneratorList(val columnName: String, generators: => Seq[ColumnGenerator]) extends java.io.Serializable {
+class ColumnGeneratorList(val columnName: String, generators: => Seq[Any]) extends java.io.Serializable {
   lazy val gen = generators
 }

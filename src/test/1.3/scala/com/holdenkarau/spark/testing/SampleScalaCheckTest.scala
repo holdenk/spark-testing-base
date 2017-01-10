@@ -122,6 +122,34 @@ class SampleScalaCheckTest extends FunSuite with SharedSparkContext with RDDComp
     check(property)
   }
 
+  test("test multi-level column generators") {
+    val schema = StructType(List(
+      StructField("user", StructType(List(
+        StructField("name", StringType),
+        StructField("age", IntegerType),
+        StructField("address", StructType(List(
+          StructField("street", StringType),
+          StructField("zip_code", IntegerType)
+        )))
+      )))
+    ))
+    val sqlContext = new SQLContext(sc)
+    val userGenerator = new ColumnGeneratorList("user", Seq(
+      new ColumnGenerator("name", Gen.oneOf("Holden", "Hanafy")), // name should be on of those
+      new ColumnGenerator("age", Gen.choose(10, 100)),
+      new ColumnGeneratorList("address", Seq(new ColumnGenerator("zip_code", Gen.choose(100, 200))))
+    ))
+    val dataframeGen = DataframeGenerator.arbitraryDataFrameWithCustomFields(sqlContext, schema)(userGenerator)
+
+    val property =
+      forAll(dataframeGen.arbitrary) {
+        dataframe => dataframe.schema === schema &&
+          dataframe.filter("(user.name != 'Holden' AND user.name != 'Hanafy') OR (user.age > 100 OR user.age < 10) OR (user.address.zip_code > 200 OR user.address.zip_code < 100)").count() == 0
+      }
+
+    check(property)
+  }
+
   test("generate rdd of specific size") {
     implicit val generatorDrivenConfig =
       PropertyCheckConfig(minSize = 10, maxSize = 20)
