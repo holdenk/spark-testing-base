@@ -35,7 +35,7 @@ object DataframeGenerator {
    * @return Arbitrary DataFrames generator of the required schema.
    */
   def arbitraryDataFrameWithCustomFields(sqlContext: SQLContext, schema: StructType, minPartitions: Int = 1)
-                                        (userGenerators: Any*): Arbitrary[DataFrame] = {
+                                        (userGenerators: Generator*): Arbitrary[DataFrame] = {
 
     val arbitraryRDDs = RDDGenerator.genRDD(sqlContext.sparkContext, minPartitions)(getRowGenerator(schema, userGenerators))
     Arbitrary {
@@ -63,21 +63,15 @@ object DataframeGenerator {
    *                         Control specific columns generation.
    * @return Gen[Row]
    */
-  def getRowGenerator(schema: StructType, customGenerators: Seq[Any]): Gen[Row] = {
+  def getRowGenerator(schema: StructType, customGenerators: Seq[Generator]): Gen[Row] = {
     val generators: List[Gen[Any]] = createGenerators(schema.fields, customGenerators)
     val listGen: Gen[List[Any]] = Gen.sequence[List[Any], Any](generators)
     val generator: Gen[Row] = listGen.map(list => Row.fromSeq(list))
     generator
   }
 
-  private def createGenerators(fields: Array[StructField], userGenerators: Seq[Any]): List[Gen[Any]] = {
-    val generatorMap = userGenerators.map(generator =>
-      generator match {
-        case gen: ColumnGenerator => (gen.columnName -> gen)
-        case list: ColumnGeneratorList => (list.columnName -> list)
-        case _ => throw new UnsupportedOperationException(s"Type: Only ColumnGenerator and ColumnGeneratorList are supported types")
-      }
-    ).toMap
+  private def createGenerators(fields: Array[StructField], userGenerators: Seq[Generator]): List[Gen[Any]] = {
+    val generatorMap = userGenerators.map(generator => (generator.columnName -> generator)).toMap
     (0 until fields.length).toList.map(index => {
       if (generatorMap.contains(fields(index).name)) {
         generatorMap.get(fields(index).name).get match {
@@ -89,7 +83,7 @@ object DataframeGenerator {
     })
   }
 
-  private def getGenerator(dataType: DataType, generators: Seq[Any] = Seq()): Gen[Any] = {
+  private def getGenerator(dataType: DataType, generators: Seq[Generator] = Seq()): Gen[Any] = {
     dataType match {
       case ByteType => Arbitrary.arbitrary[Byte]
       case ShortType => Arbitrary.arbitrary[Short]
@@ -123,10 +117,14 @@ object DataframeGenerator {
 
 }
 
-class ColumnGenerator(val columnName: String, generator: => Gen[Any]) extends java.io.Serializable {
+class ColumnGenerator(val columnName: String, generator: => Gen[Any]) extends Generator {
   lazy val gen = generator
 }
 
-class ColumnGeneratorList(val columnName: String, generators: => Seq[Any]) extends java.io.Serializable {
+class ColumnGeneratorList(val columnName: String, generators: => Seq[Generator]) extends Generator {
   lazy val gen = generators
+}
+
+abstract class Generator extends java.io.Serializable {
+  val columnName: String
 }
