@@ -150,6 +150,20 @@ class SampleScalaCheckTest extends FunSuite with SharedSparkContext with RDDComp
     check(property)
   }
 
+  test("assert invalid ColumnGeneratorList throws an Exception") {
+    val schema = StructType(List(
+      StructField("user", StructType(List(
+        StructField("name", StringType),
+        StructField("age", IntegerType)
+      )))
+    ))
+    val userGenerator = new ColumnGeneratorList("user", Seq("list", "of", "an", "unsupported", "type"))
+
+    assertThrows[UnsupportedOperationException] {
+      val rowGen = DataframeGenerator.getRowGenerator(schema, List(userGenerator))
+    }
+  }
+
   test("generate rdd of specific size") {
     implicit val generatorDrivenConfig =
       PropertyCheckConfig(minSize = 10, maxSize = 20)
