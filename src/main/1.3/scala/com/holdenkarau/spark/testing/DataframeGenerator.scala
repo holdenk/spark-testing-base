@@ -27,6 +27,10 @@ object DataframeGenerator {
    * Note: The given custom generators should match the required schema,
    * for ex. you can't use Int generator for StringType.
    *
+   * Note 2: The ColumnGenerator* accepted as userGenerators has changed.  ColumnGenerator is now the base class of the
+   * accepted generators, users upgrading to 0.6 need to change their calls to use Column.  Futher explanation can be
+   * found in the release notes, and in the class descriptions at the bottom of this file.
+   *
    * @param sqlContext     SQL Context.
    * @param schema         The required Schema.
    * @param minPartitions  minimum number of partitions, defaults to 1.
@@ -35,7 +39,7 @@ object DataframeGenerator {
    * @return Arbitrary DataFrames generator of the required schema.
    */
   def arbitraryDataFrameWithCustomFields(sqlContext: SQLContext, schema: StructType, minPartitions: Int = 1)
-                                        (userGenerators: Generator*): Arbitrary[DataFrame] = {
+                                        (userGenerators: ColumnGenerator*): Arbitrary[DataFrame] = {
 
     val arbitraryRDDs = RDDGenerator.genRDD(sqlContext.sparkContext, minPartitions)(getRowGenerator(schema, userGenerators))
     Arbitrary {
@@ -63,27 +67,27 @@ object DataframeGenerator {
    *                         Control specific columns generation.
    * @return Gen[Row]
    */
-  def getRowGenerator(schema: StructType, customGenerators: Seq[Generator]): Gen[Row] = {
+  def getRowGenerator(schema: StructType, customGenerators: Seq[ColumnGenerator]): Gen[Row] = {
     val generators: List[Gen[Any]] = createGenerators(schema.fields, customGenerators)
     val listGen: Gen[List[Any]] = Gen.sequence[List[Any], Any](generators)
     val generator: Gen[Row] = listGen.map(list => Row.fromSeq(list))
     generator
   }
 
-  private def createGenerators(fields: Array[StructField], userGenerators: Seq[Generator]): List[Gen[Any]] = {
+  private def createGenerators(fields: Array[StructField], userGenerators: Seq[ColumnGenerator]): List[Gen[Any]] = {
     val generatorMap = userGenerators.map(generator => (generator.columnName -> generator)).toMap
     (0 until fields.length).toList.map(index => {
       if (generatorMap.contains(fields(index).name)) {
         generatorMap.get(fields(index).name).get match {
-          case gen: ColumnGenerator => gen.gen
-          case list: ColumnGeneratorList => getGenerator(fields(index).dataType, list.gen)
+          case gen: Column => gen.gen
+          case list: ColumnList => getGenerator(fields(index).dataType, list.gen)
         }
       }
       else getGenerator(fields(index).dataType)
     })
   }
 
-  private def getGenerator(dataType: DataType, generators: Seq[Generator] = Seq()): Gen[Any] = {
+  private def getGenerator(dataType: DataType, generators: Seq[ColumnGenerator] = Seq()): Gen[Any] = {
     dataType match {
       case ByteType => Arbitrary.arbitrary[Byte]
       case ShortType => Arbitrary.arbitrary[Short]
@@ -117,14 +121,23 @@ object DataframeGenerator {
 
 }
 
-class ColumnGenerator(val columnName: String, generator: => Gen[Any]) extends Generator {
+/**
+ * Previously ColumnGenerator. Allows the user to specify a generator for a specific column
+ */
+class Column(val columnName: String, generator: => Gen[Any]) extends ColumnGenerator {
   lazy val gen = generator
 }
 
-class ColumnGeneratorList(val columnName: String, generators: => Seq[Generator]) extends Generator {
+/**
+ * ColumnList allows users to specify custom generators for a list of columns inside a StructType column
+ */
+class ColumnList(val columnName: String, generators: => Seq[ColumnGenerator]) extends ColumnGenerator {
   lazy val gen = generators
 }
 
-abstract class Generator extends java.io.Serializable {
+/**
+ * ColumnGenerator - prevously Column; it is now the base class for all ColumnGenerators
+ */
+abstract class ColumnGenerator extends java.io.Serializable {
   val columnName: String
 }
