@@ -27,6 +27,10 @@ object DataframeGenerator {
    * Note: The given custom generators should match the required schema,
    * for ex. you can't use Int generator for StringType.
    *
+   * Note 2: The ColumnGenerator* accepted as userGenerators has changed.  ColumnGenerator is now the base class of the
+   * accepted generators, users upgrading to 0.6 need to change their calls to use Column.  Futher explanation can be
+   * found in the release notes, and in the class descriptions at the bottom of this file.
+   *
    * @param sqlContext     SQL Context.
    * @param schema         The required Schema.
    * @param minPartitions  minimum number of partitions, defaults to 1.
@@ -72,12 +76,18 @@ object DataframeGenerator {
 
   private def createGenerators(fields: Array[StructField], userGenerators: Seq[ColumnGenerator]): List[Gen[Any]] = {
     val generatorMap = userGenerators.map(generator => (generator.columnName -> generator)).toMap
-    (0 until fields.length).toList.map(index =>
-      if (generatorMap.contains(fields(index).name)) generatorMap.get(fields(index).name).get.gen
-      else getGenerator(fields(index).dataType))
+    (0 until fields.length).toList.map(index => {
+      if (generatorMap.contains(fields(index).name)) {
+        generatorMap.get(fields(index).name).get match {
+          case gen: Column => gen.gen
+          case list: ColumnList => getGenerator(fields(index).dataType, list.gen)
+        }
+      }
+      else getGenerator(fields(index).dataType)
+    })
   }
 
-  private def getGenerator(dataType: DataType): Gen[Any] = {
+  private def getGenerator(dataType: DataType, generators: Seq[ColumnGenerator] = Seq()): Gen[Any] = {
     dataType match {
       case ByteType => Arbitrary.arbitrary[Byte]
       case ShortType => Arbitrary.arbitrary[Short]
@@ -104,13 +114,30 @@ object DataframeGenerator {
 
         return Gen.mapOf(keyValueGenerator)
       }
-      case row: StructType => return getRowGenerator(row)
+      case row: StructType => return getRowGenerator(row, generators)
       case _ => throw new UnsupportedOperationException(s"Type: $dataType not supported")
     }
   }
 
 }
 
-class ColumnGenerator(val columnName: String, generator: => Gen[Any]) extends java.io.Serializable {
+/**
+ * Previously ColumnGenerator. Allows the user to specify a generator for a specific column
+ */
+class Column(val columnName: String, generator: => Gen[Any]) extends ColumnGenerator {
   lazy val gen = generator
+}
+
+/**
+ * ColumnList allows users to specify custom generators for a list of columns inside a StructType column
+ */
+class ColumnList(val columnName: String, generators: => Seq[ColumnGenerator]) extends ColumnGenerator {
+  lazy val gen = generators
+}
+
+/**
+ * ColumnGenerator - prevously Column; it is now the base class for all ColumnGenerators
+ */
+abstract class ColumnGenerator extends java.io.Serializable {
+  val columnName: String
 }

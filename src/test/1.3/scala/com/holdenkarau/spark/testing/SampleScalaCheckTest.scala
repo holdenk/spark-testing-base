@@ -95,7 +95,7 @@ class SampleScalaCheckTest extends FunSuite with SharedSparkContext with RDDComp
   test("test custom columns generators") {
     val schema = StructType(List(StructField("name", StringType), StructField("age", IntegerType)))
     val sqlContext = new SQLContext(sc)
-    val ageGenerator = new ColumnGenerator("age", Gen.choose(10, 100))
+    val ageGenerator = new Column("age", Gen.choose(10, 100))
     val dataframeGen = DataframeGenerator.arbitraryDataFrameWithCustomFields(sqlContext, schema)(ageGenerator)
 
     val property =
@@ -109,8 +109,8 @@ class SampleScalaCheckTest extends FunSuite with SharedSparkContext with RDDComp
   test("test multiple columns generators") {
     val schema = StructType(List(StructField("name", StringType), StructField("age", IntegerType)))
     val sqlContext = new SQLContext(sc)
-    val nameGenerator = new ColumnGenerator("name", Gen.oneOf("Holden", "Hanafy")) // name should be on of those
-    val ageGenerator = new ColumnGenerator("age", Gen.choose(10, 100))
+    val nameGenerator = new Column("name", Gen.oneOf("Holden", "Hanafy")) // name should be on of those
+    val ageGenerator = new Column("age", Gen.choose(10, 100))
     val dataframeGen = DataframeGenerator.arbitraryDataFrameWithCustomFields(sqlContext, schema)(nameGenerator, ageGenerator)
 
     val property =
@@ -120,6 +120,44 @@ class SampleScalaCheckTest extends FunSuite with SharedSparkContext with RDDComp
       }
 
     check(property)
+  }
+
+  test("test multi-level column generators") {
+    val schema = StructType(List(
+      StructField("user", StructType(List(
+        StructField("name", StringType),
+        StructField("age", IntegerType),
+        StructField("address", StructType(List(
+          StructField("street", StringType),
+          StructField("zip_code", IntegerType)
+        )))
+      )))
+    ))
+    val sqlContext = new SQLContext(sc)
+    val userGenerator = new ColumnList("user", Seq(
+      new Column("name", Gen.oneOf("Holden", "Hanafy")), // name should be on of those
+      new Column("age", Gen.choose(10, 100)),
+      new ColumnList("address", Seq(new Column("zip_code", Gen.choose(100, 200))))
+    ))
+    val dataframeGen = DataframeGenerator.arbitraryDataFrameWithCustomFields(sqlContext, schema)(userGenerator)
+
+    val property =
+      forAll(dataframeGen.arbitrary) {
+        dataframe => dataframe.schema === schema &&
+          dataframe.filter("(user.name != 'Holden' AND user.name != 'Hanafy') OR (user.age > 100 OR user.age < 10) OR (user.address.zip_code > 200 OR user.address.zip_code < 100)").count() == 0
+      }
+
+    check(property)
+  }
+
+  test("assert invalid ColumnList does not compile") {
+    val schema = StructType(List(
+      StructField("user", StructType(List(
+        StructField("name", StringType),
+        StructField("age", IntegerType)
+      )))
+    ))
+    assertTypeError("""val userGenerator = new ColumnList("user", Seq("list", "of", "an", "unsupported", "type"))""")
   }
 
   test("generate rdd of specific size") {

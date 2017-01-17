@@ -15,8 +15,8 @@ class PrettifyTest extends FunSuite with SharedSparkContext with Checkers with P
   test("pretty output of DataFrame's check") {
     val schema = StructType(List(StructField("name", StringType), StructField("age", IntegerType)))
     val sqlContext = new SQLContext(sc)
-    val nameGenerator = new ColumnGenerator("name", Gen.const("Holden Hanafy"))
-    val ageGenerator = new ColumnGenerator("age", Gen.const(20))
+    val nameGenerator = new Column("name", Gen.const("Holden Hanafy"))
+    val ageGenerator = new Column("age", Gen.const(20))
 
     val dataframeGen = DataframeGenerator.arbitraryDataFrameWithCustomFields(sqlContext, schema)(nameGenerator, ageGenerator)
 
