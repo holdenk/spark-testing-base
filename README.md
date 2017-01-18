@@ -44,7 +44,10 @@ If using surefire you can add:
         <argLine>-Xmx2048m -XX:MaxPermSize=2048m</argLine>
 
 Note: the specific memory values are examples only (and the values used to run spark-testing-base's own tests)
-
+        test {
+            maxParallelForks = 1
+        }
+        
 # Special considerations
 
 Make sure to disable parallel execution
@@ -54,6 +57,12 @@ In sbt you can add:
         parallelExecution in Test := false
 
 In surefire make sure that forkCount is set to 1 and reuseForks is true.
+
+In gradle config `test`  task:
+
+        test {
+            maxParallelForks = 1
+        }
 
 # Where is this from?
 Much of this code is a stripped down version of the test suite bases that are in Apache Spark but are not accessible. Other parts are also inspired by ssbase (scalacheck generators for Spark).
