@@ -74,7 +74,9 @@ class SampleDataFrameTest extends FunSuite with DataFrameSuiteBase {
 
   test("verify hive function support") {
     import sqlContext.implicits._
-    val df = sc.parallelize(inputList).toDF
+    // Convert to int since old versions of hive only support percentile on integer types.
+    val intInputs = inputList.map(a => IntMagic(a.name, a.power.toInt, a.byteArray))
+    val df = sc.parallelize(intInputs).toDF
     df.registerTempTable("pandaTemp")
     val df2 = sqlContext.sql("select percentile(power, 0.5) from pandaTemp group by name")
     val result = df2.collect()
@@ -108,3 +110,4 @@ class SampleDataFrameTest extends FunSuite with DataFrameSuiteBase {
 }
 
 case class Magic(name: String, power: Double, byteArray: Array[Byte])
+case class IntMagic(name: String, power: Int, byteArray: Array[Byte])
