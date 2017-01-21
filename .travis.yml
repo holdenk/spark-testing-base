@@ -18,7 +18,7 @@ before_install:
   - pip install --user codecov coverage unittest2
 install:
   # Download spark 2.0.0
-  - "[ -f spark] || mkdir spark && cd spark && axel http://d3kbcqa49mib13.cloudfront.net/spark-2.0.0-bin-hadoop2.7.tgz && cd .."
+  - "[ -f spark ] || mkdir spark && cd spark && axel http://d3kbcqa49mib13.cloudfront.net/spark-2.0.0-bin-hadoop2.7.tgz && cd .."
   - "tar -xf ./spark/spark-2.0.0-bin-hadoop2.7.tgz"
   - "export SPARK_HOME=`pwd`/spark-2.0.0-bin-hadoop2.7"
   # Install Python deps.
