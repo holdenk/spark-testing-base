@@ -38,6 +38,7 @@ install:
 script:
   - ./sbt/sbt scalastyle
   - SPARK_CONF_DIR=./log4j/ ./sbt/sbt clean coverage test
+  - sbt coverageReport
   - cp ./log4j/log4j.properties $SPARK_HOME/conf/
   - ./python/run-tests
   - "pep8 --ignore=E402 ./python"
