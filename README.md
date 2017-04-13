@@ -5,12 +5,12 @@
 
 Base classes to use when writing tests with Spark.
 
-# Why?
+## Why?
 
 You've written an awesome program in Spark and now its time to write some tests. Only you find yourself writing the code to setup and tear down local mode Spark in between each suite and you say to your self:
 This is not my beautiful code.
 
-# How?
+## How?
 
 So you include com.holdenkarau.spark-testing-base [spark_version]_0.6.0 and extend one of the classes and write some simple tests instead.  For example to include this in a project using Spark 2.1.0:
 
@@ -33,7 +33,7 @@ How to use it inside your code? have a look at the [wiki](https://github.com/hol
 
 The [Maven repositories page for spark-testing-base](https://mvnrepository.com/artifact/com.holdenkarau) lists the releases available.
 
-# Minimum Memory Requirements and OOMs
+## Minimum Memory Requirements and OOMs
 
 The default SBT testing java options are too small to support running many of the tests due to the need to launch Spark in local mode. To increase the amount of memory in a build.sbt file you can add:
 
@@ -49,7 +49,7 @@ If using surefire you can add:
 
 Note: the specific memory values are examples only (and the values used to run spark-testing-base's own tests).
 
-# Special considerations
+## Special considerations
 
 Make sure to disable parallel execution.
 
@@ -61,10 +61,10 @@ parallelExecution in Test := false
 
 In surefire make sure that forkCount is set to 1 and reuseForks is true.
 
-# Where is this from?
+## Where is this from?
 
 Much of this code is a stripped down version of the test suite bases that are in Apache Spark but are not accessible. Other parts are also inspired by ssbase (scalacheck generators for Spark).
 
 Other parts of this are implemented on top of the test suite bases to make your life even easier.
 
-# [Release Notes](RELEASE_NOTES.md)
+## [Release Notes](RELEASE_NOTES.md)
