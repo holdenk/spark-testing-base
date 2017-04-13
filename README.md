@@ -38,6 +38,7 @@ The [Maven repositories page for spark-testing-base](https://mvnrepository.com/a
 The default SBT testing java options are too small to support running many of the tests due to the need to launch Spark in local mode. To increase the amount of memory in a build.sbt file you can add:
 
 ```scala
+fork in Test := true
 javaOptions ++= Seq("-Xms512M", "-Xmx2048M", "-XX:MaxPermSize=2048M", "-XX:+CMSClassUnloadingEnabled")
 ```
 
