@@ -12,10 +12,10 @@ This is not my beautiful code.
 
 # How?
 
-So you include com.holdenkarau.spark-testing-base [spark_version]_0.3.3 and extend one of the classes and write some simple tests instead.  For example to include this in a project using Spark 1.6.1:
+So you include com.holdenkarau.spark-testing-base [spark_version]_0.6.0 and extend one of the classes and write some simple tests instead.  For example to include this in a project using Spark 2.1.0:
 
 ```scala
-"com.holdenkarau" %% "spark-testing-base" % "1.6.1_0.3.3" % "test"
+"com.holdenkarau" %% "spark-testing-base" % "2.1.0_0.6.0" % "test"
 ```
 
 or
@@ -23,19 +23,15 @@ or
 ```
 <dependency>
     <groupId>com.holdenkarau</groupId>
-    <artifactId>spark-testing-base_2.10</artifactId>
-    <version>${spark.version}_0.3.3</version>
+    <artifactId>spark-testing-base_2.11</artifactId>
+    <version>${spark.version}_0.6.0</version>
     <scope>test</scope>
 </dependency>
 ```
 
 How to use it inside your code? have a look at the [wiki](https://github.com/holdenk/spark-testing-base/wiki) page.
 
-Note that new versions (0.0.8+) are built against Spark 1.3.0+ for simplicity, but if you need an old version, file an issue and I will re-enable cross-builds for older versions.
-
 The [Maven repositories page for spark-testing-base](https://mvnrepository.com/artifact/com.holdenkarau) lists the releases available.
-
-This package is can be cross compiled against scala 2.10.4 and 2.11.6 in the traditional manner.
 
 # Minimum Memory Requirements and OOMs
 
