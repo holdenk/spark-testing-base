@@ -43,7 +43,8 @@ script:
   - ./python/run-tests
   - "pep8 --ignore=E402 ./python"
 after_success:
-  - codecov
+  - bash <(curl -s https://codecov.io/bash) -cF scala
+  - bash <(curl -s https://codecov.io/bash) -cF python
 notifications:
   email:
     recipients:
