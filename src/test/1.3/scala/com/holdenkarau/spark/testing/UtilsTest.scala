@@ -26,7 +26,7 @@ class UtilsTest extends FunSuite {
     val tempDir = Utils.createTempDir()
     val tempPath = tempDir.toPath().toAbsolutePath().toString()
     Utils.shutDownCleanUp()
-    Thread.sleep(1)
+    Thread.sleep(10)
     assert(!(new File(tempPath).exists()))
   }
 
