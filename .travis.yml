@@ -17,10 +17,10 @@ before_install:
   - export PATH=$HOME/.local/bin:$PATH
   - pip install --user codecov coverage unittest2
 install:
-  # Download spark 2.0.0
-  - "[ -f spark ] || mkdir spark && cd spark && axel http://d3kbcqa49mib13.cloudfront.net/spark-2.0.0-bin-hadoop2.7.tgz && cd .."
-  - "tar -xf ./spark/spark-2.0.0-bin-hadoop2.7.tgz"
-  - "export SPARK_HOME=`pwd`/spark-2.0.0-bin-hadoop2.7"
+  # Download spark 2.1.0
+  - "[ -f spark ] || mkdir spark && cd spark && axel http://d3kbcqa49mib13.cloudfront.net/spark-2.1.0-bin-hadoop2.7.tgz && cd .."
+  - "tar -xf ./spark/spark-2.1.0-bin-hadoop2.7.tgz"
+  - "export SPARK_HOME=`pwd`/spark-2.1.0-bin-hadoop2.7"
   # Install Python deps.
   # The conda installation steps here are based on http://conda.pydata.org/docs/travis.html
   - wget https://repo.continuum.io/miniconda/Miniconda-latest-Linux-x86_64.sh -O miniconda.sh
