@@ -42,9 +42,6 @@ def add_pyspark_path():
         print("""SPARK_HOME was not set. please set it. e.g.
         SPARK_HOME='/home/...' ./bin/pyspark [program]""")
         exit(-1)
-    except ValueError as e:
-        print(str(e))
-        exit(-1)
 
 
 def quiet_py4j():
