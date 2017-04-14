@@ -38,13 +38,12 @@ install:
 script:
   - ./sbt/sbt scalastyle
   - SPARK_CONF_DIR=./log4j/ ./sbt/sbt clean coverage test
+  - bash <(curl -s https://codecov.io/bash) -cF scala
   - ./sbt/sbt coverageReport
   - cp ./log4j/log4j.properties $SPARK_HOME/conf/
   - ./python/run-tests
-  - "pep8 --ignore=E402 ./python"
-after_success:
-  - bash <(curl -s https://codecov.io/bash) -cF scala
   - bash <(curl -s https://codecov.io/bash) -cF python
+  - "pep8 --ignore=E402 ./python"
 notifications:
   email:
     recipients:
