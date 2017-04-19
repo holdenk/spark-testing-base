@@ -29,7 +29,8 @@ trait SparkContextProvider {
       setMaster("local[*]").
       setAppName("test").
       set("spark.ui.enabled", "false").
-      set("spark.app.id", appID)
+      set("spark.app.id", appID).
+      set("spark.driver.host", "localhost")
   }
 
 
