@@ -99,6 +99,7 @@ private[holdenkarau] trait StreamingSuiteCommon extends Logging with SparkContex
   override def conf = new SparkConf()
     .setMaster(master)
     .setAppName(framework)
+    .set("spark.driver.host", "localhost")
     .set("spark.streaming.clock", "org.apache.spark.streaming.util.TestManualClock")
 
   // Timeout for use in ScalaTest `eventually` blocks
