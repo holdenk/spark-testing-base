@@ -14,7 +14,7 @@ setup(
         'unittest2',
         'findspark',
         'pytest',
-        'hypothesis'
+        'hypothesis==3.7.0'
     ],
     test_requires=[
         'nose',
