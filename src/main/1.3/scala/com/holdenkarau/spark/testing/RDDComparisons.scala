@@ -35,7 +35,8 @@ trait RDDComparisonsLike extends TestSuiteLike {
    * Asserts two RDDs are equal (with the same order).
    * If they are equal assertion succeeds, otherwise assertion fails.
    */
-  def assertRDDEqualsWithOrder[T: ClassTag](expected: RDD[T], result: RDD[T]): Unit = {
+  def assertRDDEqualsWithOrder[T: ClassTag](
+    expected: RDD[T], result: RDD[T]): Unit = {
     assertTrue(compareRDDWithOrder(expected, result).isEmpty)
   }
 
@@ -46,7 +47,8 @@ trait RDDComparisonsLike extends TestSuiteLike {
    * If they are equal returns None, otherwise returns Some with the first mismatch.
    * If the lengths are not equal, one of the two components may be None.
    */
-  def compareRDDWithOrder[T: ClassTag](expected: RDD[T], result: RDD[T]): Option[(Option[T], Option[T])] = {
+  def compareRDDWithOrder[T: ClassTag](
+    expected: RDD[T], result: RDD[T]): Option[(Option[T], Option[T])] = {
     // If there is a known partitioner just zip
     if (result.partitioner.map(_ == expected.partitioner.get).getOrElse(false)) {
       compareRDDWithOrderSamePartitioner(expected, result)
@@ -60,7 +62,8 @@ trait RDDComparisonsLike extends TestSuiteLike {
       indexedExpected.cogroup(indexedResult).filter { case (_, (i1, i2)) =>
         i1.isEmpty || i2.isEmpty || i1.head != i2.head
       }.take(1).headOption.
-        map { case (_, (i1, i2)) => (i1.headOption, i2.headOption) }.take(1).headOption
+        map { case (_, (i1, i2)) =>
+          (i1.headOption, i2.headOption) }.take(1).headOption
     }
   }
 
@@ -68,7 +71,8 @@ trait RDDComparisonsLike extends TestSuiteLike {
    * Compare two RDDs. If they are equal returns None, otherwise
    * returns Some with the first mismatch. Assumes we have the same partitioner.
    */
-  def compareRDDWithOrderSamePartitioner[T: ClassTag](expected: RDD[T], result: RDD[T]): Option[(Option[T], Option[T])] = {
+  def compareRDDWithOrderSamePartitioner[T: ClassTag](
+    expected: RDD[T], result: RDD[T]): Option[(Option[T], Option[T])] = {
     // Handle mismatched lengths by converting into options and padding with Nones
     expected.zipPartitions(result) {
       (thisIter, otherIter) =>
@@ -102,11 +106,14 @@ trait RDDComparisonsLike extends TestSuiteLike {
    * Compare two RDDs where we do not require the order to be equal.
    * If they are equal returns None, otherwise returns Some with the first mismatch.
    *
-   * @return None if the two RDDs are equal, or Some That contains first mismatch information.
-   *         Mismatch information will be Tuple3 of: (key, number of times this key occur in expected RDD,
-   *         number of times this key occur in result RDD)
+   * @return None if the two RDDs are equal, or Some containing
+   *              the first mismatch information.
+   *              The mismatch information will be Tuple3 of:
+   *              (key, number of times this key occur in expected RDD,
+   *              number of times this key occur in result RDD)
    */
-  def compareRDD[T: ClassTag](expected: RDD[T], result: RDD[T]): Option[(T, Int, Int)] = {
+  def compareRDD[T: ClassTag](expected: RDD[T], result: RDD[T]):
+      Option[(T, Int, Int)] = {
     // Key the values and count the number of each unique element
     val expectedKeyed = expected.map(x => (x, 1)).reduceByKey(_ + _)
     val resultKeyed = result.map(x => (x, 1)).reduceByKey(_ + _)
@@ -115,7 +122,8 @@ trait RDDComparisonsLike extends TestSuiteLike {
       i1.isEmpty || i2.isEmpty || i1.head != i2.head
     }
       .take(1).headOption.
-      map { case (v, (i1, i2)) => (v, i1.headOption.getOrElse(0), i2.headOption.getOrElse(0)) }
+      map { case (v, (i1, i2)) =>
+        (v, i1.headOption.getOrElse(0), i2.headOption.getOrElse(0)) }
   }
 
   // end::PANDA_UNORDERED[]

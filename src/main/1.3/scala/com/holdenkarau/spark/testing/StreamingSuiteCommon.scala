@@ -52,7 +52,8 @@ class TestOutputStream[T: ClassTag](parent: DStream[T],
 /**
  * Shared logic between the Java & Scala Streaming suites.
  */
-private[holdenkarau] trait StreamingSuiteCommon extends Logging with SparkContextProvider {
+private[holdenkarau] trait StreamingSuiteCommon extends Logging
+    with SparkContextProvider {
   // tag::createTestInputStream[]
   /**
    * Create an input stream for the provided input sequence. This is done using
@@ -95,7 +96,8 @@ private[holdenkarau] trait StreamingSuiteCommon extends Logging with SparkContex
   }
 
 
-  // A SparkConf to use in tests. Can be modified before calling setupStreams to configure things.
+  // A SparkConf to use in tests.
+  // Can be modified before calling setupStreams to configure things.
   override def conf = new SparkConf()
     .setMaster(master)
     .setAppName(framework)
@@ -103,7 +105,8 @@ private[holdenkarau] trait StreamingSuiteCommon extends Logging with SparkContex
     .set("spark.streaming.clock", "org.apache.spark.streaming.util.TestManualClock")
 
   // Timeout for use in ScalaTest `eventually` blocks
-  val eventuallyTimeout: PatienceConfiguration.Timeout = timeout(Span(10, ScalaTestSeconds))
+  val eventuallyTimeout: PatienceConfiguration.Timeout =
+    timeout(Span(10, ScalaTestSeconds))
 
   /**
    * Run a block of code with the given StreamingContext and automatically
@@ -135,8 +138,9 @@ private[holdenkarau] trait StreamingSuiteCommon extends Logging with SparkContex
    * of input collections.
    */
   private[holdenkarau] def setupStreams[U: ClassTag, V: ClassTag](
-      input: Seq[Seq[U]],
-      operation: DStream[U] => DStream[V]): (TestOutputStream[V], TestStreamingContext) = {
+    input: Seq[Seq[U]],
+    operation: DStream[U] => DStream[V]):
+      (TestOutputStream[V], TestStreamingContext) = {
 
     // Create TestStreamingContext
     val ssc = new TestStreamingContext(sc, batchDuration)
@@ -203,7 +207,8 @@ private[holdenkarau] trait StreamingSuiteCommon extends Logging with SparkContex
   /**
    * Runs the streams set up in `ssc` on manual clock for `numBatches` batches and
    * returns the collected output. It will wait until `numExpectedOutput` number of
-   * output data has been collected or timeout (set by `maxWaitTimeMillis`) is reached.
+   * output data has been collected or timeout (set by `maxWaitTimeMillis`) is
+   * reached.
    *
    * Returns a sequence of items for each RDD.
    */
@@ -213,9 +218,11 @@ private[holdenkarau] trait StreamingSuiteCommon extends Logging with SparkContex
       numBatches: Int,
       numExpectedOutput: Int
     ): Seq[Seq[V]] = {
-    assert(numBatches > 0, "Number of batches to run stream computation is zero")
-    assert(numExpectedOutput > 0, "Number of expected outputs after " + numBatches + " is zero")
-    logInfo("numBatches = " + numBatches + ", numExpectedOutput = " + numExpectedOutput)
+    assert(numBatches > 0,
+      "Number of batches to run stream computation is zero")
+    assert(numExpectedOutput > 0,
+      s"Number of expected outputs after ${numBatches} is zero")
+    logInfo(s"numBatches = ${numBatches}, numExpectedOutput = ${numExpectedOutput}")
 
     val output = outputStream.output
 
@@ -237,13 +244,14 @@ private[holdenkarau] trait StreamingSuiteCommon extends Logging with SparkContex
     val startTime = System.currentTimeMillis()
     while (output.size < numExpectedOutput &&
       System.currentTimeMillis() - startTime < maxWaitTimeMillis) {
-      logInfo("output.size = " + output.size + ", numExpectedOutput = " + numExpectedOutput)
+      logInfo("output.size = ${output.size}, expected = ${numExpectedOutput}")
       ssc.awaitTerminationOrTimeout(50)
     }
     val timeTaken = System.currentTimeMillis() - startTime
-    logInfo("Output generated in " + timeTaken + " milliseconds")
+    logInfo(s"Output generated in ${timeTaken} milliseconds")
     output.foreach(x => logInfo("[" + x.mkString(",") + "]"))
-    assert(timeTaken < maxWaitTimeMillis, "Operation timed out after " + timeTaken + " ms")
+    assert(timeTaken < maxWaitTimeMillis,
+      s"Operation timed out after ${timeTaken} ms")
     Thread.sleep(200) // Give some time for the forgetting old RDDs to complete
 
     output.toSeq
@@ -252,10 +260,12 @@ private[holdenkarau] trait StreamingSuiteCommon extends Logging with SparkContex
   private[holdenkarau] def setupClock() = {
     if (useManualClock) {
       logInfo("Using manual clock")
-      conf.set("spark.streaming.clock", "org.apache.spark.streaming.util.TestManualClock")
+      conf.set("spark.streaming.clock",
+        "org.apache.spark.streaming.util.TestManualClock")
     } else {
       logInfo("Using real clock")
-      conf.set("spark.streaming.clock", "org.apache.spark.streaming.util.SystemClock")
+      conf.set("spark.streaming.clock",
+        "org.apache.spark.streaming.util.SystemClock")
     }
   }
 }

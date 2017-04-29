@@ -25,7 +25,8 @@ import org.apache.spark.streaming._
 /**
  * This is a class to provide access to zerotime information
  */
-abstract class FriendlyInputDStream[T: ClassTag](@transient var ssc_ : StreamingContext)
+abstract class FriendlyInputDStream[T: ClassTag](
+  @transient var ssc_ : StreamingContext)
     extends InputDStream[T](ssc_) {
 
   var ourZeroTime: Time = null
