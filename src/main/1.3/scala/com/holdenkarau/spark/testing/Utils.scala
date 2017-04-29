@@ -63,7 +63,8 @@ object Utils extends Logging {
       new File(file.getParentFile().getCanonicalFile(), file.getName())
     }
 
-    !fileInCanonicalDir.getCanonicalFile().equals(fileInCanonicalDir.getAbsoluteFile())
+    !fileInCanonicalDir.getCanonicalFile().equals(
+      fileInCanonicalDir.getAbsoluteFile())
   }
 
   private def listFilesSafely(file: File): Seq[File] = {
@@ -126,9 +127,10 @@ object Utils extends Logging {
 
 
   /**
-    * Create a directory inside the given parent directory. The directory is guaranteed to be
-    * newly created, and is not marked for automatic deletion.
-    */
+   * Create a directory inside the given parent directory.
+   * The directory is guaranteed to be newly created, and is not marked for automatic
+   * deletion.
+   */
   def createDirectory(root: String): File = {
     var attempts = 0
     val maxAttempts = 10
@@ -136,8 +138,8 @@ object Utils extends Logging {
     while (dir == null) {
       attempts += 1
       if (attempts > maxAttempts) {
-        throw new IOException("Failed to create a temp directory (under " + root + ") after " +
-          maxAttempts + " attempts!")
+        throw new IOException(
+          s"Failed to create a temp directory (under ${root}) after ${maxAttempts}")
       }
       try {
         dir = new File(root, "spark-" + UUID.randomUUID.toString)
@@ -151,9 +153,9 @@ object Utils extends Logging {
   }
 
   /**
-    * Create a temporary directory inside the given parent directory. The directory will be
-    * automatically deleted when the VM shuts down.
-    */
+   * Create a temporary directory inside the given parent directory.
+   * The directory will be automatically deleted when the VM shuts down.
+   */
   def createTempDir(root: String = System.getProperty("java.io.tmpdir")): File = {
     val dir = createDirectory(root)
     registerShutdownDeleteDir(dir)
@@ -162,58 +164,65 @@ object Utils extends Logging {
 
 
   /**
-   * Attempt to start a service on the given port, or fail after a number of attempts.
-   * Each subsequent attempt uses 1 + the port used in the previous attempt (unless the port is 0).
+   * Attempt to start a service on the given port, or fail after a number of
+   * attempts. Each subsequent attempt uses 1 + the port used in the previous attempt
+   * (unless the port is 0).
    *
    * @param startPort The initial port to start the service on.
    * @param startService Function to start service on a given port.
-   *                     This is expected to throw java.net.BindException on port collision.
-   * @param conf A SparkConf used to get the maximum number of retries when binding to a port.
+   *                     This is expected to throw java.net.BindException on port
+   *                     collision.
+   * @param conf A SparkConf used to get the maximum number of
+   *             retries when binding to a port.
    * @param serviceName Name of the service.
    */
   def startServiceOnPort[T](
-      startPort: Int,
-      startService: Int => (T, Int),
-      conf: SparkConf,
-      serviceName: String = ""): (T, Int) = {
+    startPort: Int,
+    startService: Int => (T, Int),
+    conf: SparkConf,
+    serviceName: String = ""): (T, Int) = {
 
     require(startPort == 0 || (1024 <= startPort && startPort < 65536),
-      "startPort should be between 1024 and 65535 (inclusive), or 0 for a random free port.")
+      "startPort should be between 1024 and 65535 (inclusive), " +
+        "or 0 for a random free port.")
 
-   val serviceString = if (serviceName.isEmpty) "" else s" '$serviceName'"
-   val maxRetries = 100
-   for (offset <- 0 to maxRetries) {
-     // Do not increment port if startPort is 0, which is treated as a special port
-     val tryPort = if (startPort == 0) {
-       startPort
-     } else {
-       // If the new port wraps around, do not try a privilege port
-       ((startPort + offset - 1024) % (65536 - 1024)) + 1024
-     }
-     try {
-       val (service, port) = startService(tryPort)
-       logInfo(s"Successfully started service$serviceString on port $port.")
-       return (service, port)
-     } catch {
-       case e: Exception if isBindCollision(e) =>
-         if (offset >= maxRetries) {
-           val exceptionMessage =
-             s"${e.getMessage}: Service$serviceString failed after $maxRetries retries!"
-           val exception = new BindException(exceptionMessage)
-           // restore original stack trace
-           exception.setStackTrace(e.getStackTrace)
-           throw exception
-         }
-         logWarning(s"Service$serviceString could not bind on port $tryPort. " +
-           s"Attempting port ${tryPort + 1}.")
-     }
-   }
-   // Should never happen
-   throw new SparkException(s"Failed to start service$serviceString on port $startPort")
+    val serviceString = if (serviceName.isEmpty) "" else s" '$serviceName'"
+    val maxRetries = 100
+    for (offset <- 0 to maxRetries) {
+      // Do not increment port if startPort is 0, which is treated as a special port
+      val tryPort = if (startPort == 0) {
+        startPort
+      } else {
+        // If the new port wraps around, do not try a privilege port
+        ((startPort + offset - 1024) % (65536 - 1024)) + 1024
+      }
+      try {
+        val (service, port) = startService(tryPort)
+        logInfo(s"Successfully started service$serviceString on port $port.")
+        return (service, port)
+      } catch {
+        case e: Exception if isBindCollision(e) =>
+          if (offset >= maxRetries) {
+            val exceptionMessage = (
+              s"${e.getMessage}: Service$serviceString failed after " +
+                s"$maxRetries retries!")
+            val exception = new BindException(exceptionMessage)
+            // restore original stack trace
+            exception.setStackTrace(e.getStackTrace)
+            throw exception
+          }
+          logWarning(s"Service$serviceString could not bind on port $tryPort. " +
+            s"Attempting port ${tryPort + 1}.")
+      }
+    }
+    // Should never happen
+    throw new SparkException(
+      s"Failed to start service$serviceString on port $startPort")
   }
 
   /**
-   * Return whether the exception is caused by an address-port collision when binding.
+   * Return whether the exception is caused by an address-port
+   * collision when binding.
    */
   def isBindCollision(exception: Throwable): Boolean = {
     import scala.collection.JavaConversions._
@@ -230,5 +239,6 @@ object Utils extends Logging {
    }
   }
 
-  private[holdenkarau] def fakeClassTag[T]: ClassTag[T] = ClassTag.AnyRef.asInstanceOf[ClassTag[T]]
+  private[holdenkarau] def fakeClassTag[T]: ClassTag[T] =
+    ClassTag.AnyRef.asInstanceOf[ClassTag[T]]
 }
