@@ -44,6 +44,9 @@ coverageHighlighting := {
   else true
 }
 
+scalastyleSources in Compile <++= unmanagedSourceDirectories in Compile
+scalastyleSources in Test <++= unmanagedSourceDirectories in Test
+
 // Allow kafka (and other) utils to have version specific files
 unmanagedSourceDirectories in Compile  := {
   if (sparkVersion.value >= "2.0.0") Seq(
