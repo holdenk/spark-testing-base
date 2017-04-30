@@ -37,7 +37,7 @@ class UtilsTest extends FunSuite {
     val pw = new PrintWriter(f)
     pw.write("junk")
     pw.close()
-    Files.createSymbolicLink(new File(tempPath +"/murh2").toPath, f.toPath)
+    Files.createSymbolicLink(new File(s"${tempPath}/murh2").toPath, f.toPath)
     Utils.shutDownCleanUp()
     Thread.sleep(1)
     assert(!(new File(tempPath).exists()))

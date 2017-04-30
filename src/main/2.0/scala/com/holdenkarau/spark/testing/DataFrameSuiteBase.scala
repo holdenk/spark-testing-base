@@ -35,7 +35,8 @@ import org.apache.hadoop.hive.conf.HiveConf.ConfVars
  * Base class for testing Spark DataFrames.
  */
 
-trait DataFrameSuiteBase extends TestSuite with SharedSparkContext with DataFrameSuiteBaseLike { self: Suite =>
+trait DataFrameSuiteBase extends TestSuite
+    with SharedSparkContext with DataFrameSuiteBaseLike { self: Suite =>
   override def beforeAll() {
     super.beforeAll()
     super.sqlBeforeAllTestCases()
@@ -47,7 +48,8 @@ trait DataFrameSuiteBase extends TestSuite with SharedSparkContext with DataFram
   }
 }
 
-trait DataFrameSuiteBaseLike extends SparkContextProvider with TestSuiteLike with Serializable {
+trait DataFrameSuiteBaseLike extends SparkContextProvider
+    with TestSuiteLike with Serializable {
   val maxUnequalRowsToShow = 10
   @transient lazy val spark: SparkSession = SparkSessionProvider._sparkSession
   @transient lazy val sqlContext: SQLContext = SparkSessionProvider.sqlContext
@@ -56,16 +58,20 @@ trait DataFrameSuiteBaseLike extends SparkContextProvider with TestSuiteLike wit
 
 
   def sqlBeforeAllTestCases() {
-    /** Constructs a configuration for hive, where the metastore is located in a temp directory. */
+    /**
+     * Constructs a configuration for hive, where the metastore is located in a
+     * temp directory.
+     */
     val tempDir = Utils.createTempDir()
     val localMetastorePath = new File(tempDir, "metastore").getCanonicalPath
     val localWarehousePath = new File(tempDir, "wharehouse").getCanonicalPath
     def newBuilder() = {
       val builder = SparkSession.builder()
-      // We have to mask all properties in hive-site.xml that relates to metastore data source
-      // as we used a local metastore here.
+      // We have to mask all properties in hive-site.xml that relates to metastore
+      // data source as we used a local metastore here.
       HiveConf.ConfVars.values().map(WrappedConfVar(_)).foreach { confvar =>
-        if (confvar.varname.contains("datanucleus") || confvar.varname.contains("jdo")) {
+        if (confvar.varname.contains("datanucleus") ||
+          confvar.varname.contains("jdo")) {
           builder.config(confvar.varname, confvar.getDefaultExpr())
         }
       }
@@ -82,7 +88,8 @@ trait DataFrameSuiteBaseLike extends SparkContextProvider with TestSuiteLike wit
       try {
         builder.enableHiveSupport()
       } catch {
-        case e: IllegalArgumentException => // Exception is thrown in Spakr if hive is not present
+        // Exception is thrown in Spark if hive is not present
+        case e: IllegalArgumentException =>
       }
       builder
     }
@@ -91,8 +98,8 @@ trait DataFrameSuiteBaseLike extends SparkContextProvider with TestSuiteLike wit
   }
 
   /**
-   * Compares if two [[DataFrame]]s are equal, checks the schema and then if that matches
-   * checks if the rows are equal.
+   * Compares if two [[DataFrame]]s are equal, checks the schema and then if that
+   * matches checks if the rows are equal.
    */
   def assertDataFrameEquals(expected: DataFrame, result: DataFrame) {
     assert(expected.schema, result.schema)
@@ -105,8 +112,9 @@ trait DataFrameSuiteBaseLike extends SparkContextProvider with TestSuiteLike wit
       val expectedIndexValue = zipWithIndex(expected.rdd)
       val resultIndexValue = zipWithIndex(result.rdd)
 
-      val unequalRDD = expectedIndexValue.join(resultIndexValue).filter{case (idx, (r1, r2)) =>
-        !(r1.equals(r2) || DataFrameSuiteBase.approxEquals(r1, r2, 0.0))}
+      val unequalRDD = expectedIndexValue.join(resultIndexValue).
+        filter{case (idx, (r1, r2)) =>
+          !(r1.equals(r2) || DataFrameSuiteBase.approxEquals(r1, r2, 0.0))}
 
       assertEmpty(unequalRDD.take(maxUnequalRowsToShow))
     } finally {
@@ -121,7 +129,9 @@ trait DataFrameSuiteBaseLike extends SparkContextProvider with TestSuiteLike wit
     *
     * @param tol max acceptable tolerance, should be less than 1.
     */
-  def assertDataFrameApproximateEquals(expected: DataFrame, result: DataFrame, tol: Double) {
+  def assertDataFrameApproximateEquals(
+    expected: DataFrame, result: DataFrame, tol: Double) {
+
     assert(expected.schema, result.schema)
 
     try {
@@ -132,8 +142,9 @@ trait DataFrameSuiteBaseLike extends SparkContextProvider with TestSuiteLike wit
       val expectedIndexValue = zipWithIndex(expected.rdd)
       val resultIndexValue = zipWithIndex(result.rdd)
 
-      val unequalRDD = expectedIndexValue.join(resultIndexValue).filter{case (idx, (r1, r2)) =>
-        !DataFrameSuiteBase.approxEquals(r1, r2, tol)}
+      val unequalRDD = expectedIndexValue.join(resultIndexValue).
+        filter{case (idx, (r1, r2)) =>
+          !DataFrameSuiteBase.approxEquals(r1, r2, tol)}
 
       assertEmpty(unequalRDD.take(maxUnequalRowsToShow))
     } finally {
@@ -143,11 +154,13 @@ trait DataFrameSuiteBaseLike extends SparkContextProvider with TestSuiteLike wit
   }
 
   /**
-    * Zip RDD's with precise indexes. This is used so we can join two DataFrame's
-    * Rows together regardless of if the source is different but still compare based on
-    * the order.
-    */
-  private[testing] def zipWithIndex[U](rdd: RDD[U]) = rdd.zipWithIndex().map{ case (row, idx) => (idx, row) }
+   * Zip RDD's with precise indexes. This is used so we can join two DataFrame's
+   * Rows together regardless of if the source is different but still compare
+   * based on the order.
+   */
+  private[testing] def zipWithIndex[U](rdd: RDD[U]) = {
+    rdd.zipWithIndex().map{ case (row, idx) => (idx, row) }
+  }
 
   def approxEquals(r1: Row, r2: Row, tol: Double): Boolean = {
     DataFrameSuiteBase.approxEquals(r1, r2, tol)
@@ -164,26 +177,43 @@ object DataFrameSuiteBase {
       var idx = 0
       val length = r1.length
       while (idx < length) {
-        if (r1.isNullAt(idx) != r2.isNullAt(idx))
+        if (r1.isNullAt(idx) != r2.isNullAt(idx)) {
           return false
+        }
 
         if (!r1.isNullAt(idx)) {
           val o1 = r1.get(idx)
           val o2 = r2.get(idx)
           o1 match {
             case b1: Array[Byte] =>
-              if (!java.util.Arrays.equals(b1, o2.asInstanceOf[Array[Byte]])) return false
+              if (!java.util.Arrays.equals(b1, o2.asInstanceOf[Array[Byte]])) {
+                return false
+              }
 
             case f1: Float =>
-              if (java.lang.Float.isNaN(f1) != java.lang.Float.isNaN(o2.asInstanceOf[Float])) return false
-              if (abs(f1 - o2.asInstanceOf[Float]) > tol) return false
+              if (java.lang.Float.isNaN(f1) !=
+                java.lang.Float.isNaN(o2.asInstanceOf[Float]))
+              {
+                return false
+              }
+              if (abs(f1 - o2.asInstanceOf[Float]) > tol) {
+                return false
+              }
 
             case d1: Double =>
-              if (java.lang.Double.isNaN(d1) != java.lang.Double.isNaN(o2.asInstanceOf[Double])) return false
-              if (abs(d1 - o2.asInstanceOf[Double]) > tol) return false
+              if (java.lang.Double.isNaN(d1) !=
+                java.lang.Double.isNaN(o2.asInstanceOf[Double]))
+              {
+                return false
+              }
+              if (abs(d1 - o2.asInstanceOf[Double]) > tol) {
+                return false
+              }
 
             case d1: java.math.BigDecimal =>
-              if (d1.compareTo(o2.asInstanceOf[java.math.BigDecimal]) != 0) return false
+              if (d1.compareTo(o2.asInstanceOf[java.math.BigDecimal]) != 0) {
+                return false
+              }
 
             case _ =>
               if (o1 != o2) return false

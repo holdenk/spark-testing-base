@@ -24,7 +24,8 @@ import org.scalacheck.Prop.forAll
 import org.scalatest.FunSuite
 import org.scalatest.prop.Checkers
 
-class SampleScalaCheckTest extends FunSuite with SharedSparkContext with RDDComparisons with Checkers {
+class SampleScalaCheckTest extends FunSuite
+    with SharedSparkContext with RDDComparisons with Checkers {
   // tag::propertySample[]
   // A trivial property that the map doesn't change the number of elements
   test("map should not change number of elements") {
@@ -69,7 +70,8 @@ class SampleScalaCheckTest extends FunSuite with SharedSparkContext with RDDComp
   }
 
   test("assert rows' types like schema type") {
-    val schema = StructType(List(StructField("name", StringType), StructField("age", IntegerType)))
+    val schema = StructType(
+      List(StructField("name", StringType), StructField("age", IntegerType)))
     val rowGen: Gen[Row] = DataframeGenerator.getRowGenerator(schema)
     val property =
       forAll(rowGen) {
@@ -80,7 +82,8 @@ class SampleScalaCheckTest extends FunSuite with SharedSparkContext with RDDComp
   }
 
   test("test generating Dataframes") {
-    val schema = StructType(List(StructField("name", StringType), StructField("age", IntegerType)))
+    val schema = StructType(
+      List(StructField("name", StringType), StructField("age", IntegerType)))
     val sqlContext = new SQLContext(sc)
     val dataframeGen = DataframeGenerator.arbitraryDataFrame(sqlContext, schema)
 
@@ -93,30 +96,41 @@ class SampleScalaCheckTest extends FunSuite with SharedSparkContext with RDDComp
   }
 
   test("test custom columns generators") {
-    val schema = StructType(List(StructField("name", StringType), StructField("age", IntegerType)))
+    val schema = StructType(
+      List(StructField("name", StringType), StructField("age", IntegerType)))
     val sqlContext = new SQLContext(sc)
     val ageGenerator = new Column("age", Gen.choose(10, 100))
-    val dataframeGen = DataframeGenerator.arbitraryDataFrameWithCustomFields(sqlContext, schema)(ageGenerator)
+    val dataframeGen =
+      DataframeGenerator.arbitraryDataFrameWithCustomFields(
+        sqlContext, schema)(ageGenerator)
 
     val property =
       forAll(dataframeGen.arbitrary) {
-        dataframe => dataframe.schema === schema && dataframe.filter("age > 100 OR age < 10").count() == 0
+        dataframe =>
+        (dataframe.schema === schema &&
+          dataframe.filter("age > 100 OR age < 10").count() == 0)
       }
 
     check(property)
   }
 
   test("test multiple columns generators") {
-    val schema = StructType(List(StructField("name", StringType), StructField("age", IntegerType)))
+    val schema = StructType(
+      List(StructField("name", StringType), StructField("age", IntegerType)))
     val sqlContext = new SQLContext(sc)
-    val nameGenerator = new Column("name", Gen.oneOf("Holden", "Hanafy")) // name should be on of those
+    // name should be on of Holden or Hanafy
+    val nameGenerator = new Column("name", Gen.oneOf("Holden", "Hanafy"))
     val ageGenerator = new Column("age", Gen.choose(10, 100))
-    val dataframeGen = DataframeGenerator.arbitraryDataFrameWithCustomFields(sqlContext, schema)(nameGenerator, ageGenerator)
+    val dataframeGen =
+      DataframeGenerator.arbitraryDataFrameWithCustomFields(
+        sqlContext, schema)(nameGenerator, ageGenerator)
 
+    val sqlExpr =
+      "(name != 'Holden' AND name != 'Hanafy') OR (age > 100 OR age < 10)"
     val property =
       forAll(dataframeGen.arbitrary) {
         dataframe => dataframe.schema === schema &&
-          dataframe.filter("(name != 'Holden' AND name != 'Hanafy') OR (age > 100 OR age < 10)").count() == 0
+          dataframe.filter(sqlExpr).count() == 0
       }
 
     check(property)
@@ -135,16 +149,24 @@ class SampleScalaCheckTest extends FunSuite with SharedSparkContext with RDDComp
     ))
     val sqlContext = new SQLContext(sc)
     val userGenerator = new ColumnList("user", Seq(
-      new Column("name", Gen.oneOf("Holden", "Hanafy")), // name should be on of those
+       // name should be on of Holden or Hanafy
+      new Column("name", Gen.oneOf("Holden", "Hanafy")),
       new Column("age", Gen.choose(10, 100)),
       new ColumnList("address", Seq(new Column("zip_code", Gen.choose(100, 200))))
     ))
-    val dataframeGen = DataframeGenerator.arbitraryDataFrameWithCustomFields(sqlContext, schema)(userGenerator)
+    val dataframeGen =
+      DataframeGenerator.arbitraryDataFrameWithCustomFields(
+        sqlContext, schema)(userGenerator)
 
+    val sqlExpr = """
+                 |(user.name != 'Holden' AND user.name != 'Hanafy') OR
+                 |(user.age > 100 OR user.age < 10) OR
+                 |(user.address.zip_code > 200 OR user.address.zip_code < 100)""".
+      stripMargin
     val property =
       forAll(dataframeGen.arbitrary) {
         dataframe => dataframe.schema === schema &&
-          dataframe.filter("(user.name != 'Holden' AND user.name != 'Hanafy') OR (user.age > 100 OR user.age < 10) OR (user.address.zip_code > 200 OR user.address.zip_code < 100)").count() == 0
+        dataframe.filter(sqlExpr).count() == 0
       }
 
     check(property)
@@ -157,7 +179,11 @@ class SampleScalaCheckTest extends FunSuite with SharedSparkContext with RDDComp
         StructField("age", IntegerType)
       )))
     ))
-    assertTypeError("""val userGenerator = new ColumnList("user", Seq("list", "of", "an", "unsupported", "type"))""")
+    assertTypeError("""
+                    |val userGenerator =
+                    |  new ColumnList("user",
+                    |    Seq("list", "of", "an", "unsupported", "type"))""".
+      stripMargin)
   }
 
   test("generate rdd of specific size") {
@@ -178,7 +204,8 @@ class SampleScalaCheckTest extends FunSuite with SharedSparkContext with RDDComp
         StructField("attributes", ArrayType(FloatType), true)))))))
 
     val sqlContext = new SQLContext(sc)
-    val dataframeGen: Arbitrary[DataFrame] = DataframeGenerator.arbitraryDataFrame(sqlContext, schema)
+    val dataframeGen: Arbitrary[DataFrame] =
+      DataframeGenerator.arbitraryDataFrame(sqlContext, schema)
     val property =
       forAll(dataframeGen.arbitrary) {
         dataframe => dataframe.schema === schema &&
@@ -189,7 +216,8 @@ class SampleScalaCheckTest extends FunSuite with SharedSparkContext with RDDComp
   }
 
   test("timestamp and type generation") {
-    val schema = StructType(List(StructField("timeStamp", TimestampType), StructField("date", DateType)))
+    val schema = StructType(
+      List(StructField("timeStamp", TimestampType), StructField("date", DateType)))
     val sqlContext = new SQLContext(sc)
     val dataframeGen = DataframeGenerator.arbitraryDataFrame(sqlContext, schema)
 
@@ -204,7 +232,8 @@ class SampleScalaCheckTest extends FunSuite with SharedSparkContext with RDDComp
   }
 
   test("map type generation") {
-    val schema = StructType(List(StructField("map", MapType(LongType, IntegerType, true))))
+    val schema = StructType(
+      List(StructField("map", MapType(LongType, IntegerType, true))))
     val sqlContext = new SQLContext(sc)
     val dataframeGen = DataframeGenerator.arbitraryDataFrame(sqlContext, schema)
 
@@ -232,11 +261,14 @@ class SampleScalaCheckTest extends FunSuite with SharedSparkContext with RDDComp
       StructField("timestampType", TimestampType) ::
       StructField("dateType", DateType) ::
       StructField("arrayType", ArrayType(TimestampType)) ::
-      StructField("mapType", MapType(LongType, TimestampType, valueContainsNull = true)) ::
-      StructField("structType", StructType(StructField("timestampType", TimestampType) :: Nil)) :: Nil
+      StructField("mapType",
+        MapType(LongType, TimestampType, valueContainsNull = true)) ::
+      StructField("structType",
+        StructType(StructField("timestampType", TimestampType) :: Nil)) :: Nil
 
     val sqlContext = new SQLContext(sc)
-    val dataframeGen = DataframeGenerator.arbitraryDataFrame(sqlContext, StructType(fields))
+    val dataframeGen =
+      DataframeGenerator.arbitraryDataFrame(sqlContext, StructType(fields))
 
     val property =
       forAll(dataframeGen.arbitrary) {
@@ -244,7 +276,8 @@ class SampleScalaCheckTest extends FunSuite with SharedSparkContext with RDDComp
           val firstEvaluation = dataframe.collect()
           val secondEvaluation = dataframe.collect()
           val zipped = firstEvaluation.zip(secondEvaluation)
-          zipped.forall { case (r1, r2) => DataFrameSuiteBase.approxEquals(r1, r2, 0.0) }
+          zipped.forall {
+            case (r1, r2) => DataFrameSuiteBase.approxEquals(r1, r2, 0.0) }
         }
       }
 

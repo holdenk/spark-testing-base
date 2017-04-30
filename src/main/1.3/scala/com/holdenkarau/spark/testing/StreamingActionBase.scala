@@ -18,15 +18,16 @@ package com.holdenkarau.spark.testing
 
 import org.apache.spark.streaming.TestStreamingContext
 import org.apache.spark.streaming.dstream.DStream
-import org.apache.spark.streaming.scheduler.{StreamingListenerBatchCompleted, StreamingListener}
+import org.apache.spark.streaming.scheduler.{
+  StreamingListenerBatchCompleted, StreamingListener}
 import org.apache.spark.streaming.util.TestManualClock
 import org.scalatest.Suite
 
 import scala.reflect.ClassTag
 
 /**
- * Methods for testing Spark actions. Because actions don't return a DStream, you will need
- * to verify the results of your test against mocks.
+ * Methods for testing Spark actions. Because actions don't return a DStream, you
+ * will need to verify the results of your test against mocks.
  */
 trait StreamingActionBase extends StreamingSuiteBase {
   self: Suite =>
@@ -103,7 +104,8 @@ trait StreamingActionBase extends StreamingSuiteBase {
     val startTime = System.currentTimeMillis()
     while (batchCountListener.batchCount < numBatches &&
       System.currentTimeMillis() - startTime < maxWaitTimeMillis) {
-      logInfo("batches run = " + batchCountListener.batchCount + ", numBatches = " + numBatches)
+      logInfo(s"batches: run = ${batchCountListener.batchCount} " +
+        s"target = ${numBatches}")
       ssc.awaitTerminationOrTimeout(50)
     }
     val timeTaken = System.currentTimeMillis() - startTime
@@ -117,7 +119,8 @@ trait StreamingActionBase extends StreamingSuiteBase {
 class BatchCountListener extends StreamingListener {
   var batchCount = 0
 
-  override def onBatchCompleted(batchCompleted: StreamingListenerBatchCompleted): Unit = {
+  override def onBatchCompleted(
+    batchCompleted: StreamingListenerBatchCompleted): Unit = {
     batchCount = batchCount + 1
   }
 }

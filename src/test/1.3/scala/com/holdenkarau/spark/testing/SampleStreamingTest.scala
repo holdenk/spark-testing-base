@@ -43,7 +43,8 @@ class SampleStreamingTest extends FunSuite with StreamingSuiteBase {
     val input = List(List("hi", "pandas"), List("hi holden"), List("bye"))
     val input2 = List(List("hi"), List("pandas"), List("byes"))
     val expected = List(List("pandas"), List("hi holden"), List("bye"))
-    testOperation[String, String, String](input, input2, subtract _, expected, ordered = false)
+    testOperation[String, String, String](
+      input, input2, subtract _, expected, ordered = false)
   }
 
   def subtract(f1: DStream[String], f2: DStream[String]): DStream[String] = {
@@ -58,9 +59,11 @@ class SampleStreamingTest extends FunSuite with StreamingSuiteBase {
 
   test("a wrong expected multiset for a micro batch leads to a test fail") {
     val input = List(List("hi"), List("hi holden"), List("bye"))
-    val badMultisetExpected = List(List("hi"), List("hi", "holden", "hi"), List("bye"))
+    val badMultisetExpected = List(
+      List("hi"), List("hi", "holden", "hi"), List("bye"))
     intercept[TestFailedException] {
-      testOperation[String, String](input, tokenize _, badMultisetExpected, ordered = false)
+      testOperation[String, String](
+        input, tokenize _, badMultisetExpected, ordered = false)
     }
   }
 
@@ -139,12 +142,15 @@ class SampleStreamingTest extends FunSuite with StreamingSuiteBase {
   }
 
   test("stream and batch transformation") {
-    def intersection(f1: DStream[String], f2: RDD[String]) = f1.transform(_.intersection(f2))
+    def intersection(f1: DStream[String], f2: RDD[String]) = {
+      f1.transform(_.intersection(f2))
+    }
 
     val stream = List(List("hi"), List("holden"), List("bye"))
     val batch = List("holden")
     val expected = List(List(), List("holden"), List())
-    testOperationWithRDD[String, String, String](stream, batch, intersection _, expected, ordered = false)
+    testOperationWithRDD[String, String, String](
+      stream, batch, intersection _, expected, ordered = false)
   }
 }
 

@@ -7,16 +7,18 @@ import scala.reflect.ClassTag
 
 import org.apache.spark.sql.Dataset
 
-trait DatasetSuiteBase extends DataFrameSuiteBase with DatasetSuiteBaseLike { self: Suite =>
-
+trait DatasetSuiteBase extends DataFrameSuiteBase
+    with DatasetSuiteBaseLike { self: Suite =>
 }
 
-class JavaDatasetSuiteBase extends JavaDataFrameSuiteBase with DatasetSuiteBaseLike with Serializable {
+class JavaDatasetSuiteBase extends JavaDataFrameSuiteBase
+    with DatasetSuiteBaseLike with Serializable {
 
   /**
-    * Check if two Datasets are equals, Datasets should have the same type.
-    * This method could be customized by overriding equals method for the given class type.
-    */
+   * Check if two Datasets are equals, Datasets should have the same type.
+   * This method could be customized by overriding equals method for
+   * the given class type.
+   */
   def assertDatasetEquals[U](expected: Dataset[U], result: Dataset[U]) = {
     super.assertDatasetEquals(expected, result)(Utils.fakeClassTag[U])
   }
@@ -27,17 +29,20 @@ class JavaDatasetSuiteBase extends JavaDataFrameSuiteBase with DatasetSuiteBaseL
     *
     * @param tol max acceptable tolerance, should be less than 1.
     */
-  def assertDatasetApproximateEquals[U](expected: Dataset[U], result: Dataset[U], tol: Double) = {
-    super.assertDatasetApproximateEquals(expected, result, tol)(Utils.fakeClassTag[U])
+  def assertDatasetApproximateEquals[U]
+    (expected: Dataset[U], result: Dataset[U], tol: Double) = {
+    super.assertDatasetApproximateEquals(
+      expected, result, tol)(Utils.fakeClassTag[U])
   }
 }
 
 trait DatasetSuiteBaseLike extends DataFrameSuiteBaseLike {
 
   /**
-    * Check if two Datasets are equals, Datasets should have the same type.
-    * This method could be customized by overriding equals method for the given class type.
-    */
+   * Check if two Datasets are equals, Datasets should have the same type.
+   * This method could be customized by overriding equals method for
+   * the given class type.
+   */
   def assertDatasetEquals[U](expected: Dataset[U], result: Dataset[U])
                             (implicit UCT: ClassTag[U]) = {
     try {
@@ -63,8 +68,9 @@ trait DatasetSuiteBaseLike extends DataFrameSuiteBaseLike {
     *
     * @param tol max acceptable tolerance, should be less than 1.
     */
-  def assertDatasetApproximateEquals[U](expected: Dataset[U], result: Dataset[U], tol: Double)
-                                       (implicit UCT: ClassTag[U]) = {
+  def assertDatasetApproximateEquals[U]
+    (expected: Dataset[U], result: Dataset[U], tol: Double)
+    (implicit UCT: ClassTag[U]) = {
 
     assertDataFrameApproximateEquals(expected.toDF, result.toDF, tol)
   }

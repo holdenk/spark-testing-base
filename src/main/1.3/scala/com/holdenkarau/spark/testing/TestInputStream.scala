@@ -26,9 +26,11 @@ import scala.reflect.ClassTag
 import org.apache.spark.streaming.dstream.FriendlyInputDStream
 
 /**
- * This is a input stream just for the testsuites. This is equivalent to a checkpointable,
- * replayable, reliable message queue like Kafka. It requires a sequence as input, and
- * returns the i_th element at the i_th batch unde manual clock.
+ * This is a input stream just for the testsuites. This is equivalent to a
+ * checkpointable, replayable, reliable message queue like Kafka.
+ * It requires a sequence as input, and returns the i_th element at the i_th batch
+ * under manual clock.
+ *
  * Based on TestInputStream class from TestSuiteBase in the Apache Spark project.
  */
 class TestInputStream[T: ClassTag](@transient var sc: SparkContext,
@@ -45,12 +47,10 @@ class TestInputStream[T: ClassTag](@transient var sc: SparkContext,
     val selectedInput = if (index < input.size) input(index) else Seq[T]()
 
     // lets us test cases where RDDs are not created
-    if (selectedInput == null) {
-      return None
+    Option(selectInput).map{si =>
+      val rdd = sc.makeRDD(si, numPartitions)
+      logInfo("Created RDD " + rdd.id + " with " + selectedInput)
+      rdd
     }
-
-    val rdd = sc.makeRDD(selectedInput, numPartitions)
-    logInfo("Created RDD " + rdd.id + " with " + selectedInput)
-    Some(rdd)
   }
 }

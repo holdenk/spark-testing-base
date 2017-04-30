@@ -27,8 +27,9 @@ import org.scalactic.Equality
 import org.scalatest.{BeforeAndAfterAll, Suite}
 
 /**
- * This is the base trait for Spark Streaming testsuites. This provides basic functionality
- * to run user-defined set of input on user-defined stream operations, and verify the output.
+ * This is the base trait for Spark Streaming testsuites. This provides basic
+ * functionality to run user-defined set of input on user-defined stream operations,
+ * and verify the output.
  */
 trait StreamingSuiteBase extends BeforeAndAfterAll with Logging
   with StreamingSuiteCommon with SharedSparkContext {
@@ -87,23 +88,29 @@ trait StreamingSuiteBase extends BeforeAndAfterAll with Logging
     logInfo("Output verified successfully")
   }
 
-  private def equalsUnordered[V](output: Seq[V], expected: Seq[V])(implicit equality: Equality[V]) = {
+  private def equalsUnordered[V](
+    output: Seq[V], expected: Seq[V])(implicit equality: Equality[V]) = {
+
     assert(output.length === expected.length)
 
     val length = output.length
     val set = new mutable.BitSet(length)
 
     for (i <- 0 until length) {
-      val equalElements = (0 until length).filter(x => (!set.contains(x) && output(i) === expected(x))).take(1)
+      val equalElements = (0 until length).
+        filter(x => (!set.contains(x) && output(i) === expected(x))).take(1)
 
-      if (equalElements.isEmpty)
-        assert(output === expected) // only to show the two unequal lists to user
+      // only to show the two unequal lists to user
+      if (equalElements.isEmpty) {
+        assert(output === expected)
+      }
 
       set += equalElements(0)
     }
   }
 
-  private def equalsOrdered[V](output: Seq[V], expected: Seq[V])(implicit equality: Equality[V]) = {
+  private def equalsOrdered[V](
+    output: Seq[V], expected: Seq[V])(implicit equality: Equality[V]) = {
     assert(output.length === expected.length)
     for (i <- output.indices)
       assert(output(i) === expected(i))
@@ -130,7 +137,8 @@ trait StreamingSuiteBase extends BeforeAndAfterAll with Logging
   /**
    * Test unary DStream operation with a list of inputs, with number of
    * batches to run same as the number of input values.
-   * You can simulate the input batch as a List of values or as null to simulate empty batch.
+   *
+   * Each input micro-batch is a list of values or as null to simulate empty batch.
    *
    * @param input          Sequence of input collections
    * @param operation      Binary DStream operation to be applied to the 2 inputs
@@ -147,16 +155,21 @@ trait StreamingSuiteBase extends BeforeAndAfterAll with Logging
     ) (implicit equality: Equality[V]): Unit = {
     val numBatches = input.size
 
-    withOutputAndStreamingContext(setupStreams[U, V](input, operation)) { (outputStream, ssc) =>
-      val output: Seq[Seq[V]] = runStreams[V](outputStream, ssc, numBatches, expectedOutput.size)
+    withOutputAndStreamingContext(setupStreams[U, V](input, operation)) {
+      (outputStream, ssc) =>
+
+      val output: Seq[Seq[V]] = runStreams[V](
+        outputStream, ssc, numBatches, expectedOutput.size)
       verifyOutput[V](output, expectedOutput, ordered)
     }
   }
 
   /**
    * Test binary DStream operation with two lists of inputs, with number of
-   * batches to run same as the number of input values. The size of the two input lists Should be the same.
-   * You can simulate the input batch as a List of values or as null to simulate empty batch.
+   * batches to run same as the number of input values. The size of the two input
+   * lists should be the same.
+   *
+   * Each input micro-batch is a list of values or as null to simulate empty batch.
    *
    * @param input1         First sequence of input collections
    * @param input2         Second sequence of input collections
@@ -173,30 +186,34 @@ trait StreamingSuiteBase extends BeforeAndAfterAll with Logging
       expectedOutput: Seq[Seq[W]],
       ordered: Boolean
     ) (implicit equality: Equality[W]): Unit = {
-    assert(input1.length === input2.length, "Length of the input lists are not equal")
+    assert(input1.length === input2.length,
+      "Length of the input lists are not equal")
 
     val numBatches = input1.size
 
     withOutputAndStreamingContext(setupStreams[U, V, W](input1, input2, operation)) {
       (outputStream, ssc) =>
-        val output = runStreams[W](outputStream, ssc, numBatches, expectedOutput.size)
-        verifyOutput[W](output, expectedOutput, ordered)
+      val output = runStreams[W](
+        outputStream, ssc, numBatches, expectedOutput.size)
+      verifyOutput[W](output, expectedOutput, ordered)
     }
   }
 
   /**
-    * Test binary DStream and RDD operation with two lists of inputs, with number of
-    * batches to run same as the number of input values corresponding to the DStream.
-    * You can simulate the input batch as a List of values or as null to simulate empty batch.
-    *
-    * @param input1         Sequence of input collections corresponding to the DStream
-    * @param input2         Sequence of input values corresponding to the RDD
-    * @param operation      Binary DStream and RDD operation to be applied to the 2 inputs
-    * @param expectedOutput Sequence of expected output collections
-    * @param ordered        Compare output values with expected output values
-    *                       within the same output batch ordered or unOrdered.
-    *                       Comparing doubles may not work well in case of unordered.
-    */
+   * Test binary DStream and RDD operation with two lists of inputs, with number of
+   * batches to run same as the number of input values corresponding to the DStream.
+   *
+   * Each input micro-batch is a list of values or as null to simulate empty batch.
+   *
+   * @param input1         Sequence of input collections corresponding to the DStream
+   * @param input2         Sequence of input values corresponding to the RDD
+   * @param operation      Binary DStream and RDD operation to be applied to the
+   *                       2 inputs
+   * @param expectedOutput Sequence of expected output collections
+   * @param ordered        Compare output values with expected output values
+   *                       within the same output batch ordered or unOrdered.
+   *                       Comparing doubles may not work well in case of unordered.
+   */
   def testOperationWithRDD[U: ClassTag, V: ClassTag, W: ClassTag](
       input1: Seq[Seq[U]],
       input2: Seq[V],
@@ -207,10 +224,13 @@ trait StreamingSuiteBase extends BeforeAndAfterAll with Logging
 
     val numBatches = input1.size
 
-    withOutputAndStreamingContext(setupStreamAndRDD[U, V, W](input1, input2, operation)) {
+    withOutputAndStreamingContext(
+      setupStreamAndRDD[U, V, W](input1, input2, operation)) {
       (outputStream, ssc) =>
-        val output = runStreams[W](outputStream, ssc, numBatches, expectedOutput.size)
-        verifyOutput[W](output, expectedOutput, ordered)
+
+      val output = runStreams[W](
+        outputStream, ssc, numBatches, expectedOutput.size)
+      verifyOutput[W](output, expectedOutput, ordered)
     }
   }
 }

@@ -18,7 +18,8 @@ package com.holdenkarau.spark.testing
 
 import java.util.{List => JList}
 
-import org.apache.spark.api.java.function.{Function => JFunction, Function2 => JFunction2}
+import org.apache.spark.api.java.function.{
+  Function => JFunction, Function2 => JFunction2}
 import org.apache.spark.streaming.api.java._
 import org.apache.spark.streaming.dstream.DStream
 import org.junit.Assert._
@@ -29,11 +30,13 @@ import scala.language.implicitConversions
 import scala.reflect.ClassTag
 
 /**
- * This is the base trait for Spark Streaming testsuite. This provides basic functionality
- * to run user-defined set of input on user-defined stream operations, and verify the output.
+ * This is the base trait for Spark Streaming testsuite. This provides basic
+ * functionality to run user-defined set of input on user-defined stream operations,
+ * and verify the output matches as expected.
+ *
  * This implementation is designed to work with JUnit for java users.
  *
- * Note: this always uses the manual clock
+ * Note: this always uses the manual clock to control Spark Streaming's batches.
  */
 class JavaStreamingSuiteBase extends JavaSuiteBase with StreamingSuiteCommon {
 
@@ -67,7 +70,9 @@ class JavaStreamingSuiteBase extends JavaSuiteBase with StreamingSuiteCommon {
         compareArrays[V](expectedOutput(i).toArray, output(i).toArray)
       } else {
         implicit val config = Bag.configuration.compact[V]
-        compareArrays[V](Bag(expectedOutput(i): _*).toArray, Bag(output(i): _*).toArray)
+        compareArrays[V](
+          Bag(expectedOutput(i): _*).toArray,
+          Bag(output(i): _*).toArray)
       }
     }
 
@@ -77,7 +82,8 @@ class JavaStreamingSuiteBase extends JavaSuiteBase with StreamingSuiteCommon {
   /**
    * Test unary DStream operation with a list of inputs, with number of
    * batches to run same as the number of input values.
-   * You can simulate the input batch as a List of values or as null to simulate empty batch.
+   *
+   * Each input micro-batch is a list of values or as null to simulate empty batch.
    *
    * @param input          Sequence of input collections
    * @param operation      Binary DStream operation to be applied to the 2 inputs
@@ -93,7 +99,8 @@ class JavaStreamingSuiteBase extends JavaSuiteBase with StreamingSuiteCommon {
   /**
    * Test unary DStream operation with a list of inputs, with number of
    * batches to run same as the number of input values.
-   * You can simulate the input batch as a List of values or as null to simulate empty batch.
+   *
+   * Each input micro-batch is a list of values or as null to simulate empty batch.
    *
    * @param input          Sequence of input collections
    * @param operation      Binary DStream operation to be applied to the 2 inputs
@@ -120,18 +127,23 @@ class JavaStreamingSuiteBase extends JavaSuiteBase with StreamingSuiteCommon {
       operation.call(new JavaDStream[U](input)).dstream
     }
 
-    withOutputAndStreamingContext(setupStreams[U, V](sInput, wrappedOperation)) {
+    withOutputAndStreamingContext(
+      setupStreams[U, V](sInput, wrappedOperation)) {
+
       (outputStream, ssc) =>
-        val output: Seq[Seq[V]] = runStreams[V](outputStream, ssc, numBatches, expectedOutput.size)
-        verifyOutput[V](output, sExpectedOutput, ordered)
+      val output: Seq[Seq[V]] =
+        runStreams[V](outputStream, ssc, numBatches, expectedOutput.size)
+      verifyOutput[V](output, sExpectedOutput, ordered)
     }
   }
 
 
   /**
    * Test binary DStream operation with two lists of inputs, with number of
-   * batches to run same as the number of input values. The size of the two input lists Should be the same.
-   * You can simulate the input batch as a List of values or as null to simulate empty batch.
+   * batches to run same as the number of input values. The size of the two input
+   * lists should be equal.
+   *
+   * Each input micro-batch is a list of values or as null to simulate empty batch.
    *
    * @param input1         First sequence of input collections
    * @param input2         Second sequence of input collections
@@ -148,8 +160,10 @@ class JavaStreamingSuiteBase extends JavaSuiteBase with StreamingSuiteCommon {
 
   /**
    * Test binary DStream operation with two lists of inputs, with number of
-   * batches to run same as the number of input values. The size of the two input lists Should be the same.
-   * You can simulate the input batch as a List of values or as null to simulate empty batch.
+   * batches to run same as the number of input values. The size of the two input
+   * lists should be equal.
+   *
+   * Each input micro-batch is a list of values or as null to simulate empty batch.
    *
    * @param input1         First sequence of input collections
    * @param input2         Second sequence of input collections
@@ -166,7 +180,8 @@ class JavaStreamingSuiteBase extends JavaSuiteBase with StreamingSuiteCommon {
       expectedOutput: JList[JList[W]],
       ordered: Boolean): Unit = {
 
-    assertEquals("Length of the input lists are not equal", input1.length, input2.length)
+    assertEquals("Length of the input lists are not equal",
+      input1.length, input2.length)
     val numBatches = input1.size
 
     implicit val ctagU = Utils.fakeClassTag[U]
@@ -181,10 +196,13 @@ class JavaStreamingSuiteBase extends JavaSuiteBase with StreamingSuiteCommon {
       operation.call(new JavaDStream[U](input1), new JavaDStream[V](input2)).dstream
     }
 
-    withOutputAndStreamingContext(setupStreams[U, V, W](sInput1, sInput2, wrappedOperation)) {
+    withOutputAndStreamingContext(
+      setupStreams[U, V, W](sInput1, sInput2, wrappedOperation)) {
+
       (outputStream, ssc) =>
-        val output = runStreams[W](outputStream, ssc, numBatches, expectedOutput.size)
-        verifyOutput[W](output, sExpectedOutput, ordered)
+      val output = runStreams[W](
+        outputStream, ssc, numBatches, expectedOutput.size)
+      verifyOutput[W](output, sExpectedOutput, ordered)
     }
   }
 

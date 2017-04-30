@@ -22,7 +22,8 @@ import org.apache.spark.SparkConf
 trait SparkContextProvider {
   def sc: SparkContext
 
-  def appID: String = this.getClass.getName + math.floor(math.random * 10E4).toLong.toString
+  def appID: String = (this.getClass.getName
+    + math.floor(math.random * 10E4).toLong.toString)
 
   def conf = {
     new SparkConf().
@@ -34,10 +35,11 @@ trait SparkContextProvider {
   }
 
 
-  /*
-   * Setup work to be called when creating a new SparkContext. Default implementation currently
-   * sets a checkpoint directory.
-   * This should be called by the context provider automatically.
+  /**
+   * Setup work to be called when creating a new SparkContext. Default implementation
+   * currently sets a checkpoint directory.
+   *
+   * This _should_ be called by the context provider automatically.
    */
   def setup(sc: SparkContext): Unit = {
     sc.setCheckpointDir(Utils.createTempDir().toPath().toString)
