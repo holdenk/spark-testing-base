@@ -13,13 +13,13 @@ class SampleDatasetTest extends FunSuite with DatasetSuiteBase {
 
   test("dataset equal itself") {
     import sqlContext.implicits._
-    
+
     val list = List(Person("Holden", 2000, 60.0), Person("Hanafy", 23, 80.0))
     val persons = sc.parallelize(list).toDS
 
     assertDatasetEquals(persons, persons)
   }
-  
+
   test("unequal different strings") {
     import sqlContext.implicits._
 
@@ -65,8 +65,12 @@ class SampleDatasetTest extends FunSuite with DatasetSuiteBase {
   test("equals with custom equals") {
     import sqlContext.implicits._
 
-    val list1 = List(CustomPerson("HoLdEn", 2000, 60.0), CustomPerson("HaNaFy", 23, 80.0))
-    val list2 = List(CustomPerson("hOlDeN", 2000, 60.0), CustomPerson("hAnAfY", 23, 80.0))
+    val list1 = List(
+      CustomPerson("HoLdEn", 2000, 60.0),
+      CustomPerson("HaNaFy", 23, 80.0))
+    val list2 = List(
+      CustomPerson("hOlDeN", 2000, 60.0),
+      CustomPerson("hAnAfY", 23, 80.0))
 
     val persons1 = sc.parallelize(list1).toDS
     val persons2 = sc.parallelize(list2).toDS
@@ -77,8 +81,12 @@ class SampleDatasetTest extends FunSuite with DatasetSuiteBase {
   test("unequal with custom equals") {
     import sqlContext.implicits._
 
-    val list1 = List(CustomPerson("HoLdEN", 2000, 60.0), CustomPerson("HaNaFy", 23, 80.1))
-    val list2 = List(CustomPerson("hOlDeN", 2000, 60.0), CustomPerson("hAnAfY", 23, 80.0))
+    val list1 = List(
+      CustomPerson("HoLdEN", 2000, 60.0),
+      CustomPerson("HaNaFy", 23, 80.1))
+    val list2 = List(
+      CustomPerson("hOlDeN", 2000, 60.0),
+      CustomPerson("hAnAfY", 23, 80.0))
 
     val persons1 = sc.parallelize(list1).toDS
     val persons2 = sc.parallelize(list2).toDS

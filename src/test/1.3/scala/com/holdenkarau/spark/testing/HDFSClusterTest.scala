@@ -1,6 +1,7 @@
 package com.holdenkarau.spark.testing
 
-import java.io.{BufferedReader, BufferedWriter, InputStreamReader, OutputStreamWriter}
+import java.io.{
+  BufferedReader, BufferedWriter, InputStreamReader, OutputStreamWriter}
 
 import com.holdenkarau.spark.testing.{RDDComparisons, SharedSparkContext}
 import org.apache.hadoop.conf.Configuration

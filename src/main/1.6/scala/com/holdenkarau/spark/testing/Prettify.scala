@@ -18,15 +18,18 @@ trait Prettify {
 
   private def describeDataframe(dataframe: DataFrame) =
     s"""<DataFrame: schema = ${dataframe.toString}, size = ${dataframe.count()},
-        |values = (${dataframe.take(maxNumberOfShownValues).mkString(", ")})>""".stripMargin.replace("\n", " ")
+        |values = (${dataframe.take(maxNumberOfShownValues).mkString(", ")})>""".
+      stripMargin.replace("\n", " ")
 
   private def describeRDD(rdd: RDD[_]) =
     s"""<RDD: size = ${rdd.count()},
-        |values = (${rdd.take(maxNumberOfShownValues).mkString(", ")})>""".stripMargin.replace("\n", " ")
+        |values = (${rdd.take(maxNumberOfShownValues).mkString(", ")})>""".
+      stripMargin.replace("\n", " ")
 
   private def describeDataset(dataset: Dataset[_]) =
     s"""<Dataset: schema = ${dataset.toString}, size = ${dataset.count()},
-        |values = (${dataset.take(maxNumberOfShownValues).mkString(", ")})>""".stripMargin.replace("\n", " ")
+        |values = (${dataset.take(maxNumberOfShownValues).mkString(", ")})>""".
+      stripMargin.replace("\n", " ")
 }
 
 object Prettify extends Prettify

@@ -58,7 +58,8 @@ class SampleRDDTest extends FunSuite with SharedSparkContext with RDDComparisons
     val tokenizedRDD = tokenize(inputRDD)
     val ordered = tokenizedRDD.sortBy(x => x.head)
 
-    val expectedList = List(List("hi"), List("hi", "holden"), List("byez"), List("cheet", "oz"),
+    val expectedList = List(
+      List("hi"), List("hi", "holden"), List("byez"), List("cheet", "oz"),
       List("murh", "bots", "bots"))
     val expectedRDD = sc.parallelize(expectedList).sortBy(x => x.head)
     val diffExpectedRDD = sc.parallelize(expectedList).sortBy(x => x.head.reverse)

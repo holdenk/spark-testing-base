@@ -22,8 +22,12 @@ import org.scalatest.FunSuite
 class SampleDataFrameTest extends FunSuite with DataFrameSuiteBase {
   val byteArray = new Array[Byte](1)
   val diffByteArray = Array[Byte](192.toByte)
-  val inputList = List(Magic("panda", 9001.0, byteArray), Magic("coffee", 9002.0, byteArray))
-  val inputList2 = List(Magic("panda", 9001.0 + 1E-6, byteArray), Magic("coffee", 9002.0, byteArray))
+  val inputList = List(
+    Magic("panda", 9001.0, byteArray),
+    Magic("coffee", 9002.0, byteArray))
+  val inputList2 = List(
+    Magic("panda", 9001.0 + 1E-6, byteArray),
+    Magic("coffee", 9002.0, byteArray))
 
   test("dataframe should be equal to its self") {
     import sqlContext.implicits._
@@ -74,11 +78,13 @@ class SampleDataFrameTest extends FunSuite with DataFrameSuiteBase {
 
   test("verify hive function support") {
     import sqlContext.implicits._
-    // Convert to int since old versions of hive only support percentile on integer types.
+    // Convert to int since old versions of hive only support percentile on
+    // integer types.
     val intInputs = inputList.map(a => IntMagic(a.name, a.power.toInt, a.byteArray))
     val df = sc.parallelize(intInputs).toDF
     df.registerTempTable("pandaTemp")
-    val df2 = sqlContext.sql("select percentile(power, 0.5) from pandaTemp group by name")
+    val df2 = sqlContext.sql(
+      "select percentile(power, 0.5) from pandaTemp group by name")
     val result = df2.collect()
   }
 

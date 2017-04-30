@@ -23,8 +23,12 @@ import org.scalatest.BeforeAndAfterAll
 import org.scalatest.BeforeAndAfterEach
 import org.scalatest.Suite
 
-/** Manages a local `sc` {@link SparkContext} variable, correctly stopping it after each test. */
-trait LocalSparkContext extends BeforeAndAfterEach with BeforeAndAfterAll { self: Suite =>
+/**
+ * Manages a local `sc` {@link SparkContext} variable,
+ * correctly stopping it after each test.
+ */
+trait LocalSparkContext extends BeforeAndAfterEach
+    with BeforeAndAfterAll { self: Suite =>
 
   @transient var sc: SparkContext = _
 
@@ -43,10 +47,9 @@ trait LocalSparkContext extends BeforeAndAfterEach with BeforeAndAfterAll { self
 
 object LocalSparkContext {
   def stop(sc: SparkContext) {
-    if (sc != null) {
-      sc.stop()
-    }
-    // To avoid Akka rebinding to the same port, since it doesn't unbind immediately on shutdown
+    Option(sc).foreach(_.stop())
+    // To avoid Akka rebinding to the same port, since it doesn't
+    // unbind immediately on shutdown.
     System.clearProperty("spark.driver.port")
   }
 

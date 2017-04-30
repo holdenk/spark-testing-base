@@ -6,14 +6,17 @@ import org.scalacheck.Prop.forAll
 import org.scalatest.FunSuite
 import org.scalatest.prop.Checkers
 
-class SampleDatasetGeneratorTest extends FunSuite with SharedSparkContext with Checkers {
+class SampleDatasetGeneratorTest extends FunSuite
+    with SharedSparkContext with Checkers {
 
   test("test generating Datasets[String]") {
     val sqlContext = new SQLContext(sc)
     import sqlContext.implicits._
 
     val property =
-      forAll(DatasetGenerator.genDataset[String](sqlContext)(Arbitrary.arbitrary[String])) {
+      forAll(
+        DatasetGenerator.genDataset[String](sqlContext)(
+          Arbitrary.arbitrary[String])) {
         dataset => dataset.map(_.length).count() == dataset.count()
       }
 

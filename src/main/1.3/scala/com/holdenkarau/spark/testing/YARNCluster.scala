@@ -30,11 +30,12 @@ import org.apache.hadoop.yarn.server.MiniYARNCluster
 import scala.collection.JavaConversions._
 
 /**
-  * Shares an HDFS MiniCluster based `SparkContext` between all tests in a suite and
-  * closes it at the end. This requires that the env variable SPARK_HOME is set.
-  * Further more if this is used, all Spark tests must run against the yarn mini cluster
-  * (see https://issues.apache.org/jira/browse/SPARK-10812 for details).
-  */
+ * Shares an HDFS MiniCluster based `SparkContext` between all tests in a suite and
+ * closes it at the end. This requires that the env variable SPARK_HOME is set.
+ * Further more if this is used prior to Spark 1.6.3,
+ *  all Spark tests must run against the yarn mini cluster
+ * (see https://issues.apache.org/jira/browse/SPARK-10812 for details).
+ */
 class YARNCluster extends YARNClusterLike
 
 trait YARNClusterLike {
@@ -53,7 +54,7 @@ trait YARNClusterLike {
     this.getClass.getProtectionDomain().getCodeSource().getLocation().getPath())
     .getParentFile.getAbsolutePath + "/hadoop-site.xml"
 
-  @transient private var yarnCluster: MiniYARNCluster = null
+  @transient private var yarnCluster: Option[MiniYARNCluster] = None
   private var tempDir: File = _
   private var logConfDir: File = _
 
@@ -67,9 +68,9 @@ trait YARNClusterLike {
     Files.write(LOG4J_CONF, logConfFile, UTF_8)
 
     val yarnConf = new YarnConfiguration()
-    yarnCluster = new MiniYARNCluster(getClass().getName(), 1, 1, 1)
-    yarnCluster.init(yarnConf)
-    yarnCluster.start()
+    yarnCluster = Some(new MiniYARNCluster(getClass().getName(), 1, 1, 1))
+    yarnCluster.foreach(_.init(yarnConf))
+    yarnCluster.foreach(_.start())
 
     val config = yarnCluster.getConfig()
     val deadline = System.currentTimeMillis() + TimeUnit.SECONDS.toMillis(10)
@@ -80,13 +81,19 @@ trait YARNClusterLike {
       TimeUnit.MILLISECONDS.sleep(100)
     }
 
+    val props = setupSparkProperties()
+    val propsFile = File.createTempFile("spark", ".properties", tempDir)
+    val writer = new OutputStreamWriter(new FileOutputStream(propsFile), UTF_8)
+    props.store(writer, "Spark properties.")
+    writer.close()
+  }
+
+  def setupSparkProperties() = {
     // Find the spark assembly jar
     // TODO: Better error messaging
 
     val sparkAssemblyJar = getAssemblyJar()
-    println("Spark assembly Jar: " + sparkAssemblyJar)
     val sparkAssemblyPath = getSparkAssemblyPath()
-    println("Spark assembly path: " + sparkAssemblyPath)
 
     // Set some yarn props
     sparkAssemblyJar.foreach{jar =>
@@ -114,10 +121,7 @@ trait YARNClusterLike {
         props.setProperty(k, v)
       }
     }
-    val propsFile = File.createTempFile("spark", ".properties", tempDir)
-    val writer = new OutputStreamWriter(new FileOutputStream(propsFile), UTF_8)
-    props.store(writer, "Spark properties.")
-    writer.close()
+    props
   }
 
   // For old style (pre 2.0)
@@ -129,7 +133,8 @@ trait YARNClusterLike {
     val sparkLibDir = List(sys.env("SPARK_HOME") + "/lib/")
 
     val candidateDirs = sparkAssemblyDirs ++ sparkLibDir
-    val candidates = candidateDirs.map(dir => new File(dir)).filter(_.exists()).flatMap(_.listFiles)
+    val candidates = candidateDirs.map(
+      dir => new File(dir)).filter(_.exists()).flatMap(_.listFiles)
 
     val sparkAssemblyJar = candidates.find { f =>
       val name = f.getName
@@ -154,15 +159,16 @@ trait YARNClusterLike {
   def generateClassPath(): String = {
     // Class path
     val clList =
-      List(logConfDir.getAbsolutePath(), sys.props("java.class.path")) ++ classPathFromCurrentClassLoader ++ extraClassPath
+      (List(logConfDir.getAbsolutePath(), sys.props("java.class.path")) ++
+        classPathFromCurrentClassLoader ++ extraClassPath)
     val clPath = clList.mkString(File.pathSeparator)
     clPath
   }
 
   // Class path based on current env + program specific class path.
   def classPathFromCurrentClassLoader(): Seq[String] = {
-    // This _assumes_ that either the current class loader or parent class loader is a
-    // URLClassLoader
+    // This _assumes_ that either the current class loader or
+    // parent class loader is a URLClassLoader
     val urlClassLoader = Thread.currentThread().getContextClassLoader() match {
       case uc: URLClassLoader => uc
       case xy => xy.getParent.asInstanceOf[URLClassLoader]
@@ -180,15 +186,13 @@ trait YARNClusterLike {
       // Likely maven classes & test-classes directory
       new File("target/classes"),
       new File("target/test-classes")
-    ).map(_.getAbsolutePath).filter(_ != null)
+    ).map(Option(_.getAbsolutePath)).flatMap(_)
   }
 
   def shutdownYARN() {
-    if (yarnCluster != null) {
-      yarnCluster.stop()
-    }
+    yarnCluster.foreach(_.stop())
     System.clearProperty("SPARK_YARN_MODE")
-    yarnCluster = null
+    yarnCluster = None
   }
 
 }
