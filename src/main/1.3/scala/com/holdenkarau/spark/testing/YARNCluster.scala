@@ -72,7 +72,7 @@ trait YARNClusterLike {
     yarnCluster.foreach(_.init(yarnConf))
     yarnCluster.foreach(_.start())
 
-    val config = yarnCluster.getConfig()
+    val config = yarnCluster.get.getConfig()
     val deadline = System.currentTimeMillis() + TimeUnit.SECONDS.toMillis(10)
     while (config.get(YarnConfiguration.RM_ADDRESS).split(":")(1) == "0") {
       if (System.currentTimeMillis() > deadline) {
@@ -109,7 +109,7 @@ trait YARNClusterLike {
     if (configurationFile.exists()) {
       configurationFile.delete()
     }
-    val configuration = yarnCluster.getConfig
+    val configuration = yarnCluster.get.getConfig
     iterableAsScalaIterable(configuration).foreach { e =>
       sys.props += ("spark.hadoop." + e.getKey() -> e.getValue())
     }
@@ -186,7 +186,7 @@ trait YARNClusterLike {
       // Likely maven classes & test-classes directory
       new File("target/classes"),
       new File("target/test-classes")
-    ).map(Option(_.getAbsolutePath)).flatMap(_)
+    ).map(x => Option(x.getAbsolutePath)).flatMap(x => x)
   }
 
   def shutdownYARN() {
