@@ -47,7 +47,7 @@ class TestInputStream[T: ClassTag](@transient var sc: SparkContext,
     val selectedInput = if (index < input.size) input(index) else Seq[T]()
 
     // lets us test cases where RDDs are not created
-    Option(selectInput).map{si =>
+    Option(selectedInput).map{si =>
       val rdd = sc.makeRDD(si, numPartitions)
       logInfo("Created RDD " + rdd.id + " with " + selectedInput)
       rdd

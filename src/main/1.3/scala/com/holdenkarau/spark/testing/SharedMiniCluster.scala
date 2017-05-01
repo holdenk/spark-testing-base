@@ -58,7 +58,7 @@ trait SharedMiniCluster extends BeforeAndAfterAll
   }
 
   override def afterAll() {
-    Option(sc).foreach(_sc.stop())
+    Option(sc).foreach(_.stop())
     _sc = null
 
     super.shutdownYARN()
