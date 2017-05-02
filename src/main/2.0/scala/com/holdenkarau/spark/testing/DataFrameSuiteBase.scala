@@ -71,7 +71,7 @@ trait DataFrameSuiteBaseLike extends SparkContextProvider
       // data source as we used a local metastore here.
       val hiveConfVars = HiveConf.ConfVars.values()
       val accessiableHiveConfVars = hiveConfVars.map(WrappedConfVar(_))
-      acessiableHiveConfVars.foreach { confvar =>
+      accessiableHiveConfVars.foreach { confvar =>
         if (confvar.varname.contains("datanucleus") ||
           confvar.varname.contains("jdo")) {
           builder.config(confvar.varname, confvar.getDefaultExpr())
