@@ -1,0 +1,6 @@
+coverage:
+  ignore: #things we ignore
+    # We are only building 2.0+
+    - "pre-2.0/*"
+    - "1.3-only/*"
+    - "pre-1.5/*"
