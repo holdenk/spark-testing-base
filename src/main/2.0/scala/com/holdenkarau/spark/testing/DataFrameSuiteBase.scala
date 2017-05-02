@@ -69,7 +69,9 @@ trait DataFrameSuiteBaseLike extends SparkContextProvider
       val builder = SparkSession.builder()
       // We have to mask all properties in hive-site.xml that relates to metastore
       // data source as we used a local metastore here.
-      HiveConf.ConfVars.values().map(WrappedConfVar(_)).foreach { confvar =>
+      val hiveConfVars = HiveConf.ConfVars.values()
+      val accessiableHiveConfVars = hiveConfVars.map(WrappedConfVar(_))
+      acessiableHiveConfVars.foreach { confvar =>
         if (confvar.varname.contains("datanucleus") ||
           confvar.varname.contains("jdo")) {
           builder.config(confvar.varname, confvar.getDefaultExpr())
@@ -94,7 +96,9 @@ trait DataFrameSuiteBaseLike extends SparkContextProvider
       builder
     }
 
-    SparkSessionProvider._sparkSession = newBuilder().getOrCreate()
+    val builder = newBuilder()
+
+    SparkSessionProvider._sparkSession = builder.getOrCreate()
   }
 
   /**
