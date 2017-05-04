@@ -16,8 +16,6 @@ addons:
 before_install:
   - export PATH=$HOME/.local/bin:$PATH
   - pip install --user codecov coverage unittest2
-# Hack to clean up some non-2.0 included components fore codecov
-  - rm -rf src/main/pre-2.0 src/main/1.3-only src/main/pre-1.5
 install:
   # Download spark 2.1.0
   - "[ -f spark ] || mkdir spark && cd spark && axel http://d3kbcqa49mib13.cloudfront.net/spark-2.1.0-bin-hadoop2.7.tgz && cd .."
