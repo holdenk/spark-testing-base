@@ -16,6 +16,16 @@ scalaVersion := {
   }
 }
 
+// See https://github.com/scala/scala/pull/3799
+coverageHighlighting := {
+  if (sparkVersion.value >= "2.0.0") {
+    true
+  } else {
+    false
+  }
+}
+
+
 crossScalaVersions := {
   if (sparkVersion.value > "2.0.0") {
     Seq("2.11.8")
