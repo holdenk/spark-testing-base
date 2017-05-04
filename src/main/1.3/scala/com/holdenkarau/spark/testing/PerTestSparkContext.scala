@@ -36,4 +36,8 @@ trait PerTestSparkContext extends LocalSparkContext with BeforeAndAfterEach
     setup(sc)
     super.beforeEach()
   }
+
+  override def afterEach() {
+    super.afterEach()
+  }
 }
