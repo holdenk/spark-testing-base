@@ -41,7 +41,7 @@ spName := "holdenk/spark-testing-base"
 //end::spName[]
 
 sparkComponents := {
-  if (sparkVersion.value >= "2.0.0") Seq("core", "streaming", "sql", "catalyst", "hive", "yarn", "mllib")
+  if (sparkVersion.value >= "2.0.0") Seq("core", "streaming", "sql", "catalyst", "hive", "yarn", "mllib", "streaming-kafka-0-8")
   else Seq("core", "streaming", "sql", "catalyst", "hive", "streaming-kafka", "yarn", "mllib")
 }
 
