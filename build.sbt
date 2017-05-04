@@ -88,6 +88,7 @@ unmanagedSourceDirectories in Compile  := {
 
 unmanagedSourceDirectories in Test  := {
   if (sparkVersion.value >= "2.0.0") Seq(
+    (sourceDirectory in Test)(_ / "2.0/scala"),
     (sourceDirectory in Test)(_ / "1.6/scala"), (sourceDirectory in Test)(_ / "1.6/java"),
     (sourceDirectory in Test)(_ / "1.4/scala"),
     (sourceDirectory in Test)(_ / "1.3/scala"), (sourceDirectory in Test)(_ / "1.3/java")
