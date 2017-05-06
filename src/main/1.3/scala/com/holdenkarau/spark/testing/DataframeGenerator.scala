@@ -135,6 +135,7 @@ object DataframeGenerator {
         Gen.mapOf(keyValueGenerator)
       }
       case row: StructType => getRowGenerator(row, generators)
+      case MLUserDefinedType(generator) => generator
       case _ => throw new UnsupportedOperationException(
         s"Type: $dataType not supported")
     }
