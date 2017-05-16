@@ -187,7 +187,10 @@ object DataFrameSuiteBase {
       }
       s"StructType(${fieldStrings.mkString(",")}"
     }
-    s"Expected Schema: ${structFieldsToString(expected.fields)} does not match result Schema: ${structFieldsToString(result.fields)}"
+    val expectedString = s"Expected Schema: ${structFieldsToString(expected.fields)}"
+    val resultString = s"result Schema: ${structFieldsToString(result.fields)}"
+
+    s"$expectedString does not match $resultString"
   }
 
   /** Approximate equality, based on equals from [[Row]] */
