@@ -188,7 +188,7 @@ object DataFrameSuiteBase {
       s"StructType(${fieldStrings.mkString(",")}"
     }
     val expectedString = s"Expected Schema: ${structFieldsToString(expected.fields)}"
-    val resultString = s"result Schema: ${structFieldsToString(result.fields)}"
+    val resultString = s"Result Schema: ${structFieldsToString(result.fields)}"
 
     s"$expectedString does not match $resultString"
   }

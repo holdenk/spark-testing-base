@@ -25,13 +25,19 @@ class DataFrameSuiteBaseTest
     val resultField = Seq(StructField("colA", IntegerType, false, metadataTwo))
     val resultSchema = StructType(resultField)
 
-    //noinspection ScalaStyle
-    val expectedErrorString =
-      "Expected Schema: StructType(StructField(colA,IntegerType,false,{\"someKey\":false}) does not match result Schema: StructType(StructField(colA,IntegerType,false,{\"someKey\":true})"
+    val expectedSchemaString = "Expected Schema: " +
+      "StructType(StructField(colA,IntegerType,false,{\"someKey\":false})"
+
+    val resultSchemaString = "Result Schema: " +
+      "StructType(StructField(colA,IntegerType,false,{\"someKey\":true})"
+
+    val errorString = expectedSchemaString +
+      " does not match " +
+      resultSchemaString
 
     val resultErrorString =
       DataFrameSuiteBase.schemaErrorMessage(expectedSchema, resultSchema)
 
-    assert(expectedErrorString.equals(resultErrorString))
+    assert(errorString.equals(resultErrorString))
   }
 }
