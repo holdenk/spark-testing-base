@@ -8,16 +8,13 @@ import org.scalatest.prop.Checkers
 
 import scala.collection.JavaConversions._
 
-
 case class PersonAge(name: String, age: Int)
 
 class DataFrameSuiteBaseTest
-extends FunSuite
-with SharedSparkContext
-with Checkers
-with DataFrameSuiteBase {
-
-  import sqlContext.implicits._
+  extends FunSuite
+    with SharedSparkContext
+    with Checkers
+    with DataFrameSuiteBase {
 
   test("testSchemaErrorMessage") {
     val metadataOne =
@@ -30,11 +27,13 @@ with DataFrameSuiteBase {
     val resultField = Seq(StructField("colA", IntegerType, false, metadataTwo))
     val resultSchema = StructType(resultField)
 
-    val errorString = """
-      |Expected Schema: StructType(StructField(colA,IntegerType,false,{"someKey":false})
-      |does not match
-      |Result Schema: StructType(StructField(colA,IntegerType,false,{"someKey":true})
-    """.stripMargin
+    //noinspection ScalaStyle
+    val errorString =
+      """
+        |Expected Schema: StructType(StructField(colA,IntegerType,false,{"someKey":false})
+        |does not match
+        |Result Schema: StructType(StructField(colA,IntegerType,false,{"someKey":true})
+        |""".stripMargin
 
     val resultErrorString =
       schemaErrorMessage(expectedSchema, resultSchema)
@@ -44,6 +43,7 @@ with DataFrameSuiteBase {
 
   test("assertSchemaEquals passes when schema are equal") {
 
+    import sqlContext.implicits._
     val data = List(PersonAge("Alice", 12), PersonAge("Bob", 45))
     val expectedDf = sc.parallelize(data).toDF
     val resultDf = sc.parallelize(data).toDF
@@ -72,7 +72,7 @@ with DataFrameSuiteBase {
       " did not equal " +
       "StructType(StructField(name,StringType,true))"
     val customErrorString = schemaErrorMessage(expectedSchema, resultSchema)
-    val errorString =  assertErrorString + customErrorString
+    val errorString = assertErrorString + customErrorString
     assert(failedException.getMessage() == errorString)
   }
 }

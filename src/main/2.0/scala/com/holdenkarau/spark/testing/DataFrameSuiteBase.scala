@@ -30,12 +30,13 @@ import org.scalatest.Suite
 import scala.math.abs
 
 /**
- * :: Experimental ::
- * Base class for testing Spark DataFrames.
- */
-
-trait DataFrameSuiteBase extends TestSuite
-    with SharedSparkContext with DataFrameSuiteBaseLike { self: Suite =>
+  * :: Experimental ::
+  * Base class for testing Spark DataFrames.
+  */
+trait DataFrameSuiteBase
+    extends TestSuite
+    with SharedSparkContext
+    with DataFrameSuiteBaseLike { self: Suite =>
   override def beforeAll() {
     super.beforeAll()
     super.sqlBeforeAllTestCases()
@@ -47,23 +48,26 @@ trait DataFrameSuiteBase extends TestSuite
   }
 }
 
-trait DataFrameSuiteBaseLike extends SparkContextProvider
-    with TestSuiteLike with Serializable {
+trait DataFrameSuiteBaseLike
+    extends SparkContextProvider
+    with TestSuiteLike
+    with Serializable {
   val maxUnequalRowsToShow = 10
   @transient lazy val spark: SparkSession = SparkSessionProvider._sparkSession
   @transient lazy val sqlContext: SQLContext = SparkSessionProvider.sqlContext
 
   protected implicit def impSqlContext: SQLContext = sqlContext
 
-
   def sqlBeforeAllTestCases() {
+
     /**
-     * Constructs a configuration for hive, where the metastore is located in a
-     * temp directory.
-     */
+      * Constructs a configuration for hive, where the metastore is located in a
+      * temp directory.
+      */
     val tempDir = Utils.createTempDir()
     val localMetastorePath = new File(tempDir, "metastore").getCanonicalPath
     val localWarehousePath = new File(tempDir, "wharehouse").getCanonicalPath
+
     def newBuilder() = {
       val builder = SparkSession.builder()
       // We have to mask all properties in hive-site.xml that relates to metastore
@@ -72,19 +76,19 @@ trait DataFrameSuiteBaseLike extends SparkContextProvider
       val accessiableHiveConfVars = hiveConfVars.map(WrappedConfVar(_))
       accessiableHiveConfVars.foreach { confvar =>
         if (confvar.varname.contains("datanucleus") ||
-          confvar.varname.contains("jdo")) {
+            confvar.varname.contains("jdo")) {
           builder.config(confvar.varname, confvar.getDefaultExpr())
         }
       }
-      builder.config("javax.jdo.option.ConnectionURL",
+      builder.config(
+        "javax.jdo.option.ConnectionURL",
         s"jdbc:derby:;databaseName=$localMetastorePath;create=true")
       builder.config("datanucleus.rdbms.datastoreAdapterClassName",
-        "org.datanucleus.store.rdbms.adapter.DerbyAdapter")
+                     "org.datanucleus.store.rdbms.adapter.DerbyAdapter")
       builder.config(ConfVars.METASTOREURIS.varname, "")
       builder.config("spark.sql.streaming.checkpointLocation",
-        Utils.createTempDir().toPath().toString)
-      builder.config("spark.sql.warehouse.dir",
-        localWarehousePath)
+                     Utils.createTempDir().toPath().toString)
+      builder.config("spark.sql.warehouse.dir", localWarehousePath)
       // Enable hive support if available
       try {
         builder.enableHiveSupport()
@@ -101,9 +105,9 @@ trait DataFrameSuiteBaseLike extends SparkContextProvider
   }
 
   /**
-   * Compares if two [[DataFrame]]s are equal, checks the schema and then if that
-   * matches checks if the rows are equal.
-   */
+    * Compares if two [[DataFrame]]s are equal, checks the schema and then if that
+    * matches checks if the rows are equal.
+    */
   def assertDataFrameEquals(expected: DataFrame, result: DataFrame) {
     schemaEquals(expected, result)
     try {
@@ -114,9 +118,10 @@ trait DataFrameSuiteBaseLike extends SparkContextProvider
       val expectedIndexValue = zipWithIndex(expected.rdd)
       val resultIndexValue = zipWithIndex(result.rdd)
 
-      val unequalRDD = expectedIndexValue.join(resultIndexValue).
-        filter{case (idx, (r1, r2)) =>
-          !(r1.equals(r2) || DataFrameSuiteBase.approxEquals(r1, r2, 0.0))}
+      val unequalRDD = expectedIndexValue.join(resultIndexValue).filter {
+        case (idx, (r1, r2)) =>
+          !(r1.equals(r2) || DataFrameSuiteBase.approxEquals(r1, r2, 0.0))
+      }
 
       assertEmpty(unequalRDD.take(maxUnequalRowsToShow))
     } finally {
@@ -131,8 +136,9 @@ trait DataFrameSuiteBaseLike extends SparkContextProvider
     *
     * @param tol max acceptable tolerance, should be less than 1.
     */
-  def assertDataFrameApproximateEquals(
-    expected: DataFrame, result: DataFrame, tol: Double) {
+  def assertDataFrameApproximateEquals(expected: DataFrame,
+                                       result: DataFrame,
+                                       tol: Double) {
     schemaEquals(expected, result)
     try {
       expected.rdd.cache
@@ -142,9 +148,10 @@ trait DataFrameSuiteBaseLike extends SparkContextProvider
       val expectedIndexValue = zipWithIndex(expected.rdd)
       val resultIndexValue = zipWithIndex(result.rdd)
 
-      val unequalRDD = expectedIndexValue.join(resultIndexValue).
-        filter{case (idx, (r1, r2)) =>
-          !DataFrameSuiteBase.approxEquals(r1, r2, tol)}
+      val unequalRDD = expectedIndexValue.join(resultIndexValue).filter {
+        case (idx, (r1, r2)) =>
+          !DataFrameSuiteBase.approxEquals(r1, r2, tol)
+      }
 
       assertEmpty(unequalRDD.take(maxUnequalRowsToShow))
     } finally {
@@ -154,12 +161,12 @@ trait DataFrameSuiteBaseLike extends SparkContextProvider
   }
 
   /**
-   * Zip RDD's with precise indexes. This is used so we can join two DataFrame's
-   * Rows together regardless of if the source is different but still compare
-   * based on the order.
-   */
+    * Zip RDD's with precise indexes. This is used so we can join two DataFrame's
+    * Rows together regardless of if the source is different but still compare
+    * based on the order.
+    */
   private[testing] def zipWithIndex[U](rdd: RDD[U]) = {
-    rdd.zipWithIndex().map{ case (row, idx) => (idx, row) }
+    rdd.zipWithIndex().map { case (row, idx) => (idx, row) }
   }
 
   def approxEquals(r1: Row, r2: Row, tol: Double): Boolean = {
@@ -186,10 +193,10 @@ object DataFrameSuiteBase {
     }
 
     s"""
-      |Expected Schema: ${structFieldsToString(expected.fields)}
-      |does not match
-      |Result Schema: ${structFieldsToString(result.fields)}
-    """.stripMargin
+       |Expected Schema: ${structFieldsToString(expected.fields)}
+       |does not match
+       |Result Schema: ${structFieldsToString(result.fields)}
+       |""".stripMargin
   }
 
   /** Approximate equality, based on equals from [[Row]] */
@@ -215,8 +222,7 @@ object DataFrameSuiteBase {
 
             case f1: Float =>
               if (java.lang.Float.isNaN(f1) !=
-                java.lang.Float.isNaN(o2.asInstanceOf[Float]))
-              {
+                    java.lang.Float.isNaN(o2.asInstanceOf[Float])) {
                 return false
               }
               if (abs(f1 - o2.asInstanceOf[Float]) > tol) {
@@ -225,8 +231,7 @@ object DataFrameSuiteBase {
 
             case d1: Double =>
               if (java.lang.Double.isNaN(d1) !=
-                java.lang.Double.isNaN(o2.asInstanceOf[Double]))
-              {
+                    java.lang.Double.isNaN(o2.asInstanceOf[Double])) {
                 return false
               }
               if (abs(d1 - o2.asInstanceOf[Double]) > tol) {
@@ -251,6 +256,8 @@ object DataFrameSuiteBase {
 
 object SparkSessionProvider {
   @transient var _sparkSession: SparkSession = _
+
   def sqlContext = EvilSessionTools.extractSQLContext(_sparkSession)
+
   def sparkSession = _sparkSession
 }
