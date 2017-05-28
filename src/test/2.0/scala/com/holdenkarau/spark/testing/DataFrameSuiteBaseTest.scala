@@ -8,13 +8,16 @@ import org.scalatest.prop.Checkers
 
 import scala.collection.JavaConversions._
 
+
 case class PersonAge(name: String, age: Int)
 
 class DataFrameSuiteBaseTest
-    extends FunSuite
-    with SharedSparkContext
-    with Checkers
-    with DataFrameSuiteBase {
+extends FunSuite
+with SharedSparkContext
+with Checkers
+with DataFrameSuiteBase {
+
+  import sqlContext.implicits._
 
   test("testSchemaErrorMessage") {
     val metadataOne =
@@ -27,15 +30,11 @@ class DataFrameSuiteBaseTest
     val resultField = Seq(StructField("colA", IntegerType, false, metadataTwo))
     val resultSchema = StructType(resultField)
 
-    val expectedSchemaString = "Expected Schema: " +
-      "StructType(StructField(colA,IntegerType,false,{\"someKey\":false})"
-
-    val resultSchemaString = "Result Schema: " +
-      "StructType(StructField(colA,IntegerType,false,{\"someKey\":true})"
-
-    val errorString = expectedSchemaString +
-      " does not match " +
-      resultSchemaString
+    val errorString = """
+      |Expected Schema: StructType(StructField(colA,IntegerType,false,{"someKey":false})
+      |does not match
+      |Result Schema: StructType(StructField(colA,IntegerType,false,{"someKey":true})
+    """.stripMargin
 
     val resultErrorString =
       schemaErrorMessage(expectedSchema, resultSchema)
@@ -44,7 +43,6 @@ class DataFrameSuiteBaseTest
   }
 
   test("assertSchemaEquals passes when schema are equal") {
-    import sqlContext.implicits._
 
     val data = List(PersonAge("Alice", 12), PersonAge("Bob", 45))
     val expectedDf = sc.parallelize(data).toDF
@@ -69,11 +67,12 @@ class DataFrameSuiteBaseTest
       intercept[org.scalatest.exceptions.TestFailedException] {
         schemaEquals(expectedDf, resultDf)
       }
-    val toStringMessage = "StructType(StructField(name,StringType,true))" +
-      " did not equal" +
-      " StructType(StructField(name,StringType,true)) "
-    val errorMessage = schemaErrorMessage(expectedSchema, resultSchema)
-    val errorString = toStringMessage + errorMessage
-    assert(failedException.getMessage() == (errorString))
+
+    val assertErrorString = "StructType(StructField(name,StringType,true))" +
+      " did not equal " +
+      "StructType(StructField(name,StringType,true))"
+    val customErrorString = schemaErrorMessage(expectedSchema, resultSchema)
+    val errorString =  assertErrorString + customErrorString
+    assert(failedException.getMessage() == errorString)
   }
 }

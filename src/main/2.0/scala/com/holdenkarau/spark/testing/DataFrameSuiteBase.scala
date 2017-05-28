@@ -20,16 +20,14 @@ package com.holdenkarau.spark.testing
 import java.io.File
 
 import com.holdenkarau.spark.testing.DataFrameSuiteBase.schemaErrorMessage
+import org.apache.hadoop.hive.conf.HiveConf
+import org.apache.hadoop.hive.conf.HiveConf.ConfVars
+import org.apache.spark.rdd.RDD
+import org.apache.spark.sql._
+import org.apache.spark.sql.types.{StructField, StructType}
 import org.scalatest.Suite
 
 import scala.math.abs
-import scala.collection.mutable.HashMap
-import org.apache.spark.rdd.RDD
-import org.apache.spark.sql._
-import org.apache.spark.sql.hive._
-import org.apache.hadoop.hive.conf.HiveConf
-import org.apache.hadoop.hive.conf.HiveConf.ConfVars
-import org.apache.spark.sql.types.{StructField, StructType}
 
 /**
  * :: Experimental ::
@@ -168,7 +166,7 @@ trait DataFrameSuiteBaseLike extends SparkContextProvider
     DataFrameSuiteBase.approxEquals(r1, r2, tol)
   }
 
-  def schemaEquals(expected: DataFrame, result: DataFrame) = {
+  def schemaEquals(expected: DataFrame, result: DataFrame): Unit = {
     val expectedSchema = expected.schema
     val resultSchema = result.schema
     val errorString = schemaErrorMessage(expectedSchema, resultSchema)
@@ -181,16 +179,17 @@ object DataFrameSuiteBase {
   def schemaErrorMessage(expected: StructType, result: StructType): String = {
     def structFieldsToString(fields: Array[StructField]): String = {
       val fieldStrings = fields.map {
-        case StructField(name, dataType, nullable, metadata) => {
+        case StructField(name, dataType, nullable, metadata) =>
           s"StructField($name,$dataType,$nullable,$metadata)"
-        }
       }
       s"StructType(${fieldStrings.mkString(",")}"
     }
-    val expectedString = s"Expected Schema: ${structFieldsToString(expected.fields)}"
-    val resultString = s"Result Schema: ${structFieldsToString(result.fields)}"
 
-    s"$expectedString does not match $resultString"
+    s"""
+      |Expected Schema: ${structFieldsToString(expected.fields)}
+      |does not match
+      |Result Schema: ${structFieldsToString(result.fields)}
+    """.stripMargin
   }
 
   /** Approximate equality, based on equals from [[Row]] */
