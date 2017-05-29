@@ -30,9 +30,9 @@ import org.scalatest.Suite
 import scala.math.abs
 
 /**
-  * :: Experimental ::
-  * Base class for testing Spark DataFrames.
-  */
+ * :: Experimental ::
+ * Base class for testing Spark DataFrames.
+ */
 trait DataFrameSuiteBase
     extends TestSuite
     with SharedSparkContext
@@ -53,20 +53,24 @@ trait DataFrameSuiteBaseLike
     with TestSuiteLike
     with Serializable {
   val maxUnequalRowsToShow = 10
-  @transient lazy val spark: SparkSession = SparkSessionProvider._sparkSession
-  @transient lazy val sqlContext: SQLContext = SparkSessionProvider.sqlContext
+  @transient lazy val spark: SparkSession =
+    SparkSessionProvider._sparkSession
+  @transient lazy val sqlContext: SQLContext =
+    SparkSessionProvider.sqlContext
 
   protected implicit def impSqlContext: SQLContext = sqlContext
 
   def sqlBeforeAllTestCases() {
 
     /**
-      * Constructs a configuration for hive, where the metastore is located in a
-      * temp directory.
-      */
+     * Constructs a configuration for hive, where the metastore is located in a
+     * temp directory.
+     */
     val tempDir = Utils.createTempDir()
-    val localMetastorePath = new File(tempDir, "metastore").getCanonicalPath
-    val localWarehousePath = new File(tempDir, "wharehouse").getCanonicalPath
+    val localMetastorePath =
+      new File(tempDir, "metastore").getCanonicalPath
+    val localWarehousePath =
+      new File(tempDir, "wharehouse").getCanonicalPath
 
     def newBuilder() = {
       val builder = SparkSession.builder()
@@ -105,11 +109,11 @@ trait DataFrameSuiteBaseLike
   }
 
   /**
-    * Compares if two [[DataFrame]]s are equal, checks the schema and then if that
-    * matches checks if the rows are equal.
-    */
+   * Compares if two [[DataFrame]]s are equal, checks the schema and then if that
+   * matches checks if the rows are equal.
+   */
   def assertDataFrameEquals(expected: DataFrame, result: DataFrame) {
-    schemaEquals(expected, result)
+    assertSchemaEquals(expected, result)
     try {
       expected.rdd.cache
       result.rdd.cache
@@ -130,16 +134,15 @@ trait DataFrameSuiteBaseLike
     }
   }
 
-  /**
-    * Compares if two [[DataFrame]]s are equal, checks that the schemas are the same.
-    * When comparing inexact fields uses tol.
-    *
-    * @param tol max acceptable tolerance, should be less than 1.
-    */
+  /** Compares if two [[DataFrame]]s are equal, checks that the schemas are the same.
+   * When comparing inexact fields uses tol.
+   *
+   * @param tol max acceptable tolerance, should be less than 1.
+   */
   def assertDataFrameApproximateEquals(expected: DataFrame,
                                        result: DataFrame,
                                        tol: Double) {
-    schemaEquals(expected, result)
+    assertSchemaEquals(expected, result)
     try {
       expected.rdd.cache
       result.rdd.cache
@@ -161,10 +164,10 @@ trait DataFrameSuiteBaseLike
   }
 
   /**
-    * Zip RDD's with precise indexes. This is used so we can join two DataFrame's
-    * Rows together regardless of if the source is different but still compare
-    * based on the order.
-    */
+   * Zip RDD's with precise indexes. This is used so we can join two DataFrame's
+   * Rows together regardless of if the source is different but still compare
+   * based on the order.
+   */
   private[testing] def zipWithIndex[U](rdd: RDD[U]) = {
     rdd.zipWithIndex().map { case (row, idx) => (idx, row) }
   }
@@ -173,7 +176,7 @@ trait DataFrameSuiteBaseLike
     DataFrameSuiteBase.approxEquals(r1, r2, tol)
   }
 
-  def schemaEquals(expected: DataFrame, result: DataFrame): Unit = {
+  def assertSchemaEquals(expected: DataFrame, result: DataFrame): Unit = {
     val expectedSchema = expected.schema
     val resultSchema = result.schema
     val errorString = schemaErrorMessage(expectedSchema, resultSchema)
@@ -183,7 +186,8 @@ trait DataFrameSuiteBaseLike
 
 object DataFrameSuiteBase {
 
-  def schemaErrorMessage(expected: StructType, result: StructType): String = {
+  def schemaErrorMessage(expected: StructType,
+                         result: StructType): String = {
     def structFieldsToString(fields: Array[StructField]): String = {
       val fieldStrings = fields.map {
         case StructField(name, dataType, nullable, metadata) =>
@@ -193,9 +197,11 @@ object DataFrameSuiteBase {
     }
 
     s"""
-       |Expected Schema: ${structFieldsToString(expected.fields)}
+       |Expected Schema:
+       |${structFieldsToString(expected.fields)}
        |does not match
-       |Result Schema: ${structFieldsToString(result.fields)}
+       |Result Schema:
+       |${structFieldsToString(result.fields)}
        |""".stripMargin
   }
 
@@ -216,7 +222,9 @@ object DataFrameSuiteBase {
           val o2 = r2.get(idx)
           o1 match {
             case b1: Array[Byte] =>
-              if (!java.util.Arrays.equals(b1, o2.asInstanceOf[Array[Byte]])) {
+              if (!java.util.Arrays.equals(
+                    b1,
+                    o2.asInstanceOf[Array[Byte]])) {
                 return false
               }
 

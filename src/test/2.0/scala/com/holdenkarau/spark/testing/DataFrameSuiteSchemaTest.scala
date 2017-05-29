@@ -10,7 +10,7 @@ import scala.collection.JavaConversions._
 
 case class PersonAge(name: String, age: Int)
 
-class DataFrameSuiteBaseTest
+class DataFrameSuiteSchemaTest
   extends FunSuite
     with SharedSparkContext
     with Checkers
@@ -27,12 +27,13 @@ class DataFrameSuiteBaseTest
     val resultField = Seq(StructField("colA", IntegerType, false, metadataTwo))
     val resultSchema = StructType(resultField)
 
-    //noinspection ScalaStyle
     val errorString =
       """
-        |Expected Schema: StructType(StructField(colA,IntegerType,false,{"someKey":false})
+        |Expected Schema:
+        |StructType(StructField(colA,IntegerType,false,{"someKey":false})
         |does not match
-        |Result Schema: StructType(StructField(colA,IntegerType,false,{"someKey":true})
+        |Result Schema:
+        |StructType(StructField(colA,IntegerType,false,{"someKey":true})
         |""".stripMargin
 
     val resultErrorString =
@@ -65,7 +66,7 @@ class DataFrameSuiteBaseTest
     val resultDf = sqlContext.createDataFrame(data, resultSchema)
     val failedException =
       intercept[org.scalatest.exceptions.TestFailedException] {
-        schemaEquals(expectedDf, resultDf)
+        assertSchemaEquals(expectedDf, resultDf)
       }
 
     val assertErrorString = "StructType(StructField(name,StringType,true))" +
