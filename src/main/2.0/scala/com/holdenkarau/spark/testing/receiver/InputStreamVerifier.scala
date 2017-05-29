@@ -42,7 +42,6 @@ case class InputStreamVerifier[T](numExpectedResults: Int,
           }
         }
       }
-      println(s"===: starting $streamingContext")
       Thread.sleep(200) // give some time to clean up (SPARK-1603)
       streamingContext.start()
     } catch {
@@ -61,16 +60,13 @@ case class InputStreamVerifier[T](numExpectedResults: Int,
   def awaitAndVerifyResults(streamingContext: StreamingContext, expected: List[T]): Unit = {
     try {
       val result: Future[List[T]] = notifier.getResults
-      System.out.println("awaitResultsTimeout:" + awaitResultsTimeout);
       val completedResult: Future[List[T]] =  Await.ready(result,  awaitResultsTimeout)
-      System.out.println("await done")
       val tuples = completedResult.value.get.get.toSet
 
       val expectedResultsAsSet = expected.toSet
       if (!tuples.equals(expectedResultsAsSet)) {
         throw new RuntimeException(s"actual result [ $tuples ] != expected result [ $expectedResultsAsSet ]")
       }
-      println(s"===: stopping $streamingContext")
     } finally {
       streamingContext.stop(stopSparkContext = false)
       Thread.sleep(200) // give some time to clean up (SPARK-1603)
