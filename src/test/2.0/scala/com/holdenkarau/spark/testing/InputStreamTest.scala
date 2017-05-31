@@ -16,12 +16,12 @@
  */
 package com.holdenkarau.spark.testing
 
-import com.holdenkarau.spark.testing.receiver.{InputStreamSuiteBase, InputStreamTestingContext}
+import com.holdenkarau.spark.testing.receiver.InputStreamTestingContext
+import com.holdenkarau.spark.testing.receiver.InputStreamSuiteBase
 import org.apache.spark.SparkContext
-import org.apache.spark.streaming.dstream.DStream
 import org.apache.spark.streaming._
+import org.apache.spark.streaming.dstream.DStream
 import org.scalatest.FunSuite
-
 
 
 class InputStreamTest extends FunSuite with InputStreamSuiteBase {
@@ -29,9 +29,9 @@ class InputStreamTest extends FunSuite with InputStreamSuiteBase {
   test("verify success if inputs received within expected timeout") {
     runTest(
       inputDataForDstream = List(1, 3),
-      expectedResult = List(1, 3),  
+      expectedResult = List(1, 3),
       generatorDelay = Seconds(0),
-      awaitResultsTimeout =  Seconds(10))
+      awaitResultsTimeout = Seconds(10))
   }
 
   test("verify failure if inputs not received within expected timeout") {
@@ -40,19 +40,20 @@ class InputStreamTest extends FunSuite with InputStreamSuiteBase {
         inputDataForDstream = List(1, 3),
         expectedResult = List(1, 3),
         generatorDelay = Seconds(10),
-        awaitResultsTimeout =  Seconds(0))
+        awaitResultsTimeout = Seconds(0))
     }
-    assert(thrown.getMessage contains  "Futures timed out")
+    assert(thrown.getMessage contains "Futures timed out")
   }
 
-  test("verify error raised if execpted results do not equal actual results obtained") {
+  test("verify error raised if execpted results do not equal actual results") {
     val thrown = intercept[Exception] {
       runTest(inputDataForDstream = List(1, 5), expectedResult = List(1, 3))
     }
-    assert(thrown.getMessage contains  "!= expected result")
+    assert(thrown.getMessage contains "!= expected result")
   }
 
-  test("show that framework does not currently detect duplicates and order discrepancies when checking results") {
+  test("show that framework does not " +
+    "currently detect duplicates and order discrepancies when checking results") {
     runTest(inputDataForDstream = List(2, 2, 1), expectedResult = List(1, 2))
   }
 
@@ -60,17 +61,19 @@ class InputStreamTest extends FunSuite with InputStreamSuiteBase {
               expectedResult: List[Int],
               batchDuration: Duration = Seconds(1),
               generatorDelay: Duration = Seconds(0),
-              awaitResultsTimeout : Duration =  Seconds(10)): Unit = {
+              awaitResultsTimeout: Duration = Seconds(10)): Unit = {
     val dstreamCreationFunc: (StreamingContext) => DStream[Int] = {
       (ssc: StreamingContext) =>
-        val customCtx = ssc.asInstanceOf[StreamingContextWithExtraInputStreamGenerators[Int]]
+        val customCtx =
+          ssc.asInstanceOf[StreamingContextWithExtraInputStreamGenerators[Int]]
         customCtx.constantStream(inputDataForDstream, generatorDelay)
     }
 
     val noOpTestDataGenerationFunc: () => Unit = { () => }
 
     val streamingCtxCreator =
-      (sc: SparkContext) => new StreamingContextWithExtraInputStreamGenerators(sc, null, Duration(1000))
+      (sc: SparkContext) =>
+        new StreamingContextWithExtraInputStreamGenerators(sc, null, Duration(1000))
 
     InputStreamTestingContext(
       sparkContext = sc,
@@ -79,7 +82,7 @@ class InputStreamTest extends FunSuite with InputStreamSuiteBase {
       pauseDuration = scala.concurrent.duration.Duration("1500 milliseconds"),
       expectedResult = expectedResult,
       streamingContextCreatorFunc = Some(streamingCtxCreator),
-      awaitResultsTimeout = awaitResultsTimeout,
+      awaitTimeout = awaitResultsTimeout,
       batchDuration = batchDuration)
       .run()
   }
