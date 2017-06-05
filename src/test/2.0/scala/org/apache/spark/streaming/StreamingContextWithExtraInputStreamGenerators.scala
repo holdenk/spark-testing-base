@@ -8,21 +8,25 @@ import scala.collection.mutable
 import scala.reflect.ClassTag
 
 
-// Test with empty RDD
+// TODO - Test with empty RDD
 //
 
 /**
-  *  Provides the [[constantStream]] method which  generates an  InputDStream whose configurable delay characteristics
-  *  and contents are useful for testing.
+  * Provides the [[constantStream]] method which  generates an
+  * InputDStream whose configurable delay characteristics and
+  * contents are useful for testing.
   */
-class StreamingContextWithExtraInputStreamGenerators [T: ClassTag] (sc_ : SparkContext,
-                                                                    cp_ : Checkpoint,
-                                                                    batchDuration_ : Duration)
-  extends TestStreamingContext(sc_, cp_, batchDuration_) {
+class StreamingContextWithExtraInputStreamGenerators[T: ClassTag]
+(sc_ : SparkContext,
+ cp_ : Checkpoint,
+ batchDuration_ : Duration
+) extends TestStreamingContext(sc_, cp_, batchDuration_) {
 
 
-  def constantStream(items: List[T], generatorDelay: org.apache.spark.streaming.Duration) : InputDStream[T] = {
-    val inputData  = new ThrottledQueue[RDD[T]](generatorDelay)
+  def constantStream(items: List[T],
+                     generatorDelay: org.apache.spark.streaming.Duration)
+  : InputDStream[T] = {
+    val inputData = new ThrottledQueue[RDD[T]](generatorDelay)
     require(items.length >= 2)
     inputData.enqueue(sc.makeRDD(items))
     new QueueInputDStream[T](this, inputData, oneAtATime = true, defaultRDD = null)

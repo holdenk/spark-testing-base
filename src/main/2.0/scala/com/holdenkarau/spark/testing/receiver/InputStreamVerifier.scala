@@ -50,7 +50,7 @@ case class InputStreamVerifier[T]
       Thread.sleep(200) // give some time to clean up (SPARK-1603)
       streamingContext.start()
     } catch {
-      case e: Throwable =>
+      case e: Exception =>
         if (streamingContext.getState() == StreamingContextState.STOPPED) {
           streamingContext.stop(stopSparkContext = false)
         }
