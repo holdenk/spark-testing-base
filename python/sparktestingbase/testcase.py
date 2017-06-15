@@ -50,6 +50,13 @@ class SparkTestingBaseTestCase(unittest2.TestCase):
         # immediately on shutdown
         self.sc._jvm.System.clearProperty("spark.driver.port")
 
+    def assertRDDEquals(self, expected, result):
+        expectedKeyed = expected.map(lambda x: (x, 1)).reduceByKey(lambda x, y: x + y)
+        resultKeyed = result.map(lambda x: (x, 1)).reduceByKey(lambda x, y: x + y)
+        if False in [x==y for x, y in [tuple(map(list,y)) for x, y in expectedKeyed.cogroup(resultKeyed).collect()]]:
+            return False
+        else:
+            return True
 
 class SparkTestingBaseReuse(unittest2.TestCase):
 
