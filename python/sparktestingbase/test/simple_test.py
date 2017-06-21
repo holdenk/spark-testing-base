@@ -64,5 +64,19 @@ class SimpleTest(SparkTestingBaseTestCase):
         rdd_result   = self.sc.parallelize(input_result)
         assert self.assertRDDEquals(rdd_expected, rdd_result)  == True
 
+    def test_assertRDDEuqlsWithOrder_true(self):
+        input_expected = [1,2,3,4,5]
+        input_result   = [1,2,3,4,5]
+        rdd_expected = self.sc.parallelize(input_expected)
+        rdd_result   = self.sc.parallelize(input_result)
+        assert self.assertRDDEqualsWithOrder(rdd_expected, rdd_result) == True
+
+    def test_assertRDDEuqlsWithOrder_wrong_order_false(self):
+        input_expected = [5,4,3,2,1]
+        input_result   = [1,2,3,4,5]
+        rdd_expected = self.sc.parallelize(input_expected)
+        rdd_result   = self.sc.parallelize(input_result)
+        assert self.assertRDDEqualsWithOrder(rdd_expected, rdd_result) == False
+
 if __name__ == "__main__":
     unittest2.main()
