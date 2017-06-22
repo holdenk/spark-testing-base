@@ -56,6 +56,7 @@ trait DataFrameSuiteBaseLike extends SparkContextProvider
 
   protected implicit def impSqlContext: SQLContext = sqlContext
 
+  protected implicit def enableHiveSupport: Boolean = true
 
   def sqlBeforeAllTestCases() {
     /**
@@ -88,7 +89,9 @@ trait DataFrameSuiteBaseLike extends SparkContextProvider
         localWarehousePath)
       // Enable hive support if available
       try {
-        builder.enableHiveSupport()
+        if (enableHiveSupport) {
+          builder.enableHiveSupport()
+        }
       } catch {
         // Exception is thrown in Spark if hive is not present
         case e: IllegalArgumentException =>
