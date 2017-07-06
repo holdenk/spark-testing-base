@@ -25,11 +25,9 @@ from .testcase import SparkTestingBaseReuse
 import os
 import sys
 from itertools import chain
-import time
 import operator
 import tempfile
 import random
-import struct
 from functools import reduce
 
 from pyspark.context import SparkConf, SparkContext, RDD

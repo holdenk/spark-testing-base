@@ -72,9 +72,9 @@ trait YARNClusterLike {
     yarnCluster.foreach(_.init(yarnConf))
     yarnCluster.foreach(_.start())
 
-    val config = yarnCluster.get.getConfig()
+    val config = yarnCluster.map(_.getConfig())
     val deadline = System.currentTimeMillis() + TimeUnit.SECONDS.toMillis(10)
-    while (config.get(YarnConfiguration.RM_ADDRESS).split(":")(1) == "0") {
+    while (config.map(_.get(YarnConfiguration.RM_ADDRESS).split(":")(1)) == Some("0")) {
       if (System.currentTimeMillis() > deadline) {
         throw new IllegalStateException("Timed out waiting for RM to come up.")
       }
