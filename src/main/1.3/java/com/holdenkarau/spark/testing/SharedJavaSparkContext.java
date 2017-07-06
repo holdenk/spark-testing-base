@@ -50,10 +50,10 @@ public class SharedJavaSparkContext implements SparkContextProvider {
   /**
    * Hooks for setup code that needs to be executed/torn down in order with SparkContexts
    */
-  void beforeAllTestCasesHook() {
+  protected void beforeAllTestCasesHook() {
   }
 
-  static void afterAllTestCasesHook() {
+  protected static void afterAllTestCasesHook() {
   }
 
   @Before
