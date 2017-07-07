@@ -55,27 +55,27 @@ class SparkTestingBaseTestCase(unittest2.TestCase):
 
     def compareRDD(self, expected, result):
         expectedKeyed = expected.map(lambda x: (x, 1))\
-			.reduceByKey(lambda x, y: x + y)
+                                .reduceByKey(lambda x, y: x + y)
         resultKeyed = result.map(lambda x: (x, 1))\
-		      .reduceByKey(lambda x, y: x + y)
+                            .reduceByKey(lambda x, y: x + y)
         return expectedKeyed.cogroup(resultKeyed)\
-	       .map(lambda x: tuple(map(list,x[1])))\
-	       .filter(lambda x: x[0] != x[1]).take(1)
+                            .map(lambda x: tuple(map(list, x[1])))\
+                            .filter(lambda x: x[0] != x[1]).take(1)
 
     def assertRDDEqualsWithOrder(self, expected, result):
         return self.compareRDDWithOrder(expected, result) == []
-    
+
     def compareRDDWithOrder(self, expected, result):
         def indexRDD(rdd):
             return rdd.zipWithIndex().map(lambda x: (x[1], x[0]))
         indexExpected = indexRDD(expected)
         indexResult = indexRDD(result)
         return indexExpected.cogroup(indexResult)\
-           .map(lambda x: tuple(map(list,x[1])))\
-           .filter(lambda x: x[0] != x[1]).take(1)
+                            .map(lambda x: tuple(map(list, x[1])))\
+                            .filter(lambda x: x[0] != x[1]).take(1)
+
 
 class SparkTestingBaseReuse(unittest2.TestCase):
-
     """Basic common test case for Spark. Provides a Spark context as sc.
     For non local mode testing you can either override sparkMaster
     or set the enviroment property SPARK_MASTER for non-local mode testing."""

@@ -17,8 +17,7 @@ from __future__ import absolute_import
 #
 
 from .utils import add_pyspark_path_if_needed, quiet_py4j
-
-add_pyspark_path_if_needed()
+from .pathmagic import *
 
 from .testcase import SparkTestingBaseReuse
 
