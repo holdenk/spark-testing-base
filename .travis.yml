@@ -6,6 +6,8 @@ cache:
     - $HOME/.cache/pip
     - $HOME/.pip-cache
     - $HOME/.sbt/launchers
+jdk:
+  - oraclejdk8
 scala:
    - 2.10.4
 sudo: false
