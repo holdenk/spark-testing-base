@@ -13,7 +13,7 @@ if ($input =~ /version\s+\:\=\s+\"(.+?)\"/) {
 } else {
     die "Could not extract version";
 }
-print "Building original version";
+print "Building original version - $original_version";
 print `./sbt/sbt clean publishSigned +publishSigned`;
 print "Cross building for $original_version";
 foreach my $spark_version (@spark_versions) {
