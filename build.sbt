@@ -10,7 +10,7 @@ sparkVersion := "2.1.1"
 
 scalaVersion := {
   if (sparkVersion.value >= "2.0.0") {
-    "2.11.8"
+    "2.11.11"
   } else {
     "2.10.6"
   }
@@ -34,7 +34,13 @@ crossScalaVersions := {
   }
 }
 
-javacOptions ++= Seq("-source", "1.7", "-target", "1.7")
+javacOptions ++= {
+    if (sparkVersion.value >= "2.1.1") {
+      Seq("-source", "1.8", "-target", "1.8")
+    } else {
+      Seq("-source", "1.7", "-target", "1.7")
+    }
+}
 
 //tag::spName[]
 spName := "holdenk/spark-testing-base"

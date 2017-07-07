@@ -14,8 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
-"""Simple sSQL test"""
+"""A simple SQL test case"""
 
 from datetime import datetime
 from pyspark.sql import Row
