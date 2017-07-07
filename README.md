@@ -64,8 +64,12 @@ In surefire make sure that forkCount is set to 1 and reuseForks is true.
 
 ## Where is this from?
 
-Much of this code is a stripped down version of the test suite bases that are in Apache Spark but are not accessible. Other parts are also inspired by ssbase (scalacheck generators for Spark).
+Much of this code is a stripped down version of the test suite bases that are in Apache Spark but are not accessible. Other parts are also inspired by sscheck (scalacheck generators for Spark).
 
 Other parts of this are implemented on top of the test suite bases to make your life even easier.
+
+## What are some other options?
+
+While we hope you choose our library, https://github.com/juanrh/sscheck , https://github.com/hammerlab/spark-tests , https://github.com/wdm0006/DummyRDD , and more https://www.google.com/search?q=python+spark+testing+libraries exist as options.
 
 ## [Release Notes](RELEASE_NOTES.md)
