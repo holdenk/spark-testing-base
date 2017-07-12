@@ -151,13 +151,13 @@ def excludeJavaxServlet(items: Seq[ModuleID]) =
   excludeFromAll(items, "javax.servlet", "servlet-api")
 
 lazy val miniClusterDependencies = excludeJavaxServlet(Seq(
-  "org.apache.hadoop" % "hadoop-hdfs" % "2.6.4" % "compile,test" classifier "" classifier "tests",
-  "org.apache.hadoop" % "hadoop-common" % "2.6.4" % "compile,test" classifier "" classifier "tests" ,
-  "org.apache.hadoop" % "hadoop-client" % "2.6.4" % "compile,test" classifier "" classifier "tests" ,
-  "org.apache.hadoop" % "hadoop-mapreduce-client-jobclient" % "2.6.4" % "compile,test" classifier "" classifier "tests",
-  "org.apache.hadoop" % "hadoop-yarn-server-tests" % "2.6.4" % "compile,test" classifier "" classifier "tests",
-  "org.apache.hadoop" % "hadoop-yarn-server-web-proxy" % "2.6.4" % "compile,test" classifier "" classifier "tests",
-  "org.apache.hadoop" % "hadoop-minicluster" % "2.6.4"))
+  "org.apache.hadoop" % "hadoop-hdfs" % "2.7.3" % "compile,test" classifier "" classifier "tests",
+  "org.apache.hadoop" % "hadoop-common" % "2.7.3" % "compile,test" classifier "" classifier "tests" ,
+  "org.apache.hadoop" % "hadoop-client" % "2.7.3" % "compile,test" classifier "" classifier "tests" ,
+  "org.apache.hadoop" % "hadoop-mapreduce-client-jobclient" % "2.7.3" % "compile,test" classifier "" classifier "tests",
+  "org.apache.hadoop" % "hadoop-yarn-server-tests" % "2.7.3" % "compile,test" classifier "" classifier "tests",
+  "org.apache.hadoop" % "hadoop-yarn-server-web-proxy" % "2.7.3" % "compile,test" classifier "" classifier "tests",
+  "org.apache.hadoop" % "hadoop-minicluster" % "2.7.3" % "compile,test" classifier "" classifier "tests"))
 
 libraryDependencies ++= miniClusterDependencies
 
