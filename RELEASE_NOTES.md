@@ -1,3 +1,7 @@
+#0.7.1
+ - Upgrade mini cluster hadoop dependencies
+ - Add support for Spark 2.2.0
+ - YARNCluster now requires SPARK_HOME to be set so as to configure spark.yarn.jars (workaround for YARN bug from deprecated code in Spark 2.2).
 #0.7
  - Add Python RDD comparisions
  - Switch to JDK8 for Spark 2.1.1+
