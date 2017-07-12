@@ -27,8 +27,8 @@ from itertools import chain
 import time
 import operator
 import tempfile
-import random
 import struct
+import shutil
 from functools import reduce
 
 from pyspark.context import SparkConf, SparkContext, RDD
@@ -48,10 +48,12 @@ class StreamingTestCase(SparkTestingBaseReuse):
     @classmethod
     def setUpClass(cls):
         super(StreamingTestCase, cls).setUpClass()
-        cls.sc.setCheckpointDir("/tmp")
+        cls._checkpointDir = tempfile.mkdtemp()
+        cls.sc.setCheckpointDir(cls._checkpointDir)
 
     @classmethod
     def tearDownClass(cls):
+        shutil.rmtree(cls._checkpointDir)
         super(StreamingTestCase, cls).tearDownClass()
 
     @classmethod
