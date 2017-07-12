@@ -157,7 +157,7 @@ lazy val miniClusterDependencies = excludeJavaxServlet(Seq(
   "org.apache.hadoop" % "hadoop-mapreduce-client-jobclient" % "2.7.3" % "compile,test" classifier "" classifier "tests",
   "org.apache.hadoop" % "hadoop-yarn-server-tests" % "2.7.3" % "compile,test" classifier "" classifier "tests",
   "org.apache.hadoop" % "hadoop-yarn-server-web-proxy" % "2.7.3" % "compile,test" classifier "" classifier "tests",
-  "org.apache.hadoop" % "hadoop-minicluster" % "2.7.3" % "compile,test" classifier "" classifier "tests"))
+  "org.apache.hadoop" % "hadoop-minicluster" % "2.7.3" % "compile,test"))
 
 libraryDependencies ++= miniClusterDependencies
 
