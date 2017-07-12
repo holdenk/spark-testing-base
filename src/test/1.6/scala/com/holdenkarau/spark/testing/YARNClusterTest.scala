@@ -13,7 +13,9 @@ class YARNClusterTest extends FunSuite with BeforeAndAfterAll {
     yarnCluster = new YARNCluster()
     yarnCluster.startYARN()
 
-    val sparkConf = new SparkConf().setMaster("yarn-client").setAppName("test")
+    val sparkConf = new SparkConf()
+      .setMaster("yarn-client")
+      .setAppName("test")
     sc = new SparkContext(sparkConf)
   }
 

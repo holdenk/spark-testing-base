@@ -19,7 +19,7 @@ package com.holdenkarau.spark.testing
 
 import org.apache.spark._
 
-import org.scalatest{BeforeAndAfterAll, BeforeAndAfterEach, Suite}
+import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach, Suite}
 
 /**
  * Manages a local `sc` {@link SparkContext} variable,

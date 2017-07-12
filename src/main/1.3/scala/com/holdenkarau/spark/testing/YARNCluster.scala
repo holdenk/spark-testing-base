@@ -105,6 +105,10 @@ trait YARNClusterLike {
     val childClasspath = generateClassPath()
     sys.props += ("spark.driver.extraClassPath" -> childClasspath)
     sys.props += ("spark.executor.extraClassPath" -> childClasspath)
+    val sparkHome = sys.env("SPARK_HOME")
+
+    // Handle the Spark JARS
+    sys.props += ("spark.yarn.jars" -> s"${sparkHome}/jars/*.jar")
     val configurationFile = new File(configurationFilePath)
     if (configurationFile.exists()) {
       configurationFile.delete()

@@ -26,7 +26,7 @@ import kafka.producer.{KeyedMessage, Producer, ProducerConfig}
 import kafka.server.{KafkaConfig, KafkaServer}
 import kafka.serializer.DefaultEncoder
 
-import java.util{Properties, UUID}
+import java.util.{Properties, UUID}
 
 import org.apache.zookeeper.server.{NIOServerCnxnFactory, ZooKeeperServer}
 import org.I0Itec.zkclient.ZkClient
