@@ -8,6 +8,9 @@ import org.scalatest.FunSuite
 import org.scalatest.prop.Checkers
 
 class MLScalaCheckTest extends FunSuite with SharedSparkContext with Checkers {
+  // re-use the spark context
+  override implicit def reuseContextIfPossible: Boolean = false
+
   test("vector generation") {
     val schema = StructType(List(StructField("vector", VectorType)))
     val sqlContext = new SQLContext(sc)
