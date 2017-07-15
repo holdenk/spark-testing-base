@@ -19,9 +19,7 @@ package com.holdenkarau.spark.testing
 
 import org.apache.spark._
 
-import org.scalatest.BeforeAndAfterAll
-import org.scalatest.BeforeAndAfterEach
-import org.scalatest.Suite
+import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach, Suite}
 
 /**
  * Provides a local `sc`
