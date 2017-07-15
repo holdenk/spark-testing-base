@@ -113,11 +113,13 @@ trait YARNClusterLike {
     if (configurationFile.exists()) {
       configurationFile.delete()
     }
-    val configuration = yarnCluster.get.getConfig
-    iterableAsScalaIterable(configuration).foreach { e =>
-      sys.props += ("spark.hadoop." + e.getKey() -> e.getValue())
+    val configuration = yarnCluster.map(_.getConfig)
+    configuration.foreach{config =>
+      iterableAsScalaIterable(config).foreach { e =>
+        sys.props += ("spark.hadoop." + e.getKey() -> e.getValue())
+      }
+      config.writeXml(new FileOutputStream(configurationFile))
     }
-    configuration.writeXml(new FileOutputStream(configurationFile))
     // Copy the system props
     val props = new Properties()
     sys.props.foreach { case (k, v) =>

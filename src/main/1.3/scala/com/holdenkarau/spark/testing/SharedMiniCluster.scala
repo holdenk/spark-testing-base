@@ -49,7 +49,7 @@ trait SharedMiniCluster extends BeforeAndAfterAll
       _sc = new SparkContext(sparkConf)
       setup(_sc)
     } catch {
-      case e: Exception =>
+      case e: Throwable =>
         super.shutdownYARN()
         super.shutdownHDFS()
         throw e

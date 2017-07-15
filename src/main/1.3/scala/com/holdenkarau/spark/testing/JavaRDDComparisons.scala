@@ -43,7 +43,7 @@ object JavaRDDComparisons extends RDDComparisonsLike with JavaTestSuite {
       Option[(T, Integer, Integer)] = {
     implicit val ctag = Utils.fakeClassTag[T]
     compareRDD(expected.rdd, result.rdd).
-      map(x => (x._1, Integer.valueOf(x._2), Integer.valueOf(x._3)))
+      map{case(value, expectedCount, resultCount) => (value, Integer.valueOf(expectedCount), Integer.valueOf(resultCount))}
   }
 
 }
