@@ -36,8 +36,8 @@ trait SharedSparkContext extends BeforeAndAfterAll with SparkContextProvider {
   protected implicit def reuseContextIfPossible: Boolean = false
 
   override def beforeAll() {
-    // This is kind of a hack, but if we've got an existing Spark Context hanging around we need
-    // to kill it.
+    // This is kind of a hack, but if we've got an existing Spark Context hanging around
+    // we need to kill it.
     if (!reuseContextIfPossible) {
       EvilSparkContext.stopActiveSparkContext()
     }
