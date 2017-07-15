@@ -24,7 +24,8 @@ import org.scalatest.{BeforeAndAfterAll, Suite}
 
 /**
  * Shares a local `SparkContext` between all tests in a suite
- * and closes it at the end.
+ * and closes it at the end. You can share between suites by enabling
+ * reuseContextIfPossible.
  */
 trait SharedSparkContext extends BeforeAndAfterAll with SparkContextProvider {
   self: Suite =>
@@ -36,8 +37,8 @@ trait SharedSparkContext extends BeforeAndAfterAll with SparkContextProvider {
   protected implicit def reuseContextIfPossible: Boolean = false
 
   override def beforeAll() {
-    // This is kind of a hack, but if we've got an existing Spark Context hanging around
-    // we need to kill it.
+    // This is kind of a hack, but if we've got an existing Spark Context
+    // hanging around we need to kill it.
     if (!reuseContextIfPossible) {
       EvilSparkContext.stopActiveSparkContext()
     }
