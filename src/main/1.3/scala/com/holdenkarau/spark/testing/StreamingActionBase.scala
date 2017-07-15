@@ -57,7 +57,7 @@ trait StreamingActionBase extends StreamingSuiteBase {
       try {
         outputStreamSSC.stop(stopSparkContext = false)
       } catch {
-        case e: Exception =>
+        case e: Throwable =>
           logError("Error stopping StreamingContext", e)
       }
     }

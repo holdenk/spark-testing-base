@@ -18,6 +18,8 @@ package com.holdenkarau.spark.testing.kafka
 
 import java.util.Properties
 
+import scala.collection.JavaConversions._
+
 import kafka.consumer.ConsumerConfig
 import org.apache.spark.streaming.kafka.KafkaTestUtils
 import org.junit.runner.RunWith
@@ -58,8 +60,6 @@ class KafkaTestUtilsTest extends FunSuite with BeforeAndAfterAll {
     val consumer = kafka.consumer.Consumer.createJavaConsumerConnector(new ConsumerConfig(consumerProps))
 
     try {
-      import scala.collection.JavaConversions._
-
       val topicCountMap = Map(topic -> new Integer(1))
       val consumerMap = consumer.createMessageStreams(topicCountMap)
       val stream = consumerMap.get(topic).get(0)

@@ -97,9 +97,9 @@ object DataframeGenerator {
       generator => (generator.columnName -> generator)).toMap
     (0 until fields.length).toList.map(index => {
       if (generatorMap.contains(fields(index).name)) {
-        generatorMap.get(fields(index).name).get match {
-          case gen: Column => gen.gen
-          case list: ColumnList => getGenerator(fields(index).dataType, list.gen)
+        generatorMap.get(fields(index).name) match {
+          case Some(gen: Column) => gen.gen
+          case Some(list: ColumnList) => getGenerator(fields(index).dataType, list.gen)
         }
       }
       else getGenerator(fields(index).dataType)
