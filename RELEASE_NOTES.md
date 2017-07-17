@@ -1,3 +1,5 @@
+# 0.7.2
+ - Add expiremental support to for reusing a SparkContext/Session accross multiple suites. For Spark 2.0+ only.
 # 0.7.1
  - Upgrade mini cluster hadoop dependencies
  - Add support for Spark 2.2.0
