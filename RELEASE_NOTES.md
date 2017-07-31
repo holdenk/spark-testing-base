@@ -1,3 +1,6 @@
+# 0.7.3
+ - Re-add Scala 2.10 support up to and including Spark 2.2.X series
+ - Attempt to make it so that users doing SQL tests without Hive don't need the hive jars.
 # 0.7.2
  - Add expiremental support to for reusing a SparkContext/Session accross multiple suites. For Spark 2.0+ only.
 # 0.7.1
