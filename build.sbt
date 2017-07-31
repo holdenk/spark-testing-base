@@ -4,7 +4,7 @@ name := "spark-testing-base"
 
 publishMavenStyle := true
 
-version := "0.7.2"
+version := "0.7.3"
 
 sparkVersion := "2.2.0"
 
@@ -27,7 +27,7 @@ coverageHighlighting := {
 
 
 crossScalaVersions := {
-  if (sparkVersion.value > "2.0.0") {
+  if (sparkVersion.value >= "2.3.0") {
     Seq("2.11.11")
   } else {
     Seq("2.10.6", "2.11.11")
