@@ -44,7 +44,9 @@ trait DataFrameSuiteBase extends TestSuite
 
   override def afterAll() {
     super.afterAll()
-    SparkSessionProvider._sparkSession = null
+    if (!reuseContextIfPossible) {
+      SparkSessionProvider._sparkSession = null
+    }
   }
 }
 
