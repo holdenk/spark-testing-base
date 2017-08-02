@@ -1,5 +1,7 @@
 package org.apache.spark
 
+import com.holdenkarau.spark.testing.LocalSparkContext
+
 import java.util.concurrent.atomic.AtomicReference
 
 /**
@@ -12,6 +14,8 @@ object EvilSparkContext {
     val activeContextField =  declaredFields.filter(_.getName.contains("active"))
     val activeContextValue = activeContextField.map(field => field.get(SparkContext$.MODULE$))
     val activeContextRef = activeContextValue.filter(ctx => ctx != null && ctx.isInstanceOf[AtomicReference[_]])
-    activeContextRef.foreach(ctx => Option(ctx.asInstanceOf[AtomicReference[SparkContext]].get()).foreach(_.stop()))
+    activeContextRef.foreach{ctx =>
+      LocalSparkContext.stop(ctx.asInstanceOf[AtomicReference[SparkContext]].get())
+    }
   }
 }
