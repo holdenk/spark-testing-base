@@ -68,6 +68,11 @@ trait YARNClusterLike {
     Files.write(LOG4J_CONF, logConfFile, UTF_8)
 
     val yarnConf = new YarnConfiguration()
+    // Disable the disk utilization check to avoid the test hanging when people's disks are
+    // getting full.
+    yarnConf.set("yarn.nodemanager.disk-health-checker.max-disk-utilization-per-disk-percentage",
+      "100.0")
+
     yarnCluster = Some(new MiniYARNCluster(getClass().getName(), 1, 1, 1))
     yarnCluster.foreach(_.init(yarnConf))
     yarnCluster.foreach(_.start())
