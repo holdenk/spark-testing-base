@@ -73,7 +73,8 @@ trait YARNClusterLike {
     yarnConf.set("yarn.nodemanager.disk-health-checker.max-disk-utilization-per-disk-percentage",
       "100.0")
 
-    yarnCluster = Some(new MiniYARNCluster(getClass().getName(), 1, 1, 1))
+    val nodes = 3
+    yarnCluster = Some(new MiniYARNCluster(getClass().getName(), nodes, 1, 1))
     yarnCluster.foreach(_.init(yarnConf))
     yarnCluster.foreach(_.start())
 
@@ -85,6 +86,9 @@ trait YARNClusterLike {
       }
       TimeUnit.MILLISECONDS.sleep(100)
     }
+
+    val nodeReports = yarnClient.map(_.getNodeReports(NodeState.RUNNING))
+    println(s"node reports in running: ${nodeReports}")
 
     val props = setupSparkProperties()
     val propsFile = File.createTempFile("spark", ".properties", tempDir)
