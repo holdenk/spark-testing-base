@@ -65,8 +65,8 @@ scalastyleSources in Test <++= unmanagedSourceDirectories in Test
 
 // Allow kafka (and other) utils to have version specific files
 unmanagedSourceDirectories in Compile  := {
-  if (sparkVersion.value >= "2.1.0") Seq(
-    (sourceDirectory in Compile)(_ / "2.1/scala"),
+  if (sparkVersion.value >= "2.2.0") Seq(
+    (sourceDirectory in Compile)(_ / "2.2/scala"),
     (sourceDirectory in Compile)(_ / "2.0/scala"),
     (sourceDirectory in Compile)(_ / "1.6/scala"),
     (sourceDirectory in Compile)(_ / "1.5/scala"),
@@ -75,7 +75,7 @@ unmanagedSourceDirectories in Compile  := {
     (sourceDirectory in Compile)(_ / "1.3/scala"), (sourceDirectory in Compile)(_ / "1.3/java")
   ).join.value
   else if (sparkVersion.value >= "2.0.0") Seq(
-    (sourceDirectory in Compile)(_ / "2.0-only/scala"),
+    (sourceDirectory in Compile)(_ / "pre-2.2/scala"),
     (sourceDirectory in Compile)(_ / "2.0/scala"),
     (sourceDirectory in Compile)(_ / "1.6/scala"),
     (sourceDirectory in Compile)(_ / "1.5/scala"),
