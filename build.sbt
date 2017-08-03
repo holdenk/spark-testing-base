@@ -141,7 +141,7 @@ unmanagedSourceDirectories in Test  := {
 }
 
 
-javaOptions ++= Seq("-Xms1536M", "-Xmx1536M", "-XX:MaxPermSize=1536M", "-XX:+CMSClassUnloadingEnabled")
+javaOptions ++= Seq("-Xms3G", "-Xmx3G", "-XX:MaxPermSize=2048M", "-XX:+CMSClassUnloadingEnabled")
 
 // additional libraries
 libraryDependencies ++= Seq(

@@ -1,4 +1,5 @@
 language: scala
+sudo: required
 dist: precise
 cache:
   directories:
