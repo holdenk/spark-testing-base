@@ -46,7 +46,6 @@ trait LocalSparkContext extends BeforeAndAfterEach
 object LocalSparkContext {
   def stop(sc: SparkContext) {
     Option(sc).foreach{ctx =>
-      println(s"Current context exists and stopped is ${ctx.isStopped}")
       ctx.stop()
     }
     // To avoid Akka rebinding to the same port, since it doesn't
