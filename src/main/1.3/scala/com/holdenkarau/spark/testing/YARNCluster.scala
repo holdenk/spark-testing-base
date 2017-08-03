@@ -75,7 +75,7 @@ trait YARNClusterLike {
     yarnConf.set("yarn.nodemanager.disk-health-checker.max-disk-utilization-per-disk-percentage",
       "100.0")
 
-    val nodes = 3
+    val nodes = 2
     yarnCluster = Some(new MiniYARNCluster(getClass().getName(), nodes, 1, 1))
     yarnCluster.foreach(_.init(yarnConf))
     yarnCluster.foreach(_.start())
