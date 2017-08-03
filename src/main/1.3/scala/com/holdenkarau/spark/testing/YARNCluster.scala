@@ -24,6 +24,8 @@ import java.util.concurrent.TimeUnit
 
 import com.google.common.base.Charsets.UTF_8
 import com.google.common.io.Files
+import org.apache.hadoop.yarn.client.api.YarnClient
+import org.apache.hadoop.yarn.api.records.NodeState
 import org.apache.hadoop.yarn.conf.YarnConfiguration
 import org.apache.hadoop.yarn.server.MiniYARNCluster
 
@@ -78,16 +80,20 @@ trait YARNClusterLike {
     yarnCluster.foreach(_.init(yarnConf))
     yarnCluster.foreach(_.start())
 
-    val config = yarnCluster.map(_.getConfig())
+    val config = yarnCluster.map(_.getConfig()).get
     val deadline = System.currentTimeMillis() + TimeUnit.SECONDS.toMillis(10)
-    while (config.map(_.get(YarnConfiguration.RM_ADDRESS).split(":")(1)) == Some("0")) {
+    while (config.get(YarnConfiguration.RM_ADDRESS).split(":")(1) == "0") {
       if (System.currentTimeMillis() > deadline) {
         throw new IllegalStateException("Timed out waiting for RM to come up.")
       }
       TimeUnit.MILLISECONDS.sleep(100)
     }
 
-    val nodeReports = yarnClient.map(_.getNodeReports(NodeState.RUNNING))
+    val yarnClient = YarnClient.createYarnClient()
+    yarnClient.init(config)
+    yarnClient.start()
+
+    val nodeReports = yarnClient.getNodeReports(NodeState.RUNNING)
     println(s"node reports in running: ${nodeReports}")
 
     val props = setupSparkProperties()
