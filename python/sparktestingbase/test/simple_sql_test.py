@@ -81,7 +81,9 @@ class SimpleSQLTest(SQLTestCase):
             b=True, list=[1, 2, 3], dict={"s": 0}, row=Row(a=1),
             time=datetime(2014, 8, 1, 14, 1, 5))])
         empty = self.sc.parallelize([])
-        self.assertDataFrameEqual(allTypes.toDF(), self.sqlCtx.createDataFrame(empty, allTypes.toDF().schema), 0.1)
+        self.assertDataFrameEqual(
+            allTypes.toDF(),
+            self.sqlCtx.createDataFrame(empty, allTypes.toDF().schema), 0.1)
 
 
 if __name__ == "__main__":
