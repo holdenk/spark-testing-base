@@ -9,7 +9,7 @@ import java.util.concurrent.atomic.AtomicReference
  */
 object EvilSparkContext {
   def stopActiveSparkContext(): Unit = {
-    val declaredFields = classOf[SparkContext$].getDeclaredFields()
+    val declaredFields = classOf[SparkContext].getDeclaredFields()
     declaredFields.foreach{field => field.setAccessible(true) }
     val activeContextField =  declaredFields.filter(_.getName.contains("active"))
     val activeContextValue = activeContextField.map(field => field.get(SparkContext$.MODULE$))

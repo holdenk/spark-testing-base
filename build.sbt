@@ -74,8 +74,17 @@ unmanagedSourceDirectories in Compile  := {
     (sourceDirectory in Compile)(_ / "kafka/scala"),
     (sourceDirectory in Compile)(_ / "1.3/scala"), (sourceDirectory in Compile)(_ / "1.3/java")
   ).join.value
+  else if (sparkVersion.value >= "2.0.0" && scalaVersion.value >= "2.11") Seq(
+    (sourceDirectory in Compile)(_ / "pre-2.2_2.11/scala"),
+    (sourceDirectory in Compile)(_ / "2.0/scala"),
+    (sourceDirectory in Compile)(_ / "1.6/scala"),
+    (sourceDirectory in Compile)(_ / "1.5/scala"),
+    (sourceDirectory in Compile)(_ / "1.4/scala"),
+    (sourceDirectory in Compile)(_ / "kafka/scala"),
+    (sourceDirectory in Compile)(_ / "1.3/scala"), (sourceDirectory in Compile)(_ / "1.3/java")
+  ).join.value
   else if (sparkVersion.value >= "2.0.0") Seq(
-    (sourceDirectory in Compile)(_ / "pre-2.2/scala"),
+    (sourceDirectory in Compile)(_ / "pre-2.2_2.10/scala"),
     (sourceDirectory in Compile)(_ / "2.0/scala"),
     (sourceDirectory in Compile)(_ / "1.6/scala"),
     (sourceDirectory in Compile)(_ / "1.5/scala"),
