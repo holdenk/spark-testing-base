@@ -1,3 +1,5 @@
+# 0.7.4
+ - Fix Scala 2.10 Spark 2.0.X, 2.1.X context reuse reflection issue.
 # 0.7.3
  - Re-add Scala 2.10 support up to and including Spark 2.2.X series
  - Attempt to make it so that users doing SQL tests without Hive don't need the hive jars.
