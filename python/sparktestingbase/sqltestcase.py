@@ -66,6 +66,7 @@ class SQLTestCase(SparkTestingBaseReuse):
         try:
             expectedRDD = expected.rdd.cache()
             resultRDD = result.rdd.cache()
+            self.assertEqual(expectedRDD.count(), resultRDD.count())
 
             def zipWithIndex(rdd):
                 """Zip with index (idx, data)"""
