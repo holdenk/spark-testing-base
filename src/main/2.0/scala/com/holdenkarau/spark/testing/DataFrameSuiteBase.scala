@@ -18,12 +18,12 @@
 package com.holdenkarau.spark.testing
 
 import java.io.File
+import java.sql.Timestamp
 
 import org.scalatest.Suite
 
 import scala.math.abs
 import scala.collection.mutable.HashMap
-
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql._
 import org.apache.spark.sql.hive._
@@ -229,6 +229,14 @@ object DataFrameSuiteBase {
             case d1: java.math.BigDecimal =>
               if (d1.compareTo(o2.asInstanceOf[java.math.BigDecimal]) != 0) {
                 return false
+              }
+
+            case t1: Timestamp =>
+              if (abs(t1.getTime - o2.asInstanceOf[Timestamp].getTime) > tol) {
+                System.out.println("Asserted timestamp")
+                return false
+              } else {
+                System.out.println("Asserted timestamp")
               }
 
             case _ =>
