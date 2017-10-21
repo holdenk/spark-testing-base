@@ -24,6 +24,7 @@ import org.scalatest.Suite
 
 import scala.math.abs
 import scala.collection.mutable.HashMap
+
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql._
 import org.apache.spark.sql.hive._
@@ -233,10 +234,7 @@ object DataFrameSuiteBase {
 
             case t1: Timestamp =>
               if (abs(t1.getTime - o2.asInstanceOf[Timestamp].getTime) > tol) {
-                System.out.println("Asserted timestamp")
                 return false
-              } else {
-                System.out.println("Asserted timestamp")
               }
 
             case _ =>
