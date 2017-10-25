@@ -17,7 +17,7 @@
 
 package com.holdenkarau.spark.testing
 
-import org.apache.spark.{SparkConf, SparkContext}
+import org.apache.spark.{SparkConf, SparkContext, EvilSparkContext}
 import org.scalatest.{BeforeAndAfterAll, Suite}
 
 /**
@@ -45,6 +45,9 @@ trait SharedMiniCluster extends BeforeAndAfterAll
       super.startHDFS()
       super.startYARN()
 
+      // Stop the spark context if already running
+      EvilSparkContext.stopActiveSparkContext()
+      // Create the new context
       val sparkConf = new SparkConf().setMaster(master).setAppName("test")
       _sc = new SparkContext(sparkConf)
       setup(_sc)
