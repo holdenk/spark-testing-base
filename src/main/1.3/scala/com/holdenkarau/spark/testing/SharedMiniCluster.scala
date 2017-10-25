@@ -45,6 +45,7 @@ trait SharedMiniCluster extends BeforeAndAfterAll
       super.startHDFS()
       super.startYARN()
 
+      // Create the new context
       val sparkConf = new SparkConf().setMaster(master).setAppName("test")
       _sc = new SparkContext(sparkConf)
       setup(_sc)
