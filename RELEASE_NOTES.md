@@ -1,3 +1,5 @@
+# 0.8.0
+ - Add initial draft support for structured streaming.
 # 0.7.4
  - Fix Scala 2.10 Spark 2.0.X, 2.1.X context reuse reflection issue.
 # 0.7.3
