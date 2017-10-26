@@ -18,12 +18,18 @@
 
 from datetime import datetime
 from pyspark.sql import Row
+from pyspark.sql.types import StructType
 from sparktestingbase.sqltestcase import SQLTestCase
 import unittest2
 
 
 class SimpleSQLTest(SQLTestCase):
     """A simple test."""
+
+    def test_empty_expected_equal(self):
+        allTypes = self.sc.parallelize([])
+        df = self.sqlCtx.createDataFrame(allTypes, StructType([]))
+        self.assertDataFrameEqual(df, df)
 
     def test_simple_expected_equal(self):
         allTypes = self.sc.parallelize([Row(
@@ -67,6 +73,18 @@ class SimpleSQLTest(SQLTestCase):
         allTypes1 = self.sc.parallelize([Row(d=1.0)])
         allTypes2 = self.sc.parallelize([Row(d="1.0")])
         self.assertDataFrameEqual(allTypes1.toDF(), allTypes2.toDF(), 0.0001)
+
+    @unittest2.expectedFailure
+    def test_empty_dataframe_unequal(self):
+        allTypes = self.sc.parallelize([Row(
+            i=1, s="string", d=1.001, l=1,
+            b=True, list=[1, 2, 3], dict={"s": 0}, row=Row(a=1),
+            time=datetime(2014, 8, 1, 14, 1, 5))])
+        empty = self.sc.parallelize([])
+        self.assertDataFrameEqual(
+            allTypes.toDF(),
+            self.sqlCtx.createDataFrame(empty, allTypes.toDF().schema), 0.1)
+
 
 if __name__ == "__main__":
     unittest2.main()

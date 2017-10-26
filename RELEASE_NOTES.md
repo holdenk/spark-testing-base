@@ -4,17 +4,17 @@
  - Re-add Scala 2.10 support up to and including Spark 2.2.X series
  - Attempt to make it so that users doing SQL tests without Hive don't need the hive jars.
  - Don't reset the SparkSession provider when in reuse mode.
- - Add workaround for inaccessiable active context info in Spark 2.0
+ - Add workaround for inaccessible active context info in Spark 2.0
  - Upgrade to Hadoop 2.8.1 for mini cluster
  - Change build env after travis changes
 # 0.7.2
- - Add expiremental support to for reusing a SparkContext/Session accross multiple suites. For Spark 2.0+ only.
+ - Add experimental support to for reusing a SparkContext/Session across multiple suites. For Spark 2.0+ only.
 # 0.7.1
  - Upgrade mini cluster hadoop dependencies
  - Add support for Spark 2.2.0
  - YARNCluster now requires SPARK_HOME to be set so as to configure spark.yarn.jars (workaround for YARN bug from deprecated code in Spark 2.2).
 # 0.7
- - Add Python RDD comparisions
+ - Add Python RDD comparisons
  - Switch to JDK8 for Spark 2.1.1+
  - Add back Kafka tests
  - Make it easier to disable Hive support when running tests
