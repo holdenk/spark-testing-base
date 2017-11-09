@@ -21,6 +21,7 @@ import java.sql.Timestamp
 import org.apache.spark.sql.Row
 import org.apache.spark.sql.types._
 import org.scalatest.FunSuite
+import java.math.{ BigDecimal => JBigDecimal }
 
 class SampleDataFrameTest extends FunSuite with DataFrameSuiteBase {
   val byteArray = new Array[Byte](1)
@@ -70,10 +71,10 @@ class SampleDataFrameTest extends FunSuite with DataFrameSuiteBase {
     val row8 = Row(Timestamp.valueOf("2018-01-12 20:22:13"))
     val row9 = Row(Timestamp.valueOf("2018-01-12 20:22:18"))
     val row10 = Row(Timestamp.valueOf("2018-01-12 20:23:13"))
-    val row11 = Row(new java.math.BigDecimal(1.0))
-    val row11a = Row(new java.math.BigDecimal(1.0 + 1.0E-6))
-    val row12 = Row(scala.math.BigDecimal(1.0))
-    val row12a = Row(scala.math.BigDecimal(1.0 + 1.0E-6))
+    val row11 = Row(new JBigDecimal(1.0))
+    val row11a = Row(new JBigDecimal(1.0 + 1.0E-6))
+    val row12 = Row(BigDecimal(1.0))
+    val row12a = Row(BigDecimal(1.0 + 1.0E-6))
     assert(false === approxEquals(row, row2, 1E-7))
     assert(true === approxEquals(row, row2, 1E-5))
     assert(true === approxEquals(row3, row3, 1E-5))
@@ -90,6 +91,42 @@ class SampleDataFrameTest extends FunSuite with DataFrameSuiteBase {
     assert(false === approxEquals(row9, row10, 53000))
     assert(true === approxEquals(row11, row11a, 1.0E-6))
     assert(true === approxEquals(row12, row12a, 1.0E-6))
+  }
+
+  test("dataframe approxEquals on rows with relative tolerance") {
+    import sqlContext.implicits._
+    // Use 1 / 2^n as example numbers to avoid numeric errors
+    val relTol = scala.math.pow(2, -6)
+    val orig = 0.25
+    val within = orig - relTol * orig
+    val outside = within - 1.0E-4
+    def assertRelativeApproxEqualsWorksFor[T](constructor: Double => T) = {
+      assertResult(true) {
+        approxEquals(
+          Row(constructor(orig)),
+          Row(constructor(within)),
+          relTol = relTol
+        )
+      }
+      assertResult(false) {
+        approxEquals(
+          Row(constructor(orig)),
+          Row(constructor(outside)),
+          relTol = relTol
+        )
+      }
+      assertResult(true) {
+        approxEquals(
+          Row(constructor(0.0)),
+          Row(constructor(0.0)),
+          relTol = relTol
+        )
+      }
+    }
+    assertRelativeApproxEqualsWorksFor[Double](identity)
+    assertRelativeApproxEqualsWorksFor[Float](_.toFloat)
+    assertRelativeApproxEqualsWorksFor[BigDecimal](BigDecimal.apply)
+    assertRelativeApproxEqualsWorksFor[JBigDecimal](new JBigDecimal(_))
   }
 
   test("verify hive function support") {
