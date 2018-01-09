@@ -1,3 +1,5 @@
+# 0.8.1
+ - Add support for Spark 2.2.1
 # 0.8.0
  - Add initial draft support for structured streaming.
 # 0.7.4
