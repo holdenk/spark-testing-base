@@ -16,6 +16,8 @@
  */
 package com.holdenkarau.spark.testing
 
+import java.sql.Timestamp
+
 import org.apache.spark.sql.Row
 import org.scalatest.FunSuite
 
@@ -64,6 +66,9 @@ class SampleDataFrameTest extends FunSuite with DataFrameSuiteBase {
     val row6 = Row("1")
     val row6a = Row("2")
     val row7 = Row(1.toFloat)
+    val row8 = Row(Timestamp.valueOf("2018-01-12 20:22:13"))
+    val row9 = Row(Timestamp.valueOf("2018-01-12 20:22:18"))
+    val row10 = Row(Timestamp.valueOf("2018-01-12 20:23:13"))
     assert(false === approxEquals(row, row2, 1E-7))
     assert(true === approxEquals(row, row2, 1E-5))
     assert(true === approxEquals(row3, row3, 1E-5))
@@ -74,6 +79,10 @@ class SampleDataFrameTest extends FunSuite with DataFrameSuiteBase {
     assert(false === approxEquals(row6, row4, 1E-5))
     assert(false === approxEquals(row6, row7, 1E-5))
     assert(false === approxEquals(row6, row6a, 1E-5))
+    assert(true === approxEquals(row8, row9, 5000))
+    assert(false === approxEquals(row9, row8, 3000))
+    assert(true === approxEquals(row9, row10, 60000))
+    assert(false === approxEquals(row9, row10, 58000))
   }
 
   test("verify hive function support") {
