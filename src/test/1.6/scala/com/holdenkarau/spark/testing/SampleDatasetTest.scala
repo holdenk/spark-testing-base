@@ -144,8 +144,10 @@ class SampleDatasetTest extends FunSuite with DatasetSuiteBase {
   test("approximate time equal") {
     import sqlContext.implicits._
 
-    val list1 = List(MagicTime("Holden", Timestamp.valueOf("2018-01-12 20:41:32")), MagicTime("Shakanti", Timestamp.valueOf("2018-01-12 19:32:18")))
-    val list2 = List(MagicTime("Holden", Timestamp.valueOf("2018-01-12 20:41:32")), MagicTime("Shakanti", Timestamp.valueOf("2018-01-12 19:32:18")))
+    val list1 = List(MagicTime("Holden", Timestamp.valueOf("2018-01-12 20:41:32")),
+      MagicTime("Shakanti", Timestamp.valueOf("2018-01-12 19:32:18")))
+    val list2 = List(MagicTime("Holden", Timestamp.valueOf("2018-01-12 20:41:32")),
+      MagicTime("Shakanti", Timestamp.valueOf("2018-01-12 19:32:18")))
 
     val time1 = sc.parallelize(list1).toDS
     val time2 = sc.parallelize(list2).toDS
@@ -156,8 +158,10 @@ class SampleDatasetTest extends FunSuite with DatasetSuiteBase {
   test("approximate time not equal acceptable tolerance") {
     import sqlContext.implicits._
 
-    val list1 = List(MagicTime("Holden", Timestamp.valueOf("2018-01-12 20:41:32")), MagicTime("Shakanti", Timestamp.valueOf("2018-01-12 19:32:18")))
-    val list2 = List(MagicTime("Holden", Timestamp.valueOf("2018-01-12 20:41:49")), MagicTime("Shakanti", Timestamp.valueOf("2018-01-12 19:32:22")))
+    val list1 = List(MagicTime("Holden", Timestamp.valueOf("2018-01-12 20:41:32")),
+      MagicTime("Shakanti", Timestamp.valueOf("2018-01-12 19:32:18")))
+    val list2 = List(MagicTime("Holden", Timestamp.valueOf("2018-01-12 20:41:49")),
+      MagicTime("Shakanti", Timestamp.valueOf("2018-01-12 19:32:22")))
 
     val time1 = sc.parallelize(list1).toDS
     val time2 = sc.parallelize(list2).toDS
@@ -168,8 +172,10 @@ class SampleDatasetTest extends FunSuite with DatasetSuiteBase {
   test("approximate time not equal low tolerance") {
     import sqlContext.implicits._
 
-    val list1 = List(MagicTime("Holden", Timestamp.valueOf("2018-01-12 20:41:32")), MagicTime("Shakanti", Timestamp.valueOf("2018-01-12 19:32:18")))
-    val list2 = List(MagicTime("Holden", Timestamp.valueOf("2018-01-12 20:41:49")), MagicTime("Shakanti", Timestamp.valueOf("2018-01-12 19:32:22")))
+    val list1 = List(MagicTime("Holden", Timestamp.valueOf("2018-01-12 20:41:32")),
+      MagicTime("Shakanti", Timestamp.valueOf("2018-01-12 19:32:18")))
+    val list2 = List(MagicTime("Holden", Timestamp.valueOf("2018-01-12 20:41:49")),
+      MagicTime("Shakanti", Timestamp.valueOf("2018-01-12 19:32:22")))
 
     val time1 = sc.parallelize(list1).toDS
     val time2 = sc.parallelize(list2).toDS
