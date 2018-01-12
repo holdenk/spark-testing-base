@@ -4,9 +4,9 @@ name := "spark-testing-base"
 
 publishMavenStyle := true
 
-version := "0.7.4"
+version := "0.8.1"
 
-sparkVersion := "2.2.0"
+sparkVersion := "2.2.1"
 
 scalaVersion := {
   if (sparkVersion.value >= "2.0.0") {
@@ -123,7 +123,15 @@ unmanagedSourceDirectories in Compile  := {
 }
 
 unmanagedSourceDirectories in Test  := {
-  if (sparkVersion.value >= "2.0.0") Seq(
+  if (sparkVersion.value >= "2.2.0") Seq(
+    (sourceDirectory in Test)(_ / "2.2/scala"),
+    (sourceDirectory in Test)(_ / "2.0/scala"),
+    (sourceDirectory in Test)(_ / "1.6/scala"), (sourceDirectory in Test)(_ / "1.6/java"),
+    (sourceDirectory in Test)(_ / "1.4/scala"),
+    (sourceDirectory in Test)(_ / "kafka/scala"),
+    (sourceDirectory in Test)(_ / "1.3/scala"), (sourceDirectory in Test)(_ / "1.3/java")
+  ).join.value
+  else if (sparkVersion.value >= "2.0.0") Seq(
     (sourceDirectory in Test)(_ / "2.0/scala"),
     (sourceDirectory in Test)(_ / "1.6/scala"), (sourceDirectory in Test)(_ / "1.6/java"),
     (sourceDirectory in Test)(_ / "1.4/scala"),
@@ -170,13 +178,13 @@ def excludeJavaxServlet(items: Seq[ModuleID]) =
   excludeFromAll(items, "javax.servlet", "servlet-api")
 
 lazy val miniClusterDependencies = excludeJavaxServlet(Seq(
-  "org.apache.hadoop" % "hadoop-hdfs" % "2.8.1" % "compile,test" classifier "" classifier "tests",
-  "org.apache.hadoop" % "hadoop-common" % "2.8.1" % "compile,test" classifier "" classifier "tests" ,
-  "org.apache.hadoop" % "hadoop-client" % "2.8.1" % "compile,test" classifier "" classifier "tests" ,
-  "org.apache.hadoop" % "hadoop-mapreduce-client-jobclient" % "2.8.1" % "compile,test" classifier "" classifier "tests",
-  "org.apache.hadoop" % "hadoop-yarn-server-tests" % "2.8.1" % "compile,test" classifier "" classifier "tests",
-  "org.apache.hadoop" % "hadoop-yarn-server-web-proxy" % "2.8.1" % "compile,test" classifier "" classifier "tests",
-  "org.apache.hadoop" % "hadoop-minicluster" % "2.8.1" % "compile,test"))
+  "org.apache.hadoop" % "hadoop-hdfs" % "2.8.3" % "compile,test" classifier "" classifier "tests",
+  "org.apache.hadoop" % "hadoop-common" % "2.8.3" % "compile,test" classifier "" classifier "tests" ,
+  "org.apache.hadoop" % "hadoop-client" % "2.8.3" % "compile,test" classifier "" classifier "tests" ,
+  "org.apache.hadoop" % "hadoop-mapreduce-client-jobclient" % "2.8.3" % "compile,test" classifier "" classifier "tests",
+  "org.apache.hadoop" % "hadoop-yarn-server-tests" % "2.8.3" % "compile,test" classifier "" classifier "tests",
+  "org.apache.hadoop" % "hadoop-yarn-server-web-proxy" % "2.8.3" % "compile,test" classifier "" classifier "tests",
+  "org.apache.hadoop" % "hadoop-minicluster" % "2.8.3" % "compile,test"))
 
 libraryDependencies ++= miniClusterDependencies
 
