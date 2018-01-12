@@ -82,7 +82,7 @@ class SampleDataFrameTest extends FunSuite with DataFrameSuiteBase {
     assert(true === approxEquals(row8, row9, 5000))
     assert(false === approxEquals(row9, row8, 3000))
     assert(true === approxEquals(row9, row10, 60000))
-    assert(false === approxEquals(row9, row10, 58000))
+    assert(false === approxEquals(row9, row10, 53000))
   }
 
   test("verify hive function support") {
