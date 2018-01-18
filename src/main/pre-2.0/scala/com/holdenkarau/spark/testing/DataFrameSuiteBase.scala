@@ -172,6 +172,11 @@ object DataFrameSuiteBase {
             case d1: java.math.BigDecimal =>
               if (d1.compareTo(o2.asInstanceOf[java.math.BigDecimal]) != 0) return false
 
+            case t1: Timestamp =>
+              if (abs(t1.getTime - o2.asInstanceOf[Timestamp].getTime) > tol) {
+                return false
+              }
+
             case _ =>
               if (o1 != o2) return false
           }

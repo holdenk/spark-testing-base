@@ -6,6 +6,7 @@ import org.apache.spark.sql.catalyst.encoders.OuterScopes;
 import org.junit.Test;
 
 import java.io.Serializable;
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -97,6 +98,51 @@ public class SampleJavaDatasetTest extends JavaDatasetSuiteBase implements Seria
         assertDatasetApproximateEquals(dataset1, dataset2, 0.2);
     }
 
+    @Test
+    public void approximateEqualTime() {
+        OuterScopes.addOuterScope(this);
+
+        Time time1 = createTime("Holden", Timestamp.valueOf("2018-01-12 22:21:23"));
+        List<Time> list1 = Arrays.asList(time1);
+        Dataset<Time> dataset1 = sqlContext().createDataset(list1, Encoders.bean(Time.class));
+
+        Time time2 = createTime("Holden", Timestamp.valueOf("2018-01-12 22:21:23"));
+        List<Time> list2 = Arrays.asList(time2);
+        Dataset<Time> dataset2 = sqlContext().createDataset(list2, Encoders.bean(Time.class));
+
+        assertDatasetApproximateEquals(dataset1, dataset2, 0);
+    }
+
+    @Test
+    public void approximateEqualTimeAcceptableTolerance() {
+        OuterScopes.addOuterScope(this);
+
+        Time time1 = createTime("Shakanti", Timestamp.valueOf("2018-01-12 22:21:23"));
+        List<Time> list1 = Arrays.asList(time1);
+        Dataset<Time> dataset1 = sqlContext().createDataset(list1, Encoders.bean(Time.class));
+
+        Time time2 = createTime("Shakanti", Timestamp.valueOf("2018-01-12 22:21:43"));
+        List<Time> list2 = Arrays.asList(time2);
+        Dataset<Time> dataset2 = sqlContext().createDataset(list2, Encoders.bean(Time.class));
+
+        assertDatasetApproximateEquals(dataset1, dataset2, 30000);
+    }
+
+    @Test (expected = AssertionError.class)
+    public void approximateEqualTimeLowTolerance() {
+        OuterScopes.addOuterScope(this);
+
+        Time time1 = createTime("Shakanti", Timestamp.valueOf("2018-01-12 22:21:23"));
+        List<Time> list1 = Arrays.asList(time1);
+        Dataset<Time> dataset1 = sqlContext().createDataset(list1, Encoders.bean(Time.class));
+
+        Time time2 = createTime("Shakanti", Timestamp.valueOf("2018-01-12 22:22:43"));
+        List<Time> list2 = Arrays.asList(time2);
+        Dataset<Time> dataset2 = sqlContext().createDataset(list2, Encoders.bean(Time.class));
+
+        assertDatasetApproximateEquals(dataset1, dataset2, 60000);
+    }
+
     private Person createPerson(String name, int age, double weight) {
         Person person = new Person();
         person.setName(name);
@@ -104,6 +150,14 @@ public class SampleJavaDatasetTest extends JavaDatasetSuiteBase implements Seria
         person.setWeight(weight);
 
         return person;
+    }
+
+    private Time createTime(String name, Timestamp time) {
+        Time t = new Time();
+        t.setName(name);
+        t.setTime(time);
+
+        return t;
     }
 
     public class Person implements Serializable {
@@ -151,4 +205,39 @@ public class SampleJavaDatasetTest extends JavaDatasetSuiteBase implements Seria
         }
     }
 
+    public class Time implements Serializable {
+        private String name;
+        private Timestamp time;
+
+        public String getName() {
+            return name;
+        }
+
+        public void setName(String name) {
+            this.name = name;
+        }
+
+        public Timestamp getTime() {
+            return time;
+        }
+
+        public void setTime(Timestamp time) {
+            this.time = time;
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (obj instanceof Time) {
+                Time objTime = (Time) obj;
+                return objTime.getName().equals(this.name) && objTime.getTime().equals(this.time);
+            }
+
+            return false;
+        }
+
+        @Override
+        public int hashCode() {
+            return name.hashCode() + time.hashCode();
+        }
+    }
 }
