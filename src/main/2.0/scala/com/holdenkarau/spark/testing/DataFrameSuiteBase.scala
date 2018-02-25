@@ -155,6 +155,16 @@ trait DataFrameSuiteBaseLike extends SparkContextProvider
   }
 
   /**
+    * Compares if two [[DataFrame]]s are equal without caring about order of rows, by
+    * finding elements in one DataFrame not in the other. The resulting DataFrame
+    * should be empty inferring the two DataFrames have the same elements.
+    */
+  def assertDataFrameNoOrderEquals(expected: DataFrame, result: DataFrame) {
+    assertEmpty(expected.except(result).rdd.take(maxUnequalRowsToShow))
+    assertEmpty(result.except(expected).rdd.take(maxUnequalRowsToShow))
+  }
+
+  /**
    * Zip RDD's with precise indexes. This is used so we can join two DataFrame's
    * Rows together regardless of if the source is different but still compare
    * based on the order.
