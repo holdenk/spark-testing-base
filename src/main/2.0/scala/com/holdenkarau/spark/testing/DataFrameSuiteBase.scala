@@ -173,9 +173,7 @@ object DataFrameSuiteBase {
     if (r1.length != r2.length) {
       return false
     } else {
-      var idx = 0
-      val length = r1.length
-      while (idx < length) {
+      (0 until r1.length).foreach(idx => {
         if (r1.isNullAt(idx) != r2.isNullAt(idx)) {
           return false
         }
@@ -223,8 +221,7 @@ object DataFrameSuiteBase {
               if (o1 != o2) return false
           }
         }
-        idx += 1
-      }
+      })
     }
     true
   }
