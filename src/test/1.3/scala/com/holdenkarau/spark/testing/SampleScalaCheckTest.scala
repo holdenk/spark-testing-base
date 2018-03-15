@@ -69,6 +69,75 @@ class SampleScalaCheckTest extends FunSuite
     check(property)
   }
 
+  test("test RDD sized generator (nodes)") {
+
+    val nodeGenerator = RDDGenerator.genSizedRDD[(Int, MyNode)](sc) { size: Int =>
+      def genGraph(sz: Int): Gen[(Int, MyNode)] = for {
+          id <- Arbitrary.arbitrary[Int]
+          size <- if (sz <= 0) Gen.const(0) else Gen.choose(0, sz)
+          nodes <- Gen.listOfN(size, genGraph(sz / 2))
+        } yield {
+        (size, MyNode(id, nodes.map{ case (_, node ) => node}))
+      }
+      genGraph(size)
+    }
+
+    val property =
+    forAll(nodeGenerator) {
+      rdd =>
+        /* Getting the rdd size, should be the same one used
+          in RandomRDDs.randomRDD(sc, randomDataGenerator, size, numPartitions)
+        */
+        val rddSize = rdd.count
+
+        val filteredNodes = rdd.filter{ case (size, _) => size > rddSize }
+
+        (rdd.map{ case (_, node) => node.key}.count == rddSize) &&
+          filteredNodes.isEmpty
+    }
+    check(property)
+  }
+
+
+  test("test custom RDD sized generator") {
+
+    val humanGen: Gen[RDD[List[Human]]] =
+      RDDGenerator.genSizedRDD[List[Human]](sc) { size: Int =>
+
+        val adultsNumber = math.ceil(size * 0.8).toInt
+        val kidsNumber = size - adultsNumber
+
+        def genHuman(genAge: Gen[Int]): Gen[Human] = for {
+            name <- Arbitrary.arbitrary[String]
+            age <- genAge
+        } yield Human(name, age)
+
+        for {
+            kids <- Gen.listOfN(kidsNumber, genHuman(Gen.choose(0, 18)))
+            adults <- Gen.listOfN(adultsNumber, genHuman(Gen.choose(18, 130)))
+        } yield {
+          kids ++ adults
+        }
+      }
+
+    val property =
+    forAll(humanGen.map(_.flatMap(identity))) {
+      rdd =>
+        val rddCount = rdd.count
+        val adults = rdd.filter(_.age >= 18).collect
+        val kids = rdd.filter(_.age < 18).collect
+        val adultsNumber = math.ceil(rdd.count * 0.8).toLong
+        val kidsNumber: Long = rddCount - adultsNumber
+
+        adults.size + kids.size == rdd.count &&
+          !kids.exists(_.age > 18) &&
+          !adults.exists(_.age < 18) &&
+          kidsNumber * 4 <= adultsNumber
+    }
+
+    check(property)
+  }
+
   test("assert rows' types like schema type") {
     val schema = StructType(
       List(StructField("name", StringType), StructField("age", IntegerType)))
@@ -294,3 +363,5 @@ class SampleScalaCheckTest extends FunSuite
 }
 
 case class Human(name: String, age: Int)
+case class MyNode(key:Int, children: List[MyNode])
+
