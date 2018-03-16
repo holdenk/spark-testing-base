@@ -4,9 +4,9 @@ name := "spark-testing-base"
 
 publishMavenStyle := true
 
-version := "0.9.0"
+version := "1.5.0_0.9.0"
 
-sparkVersion := "2.3.0"
+sparkVersion := "1.5.0"
 
 scalaVersion := {
   if (sparkVersion.value >= "2.0.0") {
