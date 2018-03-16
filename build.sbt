@@ -6,7 +6,7 @@ publishMavenStyle := true
 
 version := "0.8.1"
 
-sparkVersion := "2.2.1"
+sparkVersion := "2.3.0"
 
 scalaVersion := {
   if (sparkVersion.value >= "2.0.0") {
@@ -60,8 +60,8 @@ coverageHighlighting := {
   else true
 }
 
-scalastyleSources in Compile <++= unmanagedSourceDirectories in Compile
-scalastyleSources in Test <++= unmanagedSourceDirectories in Test
+scalastyleSources in Compile ++= {unmanagedSourceDirectories in Compile}.value
+scalastyleSources in Test ++= {unmanagedSourceDirectories in Test}.value
 
 // Allow kafka (and other) utils to have version specific files
 unmanagedSourceDirectories in Compile  := {
