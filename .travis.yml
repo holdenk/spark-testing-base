@@ -1,6 +1,6 @@
 language: scala
 sudo: required
-dist: precise
+dist: trusty
 cache:
   directories:
     - $HOME/.ivy2
@@ -11,13 +11,15 @@ cache:
 jdk:
   - oraclejdk8
 scala:
-   - 2.10.4
+   - 2.11.8
 sudo: false
 addons:
   apt:
     packages:
       - axel
 before_install:
+  - echo "We are at:"
+  - git rev-parse HEAD
   - export PATH=$HOME/.local/bin:$PATH
   - pip install --user codecov coverage unittest2
 install:
