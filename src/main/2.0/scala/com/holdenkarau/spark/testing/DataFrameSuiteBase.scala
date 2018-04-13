@@ -119,25 +119,7 @@ trait DataFrameSuiteBaseLike extends SparkContextProvider
    * matches checks if the rows are equal.
    */
   def assertDataFrameEquals(expected: DataFrame, result: DataFrame) {
-    assert(expected.schema, result.schema)
-
-    try {
-      expected.rdd.cache
-      result.rdd.cache
-      assert("Length not Equal", expected.rdd.count, result.rdd.count)
-
-      val expectedIndexValue = zipWithIndex(expected.rdd)
-      val resultIndexValue = zipWithIndex(result.rdd)
-
-      val unequalRDD = expectedIndexValue.join(resultIndexValue).
-        filter{case (idx, (r1, r2)) =>
-          !(r1.equals(r2) || DataFrameSuiteBase.approxEquals(r1, r2, 0.0))}
-
-      assertEmpty(unequalRDD.take(maxUnequalRowsToShow))
-    } finally {
-      expected.rdd.unpersist()
-      result.rdd.unpersist()
-    }
+    assertDataFrameApproximateEquals(expected, result, 0.0)
   }
 
   /**
@@ -161,7 +143,7 @@ trait DataFrameSuiteBaseLike extends SparkContextProvider
 
       val unequalRDD = expectedIndexValue.join(resultIndexValue).
         filter{case (idx, (r1, r2)) =>
-          !DataFrameSuiteBase.approxEquals(r1, r2, tol)}
+          !(r1.equals(r2) || DataFrameSuiteBase.approxEquals(r1, r2, tol))}
 
       assertEmpty(unequalRDD.take(maxUnequalRowsToShow))
     } finally {
@@ -191,9 +173,7 @@ object DataFrameSuiteBase {
     if (r1.length != r2.length) {
       return false
     } else {
-      var idx = 0
-      val length = r1.length
-      while (idx < length) {
+      (0 until r1.length).foreach(idx => {
         if (r1.isNullAt(idx) != r2.isNullAt(idx)) {
           return false
         }
@@ -241,8 +221,7 @@ object DataFrameSuiteBase {
               if (o1 != o2) return false
           }
         }
-        idx += 1
-      }
+      })
     }
     true
   }
