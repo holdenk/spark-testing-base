@@ -244,7 +244,7 @@ private[holdenkarau] trait StreamingSuiteCommon extends Logging
     val startTime = System.currentTimeMillis()
     while (output.size < numExpectedOutput &&
       System.currentTimeMillis() - startTime < maxWaitTimeMillis) {
-      logInfo("output.size = ${output.size}, expected = ${numExpectedOutput}")
+      logInfo(s"output.size = ${output.size}, expected = ${numExpectedOutput}")
       ssc.awaitTerminationOrTimeout(50)
     }
     val timeTaken = System.currentTimeMillis() - startTime
