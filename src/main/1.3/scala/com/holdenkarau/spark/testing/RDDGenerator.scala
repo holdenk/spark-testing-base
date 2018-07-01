@@ -52,6 +52,28 @@ object RDDGenerator {
   }
 
   /**
+    * Generate an RDD of the desired type with its size accessible in the lambda.
+    * Attempt to try different number of partitions so as to catch problems with
+    * empty partitions, etc.
+    *
+    * minPartitions defaults to 1, but when generating data too large for a
+    * single machine you must choose a larger value.
+    *
+    * @param sc            Spark Context
+    * @param minPartitions defaults to 1
+    * @param generator     used to create the generator.
+    *                      This function will be used to create the generator as
+    *                      many times as required.
+    * @tparam T The required type for the RDD
+    * @return
+    */
+  def genSizedRDD[T: ClassTag](
+    sc: SparkContext,
+    minPartitions: Int = 1)(generator: Int => Gen[T]): Gen[RDD[T]] = {
+    arbitrarySizedRDD(sc, minPartitions)(generator).arbitrary
+  }
+
+  /**
    * Generate an RDD of the desired type. Attempt to try different number of
    * partitions so as to catch problems with empty partitions, etc.
    *
@@ -72,25 +94,58 @@ object RDDGenerator {
       Arbitrary[RDD[T]] = {
     Arbitrary {
       Gen.sized(sz =>
-        sz match {
-          case 0 => sc.emptyRDD[T]
-          case size => {
-            // Generate different partition sizes
-            val mp = minPartitions
-            val specialPartitionSizes = List(
-              size, (size / 2), mp, mp + 1, mp + 3).filter(_ > mp)
-            val partitionsGen = for {
-            // TODO change 1 to minPartitions
-              partitionCount <- Gen.chooseNum(1, 2 * size, specialPartitionSizes: _*)
-            } yield partitionCount
-            // Wrap the scalacheck generator in a Spark generator
-            val sparkElemGenerator = new WrappedGenerator(generator)
-            val rdds = partitionsGen.map { numPartitions =>
-              RandomRDDs.randomRDD(sc, sparkElemGenerator, size, numPartitions)
-            }
-            rdds
-          }
-        })
+        arbitrary[T](sc, minPartitions, sz)(new WrappedGenerator[T](generator))
+      )
+    }
+  }
+
+  /**
+    * Generate an RDD of the desired type with its size accessible in the lambda.
+    * Attempt to try different number of
+    * partitions so as to catch problems with empty partitions, etc.
+    *
+    * minPartitions defaults to 1, but when generating data too large for a single
+    * machine you must choose a larger value.
+    *
+    * @param sc            Spark Context
+    * @param minPartitions defaults to 1
+    * @param generator     used to create the generator.
+    *                      This function will be used to create the generator as
+    *                      many times as required.
+    * @tparam T The required type for the RDD
+    * @return
+    */
+  def arbitrarySizedRDD[T: ClassTag](
+    sc: SparkContext, minPartitions: Int = 1)
+    (generator: Int => Gen[T]):
+      Arbitrary[RDD[T]] = {
+    Arbitrary {
+      Gen.sized { sz =>
+        arbitrary[T](
+          sc,
+          minPartitions,
+          sz)(new WrappedSizedGenerator[T](sz, generator))
+      }
+    }
+  }
+
+  private def arbitrary[T: ClassTag](
+    sc: SparkContext, minPartitions: Int, sz: Int)
+    (randomDataGenerator: => RandomDataGenerator[T])
+    : Gen[RDD[T]] = {
+    sz match {
+      case 0 => sc.emptyRDD[T]
+      case size => {
+        val mp = minPartitions
+        val specialPartitionSizes = List(
+          size, (size / 2), mp, mp + 1, mp + 3).filter(_ > mp)
+        val partitionsGen =
+          Gen.chooseNum(mp, 2 * size, specialPartitionSizes: _*)
+        val rdds = partitionsGen.map { numPartitions =>
+          RandomRDDs.randomRDD(sc, randomDataGenerator, size, numPartitions)
+        }
+        rdds
+      }
     }
   }
 }
@@ -100,8 +155,26 @@ object RDDGenerator {
  * RandomRDD to use it.
  */
 private[testing] class WrappedGenerator[T](getGenerator: => Gen[T])
-    extends RandomDataGenerator[T] {
+    extends WrappedGen[T] {
   lazy val generator: Gen[T] = getGenerator
+
+  def copy() = {
+    new WrappedGenerator(generator)
+  }
+}
+
+private[testing] class WrappedSizedGenerator[T]
+  (size: Int, getGenerator: Int => Gen[T])
+  extends WrappedGen[T] {
+  lazy val generator: Gen[T] = getGenerator(size)
+
+  def copy() = {
+    new WrappedSizedGenerator(size, getGenerator)
+  }
+}
+
+private[testing] trait WrappedGen[T] extends RandomDataGenerator[T] {
+  val generator: Gen[T]
   lazy val params = Gen.Parameters.default
   lazy val random = new scala.util.Random()
   var seed: Option[rng.Seed] = None
@@ -111,10 +184,6 @@ private[testing] class WrappedGenerator[T](getGenerator: => Gen[T])
       setSeed(random.nextLong())
     }
     generator(params, seed.get).get
-  }
-
-  def copy() = {
-    new WrappedGenerator(getGenerator)
   }
 
   override def setSeed(newSeed: Long): Unit = {
