@@ -19,6 +19,7 @@ package com.holdenkarau.spark.testing
 import java.sql.Timestamp
 
 import org.apache.spark.sql.Row
+import org.apache.spark.sql.types._
 import org.scalatest.FunSuite
 
 class SampleDataFrameTest extends FunSuite with DataFrameSuiteBase {
@@ -121,6 +122,17 @@ class SampleDataFrameTest extends FunSuite with DataFrameSuiteBase {
     intercept[org.scalatest.exceptions.TestFailedException] {
       assertDataFrameApproximateEquals(input, input2, 1E-5)
     }
+  }
+
+  test("equal DF of rows of bytes should be equal (see GH issue #247)") {
+    import sqlContext.implicits._
+    val row1 = Row("bytes".getBytes(), "good")
+    val rdd = sc.parallelize(List(row1))
+    val schema = StructType(
+      List(StructField("a", BinaryType, true),
+        StructField("b", StringType, true)))
+    val df = sqlContext.createDataFrame(rdd, schema)
+    assertDataFrameEquals(df, df)
   }
 }
 
