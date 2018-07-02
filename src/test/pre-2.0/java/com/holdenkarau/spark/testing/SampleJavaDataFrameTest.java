@@ -84,13 +84,15 @@ public class SampleJavaDataFrameTest extends JavaDataFrameSuiteBase implements S
     }
 
     public void testApproximateEqualTimestamp() {
-        List<MagicTime> magics1 = Arrays.asList(new MagicTime("Holden", Timestamp.valueOf("2018-01-12 19:17:32")),
-                new MagicTime("Shakanti", Timestamp.valueOf("2018-01-12 19:17:32")));
+        List<MagicTime> magics1 = Arrays.asList(
+              new MagicTime("Holden", Timestamp.valueOf("2018-01-12 19:17:32")),
+              new MagicTime("Shakanti", Timestamp.valueOf("2018-01-12 19:17:32")));
 
-        List<MagicTime> magics2 = sc.parallelize(List(new MagicTime("Holden", Timestamp.valueOf("2018-01-12 19:17:35")),
-                new MagicTime("Shakanti", Timestamp.valueOf("2018-01-12 19:18:40")))).toDF;
+        List<MagicTime> magics2 = Arrays.asList(
+            new MagicTime("Holden", Timestamp.valueOf("2018-01-12 19:17:35")),
+            new MagicTime("Shakanti", Timestamp.valueOf("2018-01-12 19:18:40")));
 
-        assertDataFrameApproximateEquals(toDF(magics1), toDF(magics2), 75000);
+        assertDataFrameApproximateEquals(timeDF(magics1), timeDF(magics2), 75000);
     }
 
     @Test (expected = java.lang.AssertionError.class)
@@ -101,15 +103,16 @@ public class SampleJavaDataFrameTest extends JavaDataFrameSuiteBase implements S
         List<MagicTime> magics2 = Arrays.asList(new MagicTime("Holden", Timestamp.valueOf("2018-01-12 19:17:35")),
                 new MagicTime("Shakanti", Timestamp.valueOf("2018-01-12 19:18:40")));
 
-        assertDataFrameApproximateEquals(toDF(magics1), toDF(magics2), 59000);
+        assertDataFrameApproximateEquals(timeDF(magics1), timeDF(magics2), 59000);
     }
 
     @Test
     public void testApproximateEqualTimeRows() {
-        List<MagicTime> magics = Arrays.asList(new MagicTime("Holden", Timestamp.valueOf("2018-01-12 20:49:32")),
-                new MagicTime("Shakanti", Timestamp.valueOf("2018-01-12 20:50:02")));
+        List<MagicTime> magics = Arrays.asList(
+          new MagicTime("Shakanti", Timestamp.valueOf("2018-01-12 20:49:32")),
+          new MagicTime("Shakanti", Timestamp.valueOf("2018-01-12 20:50:02")));
 
-        DataFrame df = sqlContext().createDataFrame(jsc().parallelize(magics), MagicTime.class);
+        DataFrame df = timeDF(magics);
 
         Row row1 = df.collect()[0];
         Row row2 = df.collect()[1];
@@ -121,13 +124,11 @@ public class SampleJavaDataFrameTest extends JavaDataFrameSuiteBase implements S
 
     private DataFrame timeDF(List<MagicTime> list) {
         JavaRDD<MagicTime> rdd = jsc().parallelize(list);
-        return sqlContext().createDataFrame(
+        return sqlContext().createDataFrame(rdd, MagicTime.class);
     }
 
     private DataFrame toDF(List<BasicMagic> list) {
         JavaRDD<BasicMagic> rdd = jsc().parallelize(list);
         return sqlContext().createDataFrame(rdd, BasicMagic.class);
     }
-
-case class MagicTime(name: String, time: Timestamp)
 }
