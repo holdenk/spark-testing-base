@@ -69,24 +69,27 @@ class SampleDatasetGeneratorTest extends FunSuite
     val sqlContext = new SQLContext(sc)
     import sqlContext.implicits._
 
-    val carGen: Gen[Dataset[List[Car]]] =
-      DatasetGenerator.genSizedDataset[List[Car]](sqlContext) { size =>
+    // In 2.3 List is fine, however in 2.0/2.1 the generator returns
+    // a concrete sub type which isn't handled well.
+    val carGen: Gen[Dataset[Seq[Car]]] =
+      DatasetGenerator.genSizedDataset[Seq[Car]](sqlContext) { size =>
         val slowCarsTopNumber = math.ceil(size * 0.1).toInt
-        def generator(speed: Gen[Int]): Gen[Car] = for {
+        def carGenerator(speed: Gen[Int]): Gen[Car] = for {
           name <- Arbitrary.arbitrary[String]
           speed <- speed
         } yield Car(name, speed)
 
-        for {
-          slowCarsNumber <- Gen.choose(0, slowCarsTopNumber)
-          slowCars <- Gen.listOfN(slowCarsNumber, generator(Gen.choose(0, 20)))
-          normalSpeedCars <- Gen.listOfN(
+        val cars: Gen[List[Car]] = for {
+          slowCarsNumber: Int <- Gen.choose(0, slowCarsTopNumber)
+          slowCars: List[Car] <- Gen.listOfN(slowCarsNumber, carGenerator(Gen.choose(0, 20)))
+          normalSpeedCars: List[Car] <- Gen.listOfN(
             size - slowCarsNumber,
-            generator(Gen.choose(21, 150))
+            carGenerator(Gen.choose(21, 150))
           )
         } yield {
           slowCars ++ normalSpeedCars
         }
+        cars
       }
 
     val property =
