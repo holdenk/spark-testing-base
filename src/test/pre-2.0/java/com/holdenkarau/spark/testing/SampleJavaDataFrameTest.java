@@ -84,33 +84,33 @@ public class SampleJavaDataFrameTest extends JavaDataFrameSuiteBase implements S
     }
 
     public void testApproximateEqualTimestamp() {
-        List<MagicTime> magics1 = Arrays.asList(
-              new MagicTime("Holden", Timestamp.valueOf("2018-01-12 19:17:32")),
-              new MagicTime("Shakanti", Timestamp.valueOf("2018-01-12 19:17:32")));
+        List<JavaMagicTime> magics1 = Arrays.asList(
+              new JavaMagicTime("Holden", Timestamp.valueOf("2018-01-12 19:17:32")),
+              new JavaMagicTime("Shakanti", Timestamp.valueOf("2018-01-12 19:17:32")));
 
-        List<MagicTime> magics2 = Arrays.asList(
-            new MagicTime("Holden", Timestamp.valueOf("2018-01-12 19:17:35")),
-            new MagicTime("Shakanti", Timestamp.valueOf("2018-01-12 19:18:40")));
+        List<JavaMagicTime> magics2 = Arrays.asList(
+            new JavaMagicTime("Holden", Timestamp.valueOf("2018-01-12 19:17:35")),
+            new JavaMagicTime("Shakanti", Timestamp.valueOf("2018-01-12 19:18:40")));
 
         assertDataFrameApproximateEquals(timeDF(magics1), timeDF(magics2), 75000);
     }
 
     @Test (expected = java.lang.AssertionError.class)
     public void testApproximateNotEqualTimestamp() {
-        List<MagicTime> magics1 = Arrays.asList(new MagicTime("Holden", Timestamp.valueOf("2018-01-12 19:17:32")),
-                new MagicTime("Shakanti", Timestamp.valueOf("2018-01-12 19:17:32")));
+        List<JavaMagicTime> magics1 = Arrays.asList(new JavaMagicTime("Holden", Timestamp.valueOf("2018-01-12 19:17:32")),
+                new JavaMagicTime("Shakanti", Timestamp.valueOf("2018-01-12 19:17:32")));
 
-        List<MagicTime> magics2 = Arrays.asList(new MagicTime("Holden", Timestamp.valueOf("2018-01-12 19:17:35")),
-                new MagicTime("Shakanti", Timestamp.valueOf("2018-01-12 19:18:40")));
+        List<JavaMagicTime> magics2 = Arrays.asList(new JavaMagicTime("Holden", Timestamp.valueOf("2018-01-12 19:17:35")),
+                new JavaMagicTime("Shakanti", Timestamp.valueOf("2018-01-12 19:18:40")));
 
         assertDataFrameApproximateEquals(timeDF(magics1), timeDF(magics2), 59000);
     }
 
     @Test
     public void testApproximateEqualTimeRows() {
-        List<MagicTime> magics = Arrays.asList(
-          new MagicTime("Shakanti", Timestamp.valueOf("2018-01-12 20:49:32")),
-          new MagicTime("Shakanti", Timestamp.valueOf("2018-01-12 20:50:02")));
+        List<JavaMagicTime> magics = Arrays.asList(
+          new JavaMagicTime("Shakanti", Timestamp.valueOf("2018-01-12 20:49:32")),
+          new JavaMagicTime("Shakanti", Timestamp.valueOf("2018-01-12 20:50:02")));
 
         DataFrame df = timeDF(magics);
 
@@ -122,9 +122,9 @@ public class SampleJavaDataFrameTest extends JavaDataFrameSuiteBase implements S
         assertFalse(approxEquals(row1, row2, 0));
     }
 
-    private DataFrame timeDF(List<MagicTime> list) {
-        JavaRDD<MagicTime> rdd = jsc().parallelize(list);
-        return sqlContext().createDataFrame(rdd, MagicTime.class);
+    private DataFrame timeDF(List<JavaMagicTime> list) {
+        JavaRDD<JavaMagicTime> rdd = jsc().parallelize(list);
+        return sqlContext().createDataFrame(rdd, JavaMagicTime.class);
     }
 
     private DataFrame toDF(List<BasicMagic> list) {

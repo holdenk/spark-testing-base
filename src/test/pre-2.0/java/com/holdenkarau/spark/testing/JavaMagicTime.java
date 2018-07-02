@@ -4,7 +4,7 @@ import java.io.Serializable;
 
 import java.sql.Timestamp;
 
-public class MagicTime implements Serializable {
+public class JavaMagicTime implements Serializable {
   private String name;
   private Timestamp t;
 
@@ -15,10 +15,10 @@ public class MagicTime implements Serializable {
     return this.t;
   }
 
-  public MagicTime() {
+  public JavaMagicTime() {
   }
 
-  public MagicTime(String newName, Timestamp nt) {
+  public JavaMagicTime(String newName, Timestamp nt) {
     this.name = newName;
     this.t = nt;
   }
