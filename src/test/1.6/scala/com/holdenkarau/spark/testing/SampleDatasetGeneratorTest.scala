@@ -69,7 +69,7 @@ class SampleDatasetGeneratorTest extends FunSuite
     val sqlContext = new SQLContext(sc)
     import sqlContext.implicits._
 
-    // In 2.3 List is fine, however in 2.0/2.1 the generator returns
+    // In 2.3 List is fine, however in 2.0 and earlier the generator returns
     // a concrete sub type which isn't handled well.
     val carGen: Gen[Dataset[Seq[Car]]] =
       DatasetGenerator.genSizedDataset[Seq[Car]](sqlContext) { size =>
