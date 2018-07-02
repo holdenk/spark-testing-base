@@ -33,7 +33,7 @@ class SimpleSQLTest(SQLTestCase):
 
     def test_simple_expected_equal(self):
         allTypes = self.sc.parallelize([Row(
-            i=1, s="string", d=1.0, l=1,
+            i=1, s="string", d=1.0, lng=1,
             b=True, list=[1, 2, 3], dict={"s": 0}, row=Row(a=1),
             time=datetime(2014, 8, 1, 14, 1, 5))])
         df = allTypes.toDF()
@@ -41,11 +41,11 @@ class SimpleSQLTest(SQLTestCase):
 
     def test_simple_close_equal(self):
         allTypes1 = self.sc.parallelize([Row(
-            i=1, s="string", d=1.0, l=1,
+            i=1, s="string", d=1.0, lng=1,
             b=True, list=[1, 2, 3], dict={"s": 0}, row=Row(a=1),
             time=datetime(2014, 8, 1, 14, 1, 5))])
         allTypes2 = self.sc.parallelize([Row(
-            i=1, s="string", d=1.001, l=1,
+            i=1, s="string", d=1.001, lng=1,
             b=True, list=[1, 2, 3], dict={"s": 0}, row=Row(a=1),
             time=datetime(2014, 8, 1, 14, 1, 5))])
         self.assertDataFrameEqual(allTypes1.toDF(), allTypes2.toDF(), 0.1)
@@ -53,11 +53,11 @@ class SimpleSQLTest(SQLTestCase):
     @unittest2.expectedFailure
     def test_simple_close_unequal(self):
         allTypes1 = self.sc.parallelize([Row(
-            i=1, s="string", d=1.0, l=1,
+            i=1, s="string", d=1.0, lng=1,
             b=True, list=[1, 2, 3], dict={"s": 0}, row=Row(a=1),
             time=datetime(2014, 8, 1, 14, 1, 5))])
         allTypes2 = self.sc.parallelize([Row(
-            i=1, s="string", d=1.001, l=1,
+            i=1, s="string", d=1.001, lng=1,
             b=True, list=[1, 2, 3], dict={"s": 0}, row=Row(a=1),
             time=datetime(2014, 8, 1, 14, 1, 5))])
         self.assertDataFrameEqual(allTypes1.toDF(), allTypes2.toDF(), 0.0001)
@@ -77,7 +77,7 @@ class SimpleSQLTest(SQLTestCase):
     @unittest2.expectedFailure
     def test_empty_dataframe_unequal(self):
         allTypes = self.sc.parallelize([Row(
-            i=1, s="string", d=1.001, l=1,
+            i=1, s="string", d=1.001, lng=1,
             b=True, list=[1, 2, 3], dict={"s": 0}, row=Row(a=1),
             time=datetime(2014, 8, 1, 14, 1, 5))])
         empty = self.sc.parallelize([])

@@ -31,5 +31,6 @@ class HelloWorldTest(SparkTestingBaseTestCase):
         result = rdd.collect()
         assert result == input
 
+
 if __name__ == "__main__":
     unittest2.main()

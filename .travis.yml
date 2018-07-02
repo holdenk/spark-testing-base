@@ -36,7 +36,7 @@ install:
   - conda update -q conda
   # Useful for debugging any issues with conda
   - conda info -a
-  - deps='pip requests nose sphinx pep8 coverage'
+  - deps='pip requests nose sphinx pycodestyle coverage'
   - conda create -p $HOME/py --yes $deps "python=2.7"
   - export PATH=$HOME/py/bin:$PATH
   - pip install --upgrade unittest2 codecov
