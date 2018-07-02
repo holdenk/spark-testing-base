@@ -32,5 +32,6 @@ class ReuseSparkContextTest(SparkTestingBaseReuse):
         """Test that we have the same context."""
         assert self.sc.getLocalProperty("pandas") == "123"
 
+
 if __name__ == "__main__":
     unittest2.main()

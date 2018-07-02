@@ -55,7 +55,7 @@ class SQLTestCase(SparkTestingBaseReuse):
             from pyspark.sql import Session
             self.session = Session.Builder.config(self.getConf())
             self.sqlCtx = self.session._wrapped
-        except:
+        except Exception:
             self.sqlCtx = SQLContext(self.sc)
 
     def assertDataFrameEqual(self, expected, result, tol=0):

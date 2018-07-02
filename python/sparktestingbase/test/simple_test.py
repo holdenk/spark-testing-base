@@ -77,5 +77,6 @@ class SimpleTest(SparkTestingBaseTestCase):
         rdd_result = self.sc.parallelize(input_result)
         assert self.assertRDDEqualsWithOrder(rdd_expected, rdd_result) is False
 
+
 if __name__ == "__main__":
     unittest2.main()
