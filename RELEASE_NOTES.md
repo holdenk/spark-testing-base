@@ -1,3 +1,10 @@
+# 0.10.0
+- Add support for Spark 2.3.1, 2.1.3
+- Add better sized generators
+- Improve logging for differing output sizes
+# 0.9.0
+- Add Spark 2.1.2
+- Add Spark 2.3.0
 # 0.8.1
  - Add support for Spark 2.2.1
 # 0.8.0
