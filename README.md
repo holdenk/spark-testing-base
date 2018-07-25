@@ -33,6 +33,10 @@ How to use it inside your code? have a look at the [wiki](https://github.com/hol
 
 The [Maven repositories page for spark-testing-base](https://mvnrepository.com/artifact/com.holdenkarau) lists the releases available.
 
+The Python package of spark-testing-base is available via:
+* PyPI: https://pypi.org/project/spark-testing-base/, e.g. `pip install spark-testing-base`
+* Conda: https://anaconda.org/conda-forge/spark-testing-base, e.g. `conda install -c conda-forge spark-testing-base`
+
 ## Minimum Memory Requirements and OOMs
 
 The default SBT testing java options are too small to support running many of the tests due to the need to launch Spark in local mode. To increase the amount of memory in a build.sbt file you can add:
