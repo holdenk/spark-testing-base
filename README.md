@@ -1,5 +1,8 @@
 [![buildstatus](https://travis-ci.org/holdenk/spark-testing-base.svg?branch=master)](https://travis-ci.org/holdenk/spark-testing-base)
 [![codecov.io](http://codecov.io/github/holdenk/spark-testing-base/coverage.svg?branch=master)](http://codecov.io/github/holdenk/spark-testing-base?branch=master)
+[![maven](https://img.shields.io/maven-central/v/com.holdenkarau/spark-testing-base_2.11.svg)](https://mvnrepository.com/artifact/com.holdenkarau/spark-testing-base)
+[![pypi](https://img.shields.io/pypi/v/spark-testing-base.svg)](https://pypi.org/project/spark-testing-base/)
+[![conda](https://img.shields.io/conda/v/conda-forge/spark-testing-base.svg)](https://anaconda.org/conda-forge/spark-testing-base)
 
 # spark-testing-base
 
