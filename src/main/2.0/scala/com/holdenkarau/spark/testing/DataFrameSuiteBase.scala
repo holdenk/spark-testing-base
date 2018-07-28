@@ -31,6 +31,8 @@ import org.apache.spark.sql.hive._
 import org.apache.hadoop.hive.conf.HiveConf
 import org.apache.hadoop.hive.conf.HiveConf.ConfVars
 
+case class ColumnMismatch(smth: String) extends Exception(smth)
+
 /**
  * :: Experimental ::
  * Base class for testing Spark DataFrames.
@@ -149,6 +151,26 @@ trait DataFrameSuiteBaseLike extends SparkContextProvider
     } finally {
       expected.rdd.unpersist()
       result.rdd.unpersist()
+    }
+  }
+
+  def assertColumnEquality(
+    df: DataFrame,
+    colName1: String,
+    colName2: String
+  ): Unit = {
+    val elements = df.select(colName1, colName2).collect()
+    val colName1Elements = elements.map(_(0))
+    val colName2Elements = elements.map(_(1))
+    val mismatchMessage = s"""
+Columns aren't equal
+'$colName1' elements:
+[${colName1Elements.mkString(", ")}]
+'$colName2' elements:
+[${colName2Elements.mkString(", ")}]
+"""
+    if (!colName1Elements.sameElements(colName2Elements)) {
+      throw ColumnMismatch(mismatchMessage)
     }
   }
 
