@@ -109,6 +109,8 @@ trait DataFrameSuiteBaseLike extends SparkContextProvider
       }
 
       val builder = newBuilder()
+     
+      extendBuilder(builder)
 
       SparkSessionProvider._sparkSession = builder.getOrCreate()
     }
@@ -163,6 +165,14 @@ trait DataFrameSuiteBaseLike extends SparkContextProvider
 
   def approxEquals(r1: Row, r2: Row, tol: Double): Boolean = {
     DataFrameSuiteBase.approxEquals(r1, r2, tol)
+  }
+
+  /**
+   * Gives users a chance to extend DataFrameSuiteBase and 
+   * change the default settings of the session
+   */
+  def extendBuilder(builder: SparkSession.Builder) = {
+  
   }
 }
 
