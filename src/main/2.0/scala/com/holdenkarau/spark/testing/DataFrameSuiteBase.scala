@@ -156,12 +156,15 @@ trait DataFrameSuiteBaseLike extends SparkContextProvider
 
   /**
     * Compares if two [[DataFrame]]s are equal without caring about order of rows, by
-    * finding elements in one DataFrame not in the other. The resulting DataFrame
+    * finding elements in one DataFrame that is not in the other. The resulting DataFrame
     * should be empty inferring the two DataFrames have the same elements.
     */
   def assertDataFrameNoOrderEquals(expected: DataFrame, result: DataFrame) {
-    assertEmpty(expected.except(result).rdd.take(maxUnequalRowsToShow))
-    assertEmpty(result.except(expected).rdd.take(maxUnequalRowsToShow))
+    import org.apache.spark.sql.functions.col
+    val expectedElementsCount = expected.groupBy(expected.columns.map(s => col(s)): _*).count()
+    val resultElementsCount = result.groupBy(result.columns.map(s => col(s)): _*).count()
+
+    assertDataFrameEquals(expectedElementsCount, resultElementsCount)
   }
 
   /**

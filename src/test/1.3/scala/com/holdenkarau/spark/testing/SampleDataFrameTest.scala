@@ -40,8 +40,9 @@ class SampleDataFrameTest extends FunSuite with DataFrameSuiteBase {
 
   test("dataframe should be equal with different order of rows") {
     import sqlContext.implicits._
-    val input = sc.parallelize(inputList).toDF
-    val reverseInput = sc.parallelize(inputList.reverse).toDF
+    val inputListWithDuplicates = inputList ++ List(inputList.head)
+    val input = sc.parallelize(inputListWithDuplicates).toDF
+    val reverseInput = sc.parallelize(inputListWithDuplicates.reverse).toDF
     assertDataFrameNoOrderEquals(input, reverseInput)
   }
 
@@ -56,8 +57,9 @@ class SampleDataFrameTest extends FunSuite with DataFrameSuiteBase {
 
   test("unequal dataframe with different order should not equal") {
     import sqlContext.implicits._
-    val input = sc.parallelize(inputList).toDF
-    val input2 = sc.parallelize(List(inputList.head)).toDF
+    val inputListWithDuplicates = inputList ++ List(inputList.head)
+    val input = sc.parallelize(inputListWithDuplicates).toDF
+    val input2 = sc.parallelize(inputList).toDF
     intercept[org.scalatest.exceptions.TestFailedException] {
       assertDataFrameNoOrderEquals(input, input2)
     }
