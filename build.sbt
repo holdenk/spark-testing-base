@@ -27,7 +27,9 @@ coverageHighlighting := {
 
 
 crossScalaVersions := {
-  if (sparkVersion.value >= "2.3.0") {
+  if (sparkVersion.value >= "2.4.0") {
+    Seq("2.11.11", "2.12.7")
+  } else if (sparkVersion.value >= "2.3.0") {
     Seq("2.11.11")
   } else {
     Seq("2.10.6", "2.11.11")
@@ -47,7 +49,9 @@ spName := "holdenk/spark-testing-base"
 //end::spName[]
 
 sparkComponents := {
-  if (sparkVersion.value >= "2.0.0") Seq("core", "streaming", "sql", "catalyst", "hive", "yarn", "mllib", "streaming-kafka-0-8")
+  // In scala 2.12 with Spark 2.4.0+ streaming-kafka-0-8 is no longer available.
+  if (sparkVersion.value >= "2.4.0") Seq("core", "streaming", "sql", "catalyst", "hive", "yarn", "mllib", "streaming-kafka-0-10")
+  else if (sparkVersion.value >= "2.0.0") Seq("core", "streaming", "sql", "catalyst", "hive", "yarn", "mllib", "streaming-kafka-0-8")
   else Seq("core", "streaming", "sql", "catalyst", "hive", "streaming-kafka", "yarn", "mllib")
 }
 
@@ -65,13 +69,22 @@ scalastyleSources in Test ++= {unmanagedSourceDirectories in Test}.value
 
 // Allow kafka (and other) utils to have version specific files
 unmanagedSourceDirectories in Compile  := {
-  if (sparkVersion.value >= "2.2.0") Seq(
+  if (sparkVersion.value >= "2.4.0") Seq(
     (sourceDirectory in Compile)(_ / "2.2/scala"),
     (sourceDirectory in Compile)(_ / "2.0/scala"),
     (sourceDirectory in Compile)(_ / "1.6/scala"),
     (sourceDirectory in Compile)(_ / "1.5/scala"),
     (sourceDirectory in Compile)(_ / "1.4/scala"),
     (sourceDirectory in Compile)(_ / "kafka/scala"),
+    (sourceDirectory in Compile)(_ / "1.3/scala"), (sourceDirectory in Compile)(_ / "1.3/java")
+  ).join.value
+  if (sparkVersion.value >= "2.2.0") Seq(
+    (sourceDirectory in Compile)(_ / "2.2/scala"),
+    (sourceDirectory in Compile)(_ / "2.0/scala"),
+    (sourceDirectory in Compile)(_ / "1.6/scala"),
+    (sourceDirectory in Compile)(_ / "1.5/scala"),
+    (sourceDirectory in Compile)(_ / "1.4/scala"),
+    (sourceDirectory in Compile)(_ / "kafka-pre2.4/scala"),
     (sourceDirectory in Compile)(_ / "1.3/scala"), (sourceDirectory in Compile)(_ / "1.3/java")
   ).join.value
   else if (sparkVersion.value >= "2.0.0" && scalaVersion.value >= "2.11") Seq(

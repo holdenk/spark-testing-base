@@ -19,12 +19,12 @@ package org.apache.spark.streaming.kafka
 import java.net.InetSocketAddress
 
 import org.apache.spark.{Logging, SparkConf}
-import org.apache.kafka.admin.AdminUtils
-import org.apache.kafka.api.Request
-import org.apache.kafka.common.TopicAndPartition
-import org.apache.kafka.producer.{KeyedMessage, Producer, ProducerConfig}
-import org.apache.kafka.server.{KafkaConfig, KafkaServer}
-import org.apache.kafka.serializer.DefaultEncoder
+import kafka.admin.AdminUtils
+import kafka.api.Request
+import kafka.common.TopicAndPartition
+import kafka.producer.{KeyedMessage, Producer, ProducerConfig}
+import kafka.server.{KafkaConfig, KafkaServer}
+import kafka.serializer.DefaultEncoder
 
 import java.util.{Properties, UUID}
 
