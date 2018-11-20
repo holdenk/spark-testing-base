@@ -75,6 +75,8 @@ trait DataFrameSuiteBaseLike extends SparkContextProvider
       val localWarehousePath = new File(tempDir, "wharehouse").getCanonicalPath
       def newBuilder() = {
         val builder = SparkSession.builder()
+        // Long story with lz4 issues in 2.3+
+        builder.config("spark.io.compression.codec", "snappy")
         // We have to mask all properties in hive-site.xml that relates to metastore
         // data source as we used a local metastore here.
         if (enableHiveSupport) {
