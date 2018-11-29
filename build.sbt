@@ -27,7 +27,9 @@ coverageHighlighting := {
 
 
 crossScalaVersions := {
-  if (sparkVersion.value >= "2.3.0") {
+  if (sparkVersion.value >= "2.4.0") {
+    Seq("2.11.11", "2.12.7")
+  } else if (sparkVersion.value >= "2.3.0") {
     Seq("2.11.11")
   } else {
     Seq("2.10.6", "2.11.11")
