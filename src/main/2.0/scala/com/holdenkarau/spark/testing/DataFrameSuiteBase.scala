@@ -20,16 +20,15 @@ package com.holdenkarau.spark.testing
 import java.io.File
 import java.sql.Timestamp
 
+import org.apache.hadoop.hive.conf.HiveConf
+import org.apache.hadoop.hive.conf.HiveConf.ConfVars
+import org.apache.spark.rdd.RDD
+import org.apache.spark.sql._
+import org.apache.spark.sql.catalyst.expressions.GenericRowWithSchema
+import org.apache.spark.sql.types.{StringType, StructField, StructType}
 import org.scalatest.Suite
 
 import scala.math.abs
-import scala.collection.mutable.HashMap
-
-import org.apache.spark.rdd.RDD
-import org.apache.spark.sql._
-import org.apache.spark.sql.hive._
-import org.apache.hadoop.hive.conf.HiveConf
-import org.apache.hadoop.hive.conf.HiveConf.ConfVars
 
 /**
  * :: Experimental ::
@@ -132,6 +131,7 @@ trait DataFrameSuiteBaseLike extends SparkContextProvider
     */
   def assertDataFrameApproximateEquals(
     expected: DataFrame, result: DataFrame, tol: Double) {
+    import scala.collection.JavaConverters._
 
     assert(expected.schema, result.schema)
 
@@ -147,12 +147,34 @@ trait DataFrameSuiteBaseLike extends SparkContextProvider
         filter{case (idx, (r1, r2)) =>
           !(r1.equals(r2) || DataFrameSuiteBase.approxEquals(r1, r2, tol))}
 
-      assertEmpty(unequalRDD.take(maxUnequalRowsToShow))
+      val unEqualRows = unequalRDD.take(maxUnequalRowsToShow)
+      if (unEqualRows.nonEmpty) {
+        val unequalSchema = StructType(
+          StructField("source_dataframe", StringType) ::
+            expected.schema.fields.toList)
+
+        spark.createDataFrame(
+          unEqualRows
+            .flatMap(un =>
+                       Seq(tagRow(un._2._1, "expected", unequalSchema),
+                           tagRow(un._2._2, "result", unequalSchema)))
+            .toList.asJava, unequalSchema).show()
+        fail("There are some unequal rows")
+      }
     } finally {
       expected.rdd.unpersist()
       result.rdd.unpersist()
     }
   }
+
+  private[testing] def tagRow(
+    row: Row, tag: String, schema: StructType): Row = row match {
+    case generic: GenericRowWithSchema =>
+      new GenericRowWithSchema((tag :: generic.toSeq.toList).toArray, schema)
+    case _ => throw new UnsupportedOperationException(
+      s"row of type ${row.getClass} is not supported")
+  }
+
 
   /**
    * Zip RDD's with precise indexes. This is used so we can join two DataFrame's

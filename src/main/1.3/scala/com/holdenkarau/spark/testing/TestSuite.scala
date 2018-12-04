@@ -17,6 +17,9 @@ trait TestSuite extends TestSuiteLike { self: Suite =>
 
   def assert[U](message: String, expected: U, actual: U)(implicit CT: ClassTag[U]) =
     org.scalatest.Assertions.assert(expected === actual, message)
+
+  override def fail(message: String): Unit =
+    org.scalatest.Assertions.fail(message)
 }
 
 trait JavaTestSuite extends TestSuiteLike {
@@ -33,6 +36,9 @@ trait JavaTestSuite extends TestSuiteLike {
 
   def assert[U](message: String, expected: U, actual: U)(implicit CT: ClassTag[U]) =
     org.junit.Assert.assertEquals(message, expected, actual)
+
+  override def fail(message: String): Unit =
+    org.junit.Assert.fail(message)
 }
 
 trait TestSuiteLike {
@@ -43,5 +49,7 @@ trait TestSuiteLike {
   def assertTrue(expected: Boolean)
 
   def assert[U](message: String, expected: U, actual: U)(implicit CT: ClassTag[U])
+
+  def fail(message: String)
 }
 
