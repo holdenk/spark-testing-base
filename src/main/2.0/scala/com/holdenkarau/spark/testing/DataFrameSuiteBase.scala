@@ -20,15 +20,15 @@ package com.holdenkarau.spark.testing
 import java.io.File
 import java.sql.Timestamp
 
-import org.apache.hadoop.hive.conf.HiveConf
-import org.apache.hadoop.hive.conf.HiveConf.ConfVars
-import org.apache.spark.rdd.RDD
-import org.apache.spark.sql._
-import org.apache.spark.sql.catalyst.expressions.GenericRowWithSchema
-import org.apache.spark.sql.types.{StringType, StructField, StructType}
 import org.scalatest.Suite
 
 import scala.math.abs
+import org.apache.spark.rdd.RDD
+import org.apache.spark.sql._
+import org.apache.spark.sql.types._
+import org.apache.spark.sql.catalyst.expressions.GenericRowWithSchema
+import org.apache.hadoop.hive.conf.HiveConf
+import org.apache.hadoop.hive.conf.HiveConf.ConfVars
 
 /**
  * :: Experimental ::
