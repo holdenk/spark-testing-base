@@ -35,8 +35,6 @@ lazy val core = (project in file("core"))
           // need a more recent version of xbean for Spark 2.4 so we support JDK11
           Seq(
             "org.apache.xbean" % "xbean-asm6-shaded" % "4.10",
-            // In Spark 2.4.8 we need a newer json4s so we can use a current scala-xml
-            "org.json4s" %% "json4s-core" % "3.6.12"
           )
         }}
 
@@ -165,7 +163,8 @@ val coreTestSources = unmanagedSourceDirectories in Test  := {
 
 // additional libraries
 lazy val commonDependencies = Seq(
-  "org.scalatest" %% "scalatest" % "3.2.14",
+  // Above 3.2.10 we need a newer scala-xml which _might_ break stuff.
+  "org.scalatest" %% "scalatest" % "3.2.10",
   "org.scalatestplus" %% "scalacheck-1-15" % "3.2.3.0",
   "org.scalatestplus" %% "junit-4-12" % "3.2.2.0",
   "org.scalacheck" %% "scalacheck" % "1.15.2",

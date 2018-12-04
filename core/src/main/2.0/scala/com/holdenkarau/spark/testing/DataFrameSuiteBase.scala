@@ -213,7 +213,8 @@ trait DataFrameSuiteBaseLike extends SparkContextProvider
     * @param tol max acceptable tolerance, should be less than 1.
     */
   def assertDataFrameApproximateEquals(
-    expected: DataFrame, result: DataFrame, tol: Double): Unit = {
+    expected: DataFrame, result: DataFrame, tol: Double) {
+    import scala.collection.JavaConverters._
 
     assert(expected.schema, result.schema)
 
@@ -229,12 +230,34 @@ trait DataFrameSuiteBaseLike extends SparkContextProvider
         filter{case (idx, (r1, r2)) =>
           !(r1.equals(r2) || DataFrameSuiteBase.approxEquals(r1, r2, tol))}
 
-      assertEmpty(unequalRDD.take(maxUnequalRowsToShow))
+      val unEqualRows = unequalRDD.take(maxUnequalRowsToShow)
+      if (unEqualRows.nonEmpty) {
+        val unequalSchema = StructType(
+          StructField("source_dataframe", StringType) ::
+            expected.schema.fields.toList)
+
+        spark.createDataFrame(
+          unEqualRows
+            .flatMap(un =>
+                       Seq(tagRow(un._2._1, "expected", unequalSchema),
+                           tagRow(un._2._2, "result", unequalSchema)))
+            .toList.asJava, unequalSchema).show()
+        fail("There are some unequal rows")
+      }
     } finally {
       expected.rdd.unpersist()
       result.rdd.unpersist()
     }
   }
+
+  private[testing] def tagRow(
+    row: Row, tag: String, schema: StructType): Row = row match {
+    case generic: GenericRowWithSchema =>
+      new GenericRowWithSchema((tag :: generic.toSeq.toList).toArray, schema)
+    case _ => throw new UnsupportedOperationException(
+      s"row of type ${row.getClass} is not supported")
+  }
+
 
   /**
     * Compares if two [[DataFrame]]s are equal without caring about order of rows, by
