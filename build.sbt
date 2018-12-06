@@ -185,8 +185,7 @@ libraryDependencies ++= excludeJpountz(
   // For Spark 2.4 w/ Scala 2.12 we're going to need some special logic
   if (sparkVersion.value >= "2.3.0") {
     Seq(
-      "org.apache.spark" %% "spark-streaming-kafka-0-8" % sparkVersion.value,
-      "org.apache.spark" %% "spark-sql-kafka-0-8" % sparkVersion.value
+      "org.apache.spark" %% "spark-streaming-kafka-0-8" % sparkVersion.value
     )
   } else {
     // We still have Kafka it's just done through sparkComponents
