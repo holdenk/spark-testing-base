@@ -182,10 +182,11 @@ def excludeJpountz(items: Seq[ModuleID]) =
   excludeFromAll(items, "net.jpountz.lz4", "lz4")
 
 libraryDependencies ++= excludeJpountz(
-  // For 2.4 we're going to need some special logic
+  // For Spark 2.4 w/ Scala 2.12 we're going to need some special logic
   if (sparkVersion.value >= "2.3.0") {
     Seq(
-      "org.apache.spark" %% "spark-streaming-kafka-0-8" % sparkVersion.value
+      "org.apache.spark" %% "spark-streaming-kafka-0-8" % sparkVersion.value,
+      "org.apache.spark" %% "spark-sql-kafka-0-8" % sparkVersion.value
     )
   } else {
     // We still have Kafka it's just done through sparkComponents
