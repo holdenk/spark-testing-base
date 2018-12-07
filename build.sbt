@@ -47,7 +47,8 @@ spName := "holdenk/spark-testing-base"
 //end::spName[]
 
 sparkComponents := {
-  if (sparkVersion.value >= "2.0.0") Seq("core", "streaming", "sql", "catalyst", "hive", "yarn", "mllib", "streaming-kafka-0-8")
+  if (sparkVersion.value >= "2.3.0") Seq("core", "streaming", "sql", "catalyst", "hive", "yarn", "mllib")
+  else if (sparkVersion.value >= "2.0.0") Seq("core", "streaming", "sql", "catalyst", "hive", "yarn", "mllib", "streaming-kafka-0-8")
   else Seq("core", "streaming", "sql", "catalyst", "hive", "streaming-kafka", "yarn", "mllib")
 }
 
@@ -176,6 +177,22 @@ def excludeFromAll(items: Seq[ModuleID], group: String, artifact: String) =
 
 def excludeJavaxServlet(items: Seq[ModuleID]) =
   excludeFromAll(items, "javax.servlet", "servlet-api")
+
+def excludeJpountz(items: Seq[ModuleID]) =
+  excludeFromAll(items, "net.jpountz.lz4", "lz4")
+
+libraryDependencies ++= excludeJpountz(
+  // For Spark 2.4 w/ Scala 2.12 we're going to need some special logic
+  if (sparkVersion.value >= "2.3.0") {
+    Seq(
+      "org.apache.spark" %% "spark-streaming-kafka-0-8" % sparkVersion.value
+    )
+  } else {
+    // We still have Kafka it's just done through sparkComponents
+    Seq()
+  }
+)
+
 
 lazy val miniClusterDependencies = excludeJavaxServlet(Seq(
   "org.apache.hadoop" % "hadoop-hdfs" % "2.8.3" % "compile,test" classifier "" classifier "tests",
