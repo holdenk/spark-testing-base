@@ -51,9 +51,9 @@ foreach my $spark_version (@spark_versions) {
     print OUT $new_build;
     close (OUT);
     print "publishing";
-    print `./sbt/sbt clean spPublish`;
-    print `./sbt/sbt +spPublish`;
+    print `./sbt/sbt clean publish`;
+    print `./sbt/sbt +publish`;
 }
 `cp build.sbt_back build.sbt`;
-`./sbt/sbt spPublish`;
-`./sbt/sbt +spPublish`;
+`./sbt/sbt publish`;
+`./sbt/sbt +publish`;

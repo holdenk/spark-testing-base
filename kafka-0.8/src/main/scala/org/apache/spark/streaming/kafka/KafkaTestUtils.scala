@@ -21,12 +21,11 @@ import java.net.InetSocketAddress
 import org.apache.spark.{Logging, SparkConf}
 import kafka.admin.AdminUtils
 import kafka.api.Request
-import kafka.common.TopicAndPartition
 import kafka.producer.{KeyedMessage, Producer, ProducerConfig}
 import kafka.server.{KafkaConfig, KafkaServer}
 import kafka.serializer.DefaultEncoder
 
-import java.util.{Properties, UUID}
+import java.util.Properties
 
 import org.apache.zookeeper.server.{NIOServerCnxnFactory, ZooKeeperServer}
 import org.I0Itec.zkclient.ZkClient
