@@ -3,6 +3,7 @@ lazy val root = (project in file("."))
   .settings(noPublishSettings, commonSettings)
 
 val sparkVersion = settingKey[String]("Spark version")
+val sparkTestingVersion = settingKey[String]("Spark testing base version without Spark version part")
 
 lazy val core = (project in file("core"))
   .settings(
@@ -66,8 +67,9 @@ lazy val kafka_0_8 = {
 val commonSettings = Seq(
   organization := "com.holdenkarau",
   publishMavenStyle := true,
-  version := "0.11.0",
   sparkVersion := "2.4.0",
+  sparkTestingVersion := "0.11.0",
+  version := sparkVersion.value + "_" + sparkTestingVersion.value,
   scalaVersion := {
     if (sparkVersion.value >= "2.0.0") {
       "2.11.11"
@@ -272,7 +274,10 @@ lazy val publishSettings = Seq(
 
   //credentials += Credentials(Path.userHome / ".ivy2" / ".spcredentials")
   credentials ++= Seq(Credentials(Path.userHome / ".ivy2" / ".sbtcredentials"), Credentials(Path.userHome / ".ivy2" / ".sparkcredentials")),
-  useGpg := true
+  useGpg := true,
+  artifactName := { (sv: ScalaVersion, module: ModuleID, artifact: Artifact) =>
+    artifact.name + "-" + sparkVersion.value +  module.revision + "." + artifact.extension
+  }
 )
 
 lazy val noPublishSettings =
