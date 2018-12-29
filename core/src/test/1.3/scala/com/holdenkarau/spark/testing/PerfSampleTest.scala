@@ -41,7 +41,7 @@ class PerfSampleTest extends FunSuite with PerTestSparkContext {
   //end::samplePerfTest[]
 
   def doWork(sc: SparkContext): Unit = {
-    val data = sc.textFile("README.md")
+    val data = sc.textFile("../README.md")
     val words = data.flatMap(_.split(" "))
     words.map((_, 1)).reduceByKey(_ + _).saveAsTextFile(tempPath + "/magic")
   }
