@@ -1,3 +1,4 @@
+from __future__ import absolute_import
 #
 # Licensed to the Apache Software Foundation (ASF) under one or more
 # contributor license agreements.  See the NOTICE file distributed with
@@ -15,11 +16,10 @@
 # limitations under the License.
 #
 
-from utils import add_pyspark_path_if_needed, quiet_py4j
+from .utils import add_pyspark_path_if_needed, quiet_py4j
+from .pathmagic import *
 
-add_pyspark_path_if_needed()
-
-from testcase import SparkTestingBaseReuse
+from .testcase import SparkTestingBaseReuse
 
 import os
 import sys
@@ -27,8 +27,8 @@ from itertools import chain
 import time
 import operator
 import tempfile
-import random
 import struct
+import shutil
 from functools import reduce
 
 from pyspark.context import SparkConf, SparkContext, RDD
@@ -48,10 +48,12 @@ class StreamingTestCase(SparkTestingBaseReuse):
     @classmethod
     def setUpClass(cls):
         super(StreamingTestCase, cls).setUpClass()
-        cls.sc.setCheckpointDir("/tmp")
+        cls._checkpointDir = tempfile.mkdtemp()
+        cls.sc.setCheckpointDir(cls._checkpointDir)
 
     @classmethod
     def tearDownClass(cls):
+        shutil.rmtree(cls._checkpointDir)
         super(StreamingTestCase, cls).tearDownClass()
 
     @classmethod

@@ -14,7 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
 """Simple streaming test"""
 
 from sparktestingbase.streamingtestcase import StreamingTestCase
