@@ -14,21 +14,8 @@ from __future__ import absolute_import
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-#
-
-from .utils import add_pyspark_path_if_needed, quiet_py4j
-from .pathmagic import *
 from .testcase import SparkTestingBaseReuse
 
-import os
-import sys
-from itertools import chain
-import operator
-import tempfile
-import random
-from functools import reduce
-
-from pyspark.context import SparkConf, SparkContext, RDD
 from pyspark.sql import SQLContext
 
 
@@ -54,9 +41,9 @@ class SQLTestCase(SparkTestingBaseReuse):
         try:
             from pyspark.sql import Session
             self.session = Session.Builder.config(self.getConf())
-            self.sqlCtx = self.session._wrapped
+            self.sql_context = self.session._wrapped
         except Exception:
-            self.sqlCtx = SQLContext(self.sc)
+            self.sql_context = SQLContext(self.sc)
 
     def assertDataFrameEqual(self, expected, result, tol=0):
         """Assert that two DataFrames contain the same data.
