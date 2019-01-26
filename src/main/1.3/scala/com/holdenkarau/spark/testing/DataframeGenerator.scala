@@ -118,6 +118,7 @@ object DataframeGenerator {
       case StringType => Arbitrary.arbitrary[String]
       case BinaryType => Arbitrary.arbitrary[Array[Byte]]
       case BooleanType => Arbitrary.arbitrary[Boolean]
+      case DecimalType() => Arbitrary.arbitrary[BigDecimal]
       case TimestampType => Arbitrary.arbLong.arbitrary.map(new Timestamp(_))
       case DateType => Arbitrary.arbLong.arbitrary.map(new Date(_))
       case arr: ArrayType => {
