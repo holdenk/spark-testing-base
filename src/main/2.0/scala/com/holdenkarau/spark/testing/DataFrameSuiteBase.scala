@@ -27,6 +27,7 @@ import scala.collection.mutable.HashMap
 
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql._
+import org.apache.spark.sql.functions.col
 import org.apache.spark.sql.hive._
 import org.apache.hadoop.hive.conf.HiveConf
 import org.apache.hadoop.hive.conf.HiveConf.ConfVars
@@ -156,13 +157,16 @@ trait DataFrameSuiteBaseLike extends SparkContextProvider
 
   /**
     * Compares if two [[DataFrame]]s are equal without caring about order of rows, by
-    * finding elements in one DataFrame that is not in the other. The resulting DataFrame
-    * should be empty inferring the two DataFrames have the same elements.
+    * finding elements in one DataFrame that is not in the other. The resulting
+    * DataFrame should be empty inferring the two DataFrames have the same elements.
     */
   def assertDataFrameNoOrderEquals(expected: DataFrame, result: DataFrame) {
-    import org.apache.spark.sql.functions.col
-    val expectedElementsCount = expected.groupBy(expected.columns.map(s => col(s)): _*).count()
-    val resultElementsCount = result.groupBy(result.columns.map(s => col(s)): _*).count()
+    val expectedElementsCount = expected
+      .groupBy(expected.columns.map(s => col(s)): _*)
+      .count()
+    val resultElementsCount = result
+      .groupBy(result.columns.map(s => col(s)): _*)
+      .count()
 
     assertDataFrameEquals(expectedElementsCount, resultElementsCount)
   }
