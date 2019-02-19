@@ -47,6 +47,7 @@ class SampleDataFrameTest extends FunSuite with DataFrameSuiteBase {
     }
   }
 
+  // Test
   test("dataframe approx expected") {
     import sqlContext.implicits._
     val input = sc.parallelize(inputList).toDF
