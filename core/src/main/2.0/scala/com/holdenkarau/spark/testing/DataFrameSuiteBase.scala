@@ -23,13 +23,9 @@ import java.sql.Timestamp
 import org.scalatest.Suite
 
 import scala.math.abs
-import scala.collection.mutable.HashMap
 
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql._
-import org.apache.spark.sql.hive._
-import org.apache.hadoop.hive.conf.HiveConf
-import org.apache.hadoop.hive.conf.HiveConf.ConfVars
 
 /**
  * :: Experimental ::
@@ -80,6 +76,7 @@ trait DataFrameSuiteBaseLike extends SparkContextProvider
         // We have to mask all properties in hive-site.xml that relates to metastore
         // data source as we used a local metastore here.
         if (enableHiveSupport) {
+          import org.apache.hadoop.hive.conf.HiveConf
           val hiveConfVars = HiveConf.ConfVars.values()
           val accessiableHiveConfVars = hiveConfVars.map(WrappedConfVar(_))
           accessiableHiveConfVars.foreach { confvar =>
@@ -88,12 +85,12 @@ trait DataFrameSuiteBaseLike extends SparkContextProvider
               builder.config(confvar.varname, confvar.getDefaultExpr())
             }
           }
+          builder.config(HiveConf.ConfVars.METASTOREURIS.varname, "")
         }
         builder.config("javax.jdo.option.ConnectionURL",
           s"jdbc:derby:;databaseName=$localMetastorePath;create=true")
         builder.config("datanucleus.rdbms.datastoreAdapterClassName",
           "org.datanucleus.store.rdbms.adapter.DerbyAdapter")
-        builder.config(ConfVars.METASTOREURIS.varname, "")
         builder.config("spark.sql.streaming.checkpointLocation",
           Utils.createTempDir().toPath().toString)
         builder.config("spark.sql.warehouse.dir",
