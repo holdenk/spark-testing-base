@@ -2,7 +2,7 @@
 use File::Slurp;
 use strict;
 use warnings;
-my @spark_versions = ("1.4.0", "1.4.1", "1.5.0", "1.5.1", "1.5.2", "1.6.0", "1.6.1", "1.6.2", "1.6.3", "2.0.0", "2.0.1", "2.0.2", "2.1.0", "2.1.1", "2.1.2", "2.1.3", "2.2.0", "2.2.1", "2.2.2", "2.3.0", "2.3.1", "2.3.2", "2.4.0");
+my @spark_versions = ("1.4.0", "1.4.1", "1.5.0", "1.5.1", "1.5.2", "1.6.0", "1.6.1", "1.6.2", "1.6.3", "2.0.0", "2.0.1", "2.0.2", "2.1.0", "2.1.1", "2.1.2", "2.1.3", "2.2.0", "2.2.1", "2.2.2", "2.2.3", "2.3.0", "2.3.1", "2.3.2", "2.3.3", "2.4.0", "2.4.1");
 # Backup the build file
 `cp build.sbt build.sbt_back`;
 # Get the original version
@@ -51,9 +51,9 @@ foreach my $spark_version (@spark_versions) {
     print OUT $new_build;
     close (OUT);
     print "publishing";
-    print `./sbt/sbt clean spPublish`;
-    print `./sbt/sbt +spPublish`;
+    print `./sbt/sbt clean publish`;
+    print `./sbt/sbt +publish`;
 }
 `cp build.sbt_back build.sbt`;
-`./sbt/sbt spPublish`;
-`./sbt/sbt +spPublish`;
+`./sbt/sbt publish`;
+`./sbt/sbt +publish`;

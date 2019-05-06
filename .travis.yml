@@ -21,10 +21,10 @@ before_install:
   - export PATH=$HOME/.local/bin:$PATH
   - pip install --user codecov coverage unittest2
 install:
-  # Download spark 2.2.2
-  - "[ -f spark ] || mkdir spark && cd spark && axel http://www-us.apache.org/dist/spark/spark-2.2.2/spark-2.2.2-bin-hadoop2.7.tgz && cd .."
-  - "tar -xf ./spark/spark-2.2.2-bin-hadoop2.7.tgz"
-  - "export SPARK_HOME=`pwd`/spark-2.2.2-bin-hadoop2.7"
+  # Download spark 2.3.3
+  - "[ -f spark ] || mkdir spark && cd spark && axel http://www-us.apache.org/dist/spark/spark-2.3.3/spark-2.3.3-bin-hadoop2.7.tgz && cd .."
+  - "tar -xf ./spark/spark-2.3.3-bin-hadoop2.7.tgz"
+  - "export SPARK_HOME=`pwd`/spark-2.3.3-bin-hadoop2.7"
   - echo "spark.yarn.jars=$SPARK_HOME/jars/*.jar" > $SPARK_HOME/conf/spark-defaults.conf
   # Install Python deps.
   # The conda installation steps here are based on http://conda.pydata.org/docs/travis.html
