@@ -15,7 +15,8 @@ my @spark_versions = (
 my $input = read_file("build.sbt");
 foreach my $spark_version (@spark_versions) {
     print "Next spark version ".$spark_version;
-    print "building";
-    print `./sbt/sbt clean +publishSigned -DsparkVersion=$spark_version || ./sbt/sbt clean +publishSigned -DsparkVersion=$spark_version`;
-    print "built"
+    print "\nbuilding\n";
+    print "\nGoing to run: ./sbt/sbt  -DsparkVersion=$spark_version version clean +publishSigned\n";
+    print `./sbt/sbt  -DsparkVersion=$spark_version version clean +publishSigned`;
+    print "\nbuilt\n";
 }
