@@ -38,6 +38,7 @@ lazy val kafka_0_8 = {
     .settings(
       name := "spark-testing-kafka-0_8",
       commonSettings,
+      publishSettings,
       unmanagedSourceDirectories in Compile := {
         if (sparkVersion.value >= "1.4" && scalaVersion.value < "2.12.0")
           (unmanagedSourceDirectories in Compile).value
