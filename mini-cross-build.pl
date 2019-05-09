@@ -13,9 +13,6 @@ my @spark_versions = (
 `cp build.sbt build.sbt_back`;
 # Get the original version
 my $input = read_file("build.sbt");
-print "Building original version - $original_version";
-print `./sbt/sbt clean publishSigned +publishSigned`;
-print "Cross building for $original_version";
 foreach my $spark_version (@spark_versions) {
     print "Next spark version ".$spark_version;
     print "building";
