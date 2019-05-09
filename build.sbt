@@ -38,7 +38,7 @@ lazy val kafka_0_8 = {
     .settings(
       name := "spark-testing-kafka-0_8",
       commonSettings,
-      publishSettings,
+      kafkaPublishSettings,
       unmanagedSourceDirectories in Compile := {
         if (sparkVersion.value >= "1.4" && scalaVersion.value < "2.12.0")
           (unmanagedSourceDirectories in Compile).value
@@ -248,6 +248,11 @@ lazy val miniClusterDependencies = excludeJavaxServlet(Seq(
   "org.apache.hadoop" % "hadoop-yarn-server-tests" % "2.8.3" % "compile,test" classifier "" classifier "tests",
   "org.apache.hadoop" % "hadoop-yarn-server-web-proxy" % "2.8.3" % "compile,test" classifier "" classifier "tests",
   "org.apache.hadoop" % "hadoop-minicluster" % "2.8.3" % "compile,test"))
+
+lazy val kafkaPublishSettings =
+  publishSettings ++ Seq(
+    skip in publish := scalaVersion.value >= "2.12.0"
+  )
 
 // publish settings
 lazy val publishSettings = Seq(
