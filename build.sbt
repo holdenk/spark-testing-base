@@ -1,5 +1,5 @@
 lazy val root = (project in file("."))
-  .aggregate(core, kafka_0_8)
+  .aggregate(core)
   .settings(noPublishSettings, commonSettings)
 
 val sparkVersion = settingKey[String]("Spark version")
@@ -32,6 +32,7 @@ lazy val core = (project in file("core"))
     ) ++ commonDependencies ++ miniClusterDependencies
   )
 
+/*
 lazy val kafka_0_8 = {
   Project("kafka_0_8", file("kafka-0.8"))
     .dependsOn(core)
@@ -64,6 +65,7 @@ lazy val kafka_0_8 = {
       )
     )
 }
+*/
 
 val commonSettings = Seq(
   organization := "com.holdenkarau",
