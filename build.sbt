@@ -61,6 +61,10 @@ coverageHighlighting := {
   else true
 }
 
+artifactName := { (sv: ScalaVersion, module: ModuleID, artifact: Artifact) =>
+  artifact.name + "_" + "2.11" + "-" + module.revision + "_" + "hadoop3.1.1" + "." + artifact.extension 
+}
+
 scalastyleSources in Compile ++= {unmanagedSourceDirectories in Compile}.value
 scalastyleSources in Test ++= {unmanagedSourceDirectories in Test}.value
 
@@ -195,15 +199,22 @@ libraryDependencies ++= excludeJpountz(
 
 
 lazy val miniClusterDependencies = excludeJavaxServlet(Seq(
-  "org.apache.hadoop" % "hadoop-hdfs" % "2.8.3" % "compile,test" classifier "" classifier "tests",
-  "org.apache.hadoop" % "hadoop-common" % "2.8.3" % "compile,test" classifier "" classifier "tests" ,
-  "org.apache.hadoop" % "hadoop-client" % "2.8.3" % "compile,test" classifier "" classifier "tests" ,
-  "org.apache.hadoop" % "hadoop-mapreduce-client-jobclient" % "2.8.3" % "compile,test" classifier "" classifier "tests",
-  "org.apache.hadoop" % "hadoop-yarn-server-tests" % "2.8.3" % "compile,test" classifier "" classifier "tests",
-  "org.apache.hadoop" % "hadoop-yarn-server-web-proxy" % "2.8.3" % "compile,test" classifier "" classifier "tests",
-  "org.apache.hadoop" % "hadoop-minicluster" % "2.8.3" % "compile,test"))
-
+  "org.apache.hadoop" % "hadoop-hdfs" % "3.1.1" % "compile,test" classifier "" classifier "tests",
+  "org.apache.hadoop" % "hadoop-common" % "3.1.1" % "compile,test" classifier "" classifier "tests" ,
+  "org.apache.hadoop" % "hadoop-client" % "3.1.1" % "compile,test" classifier "" classifier "tests" ,
+  "org.apache.hadoop" % "hadoop-mapreduce-client-jobclient" % "3.1.1" % "compile,test" classifier "" classifier "tests",
+  "org.apache.hadoop" % "hadoop-yarn-server-tests" % "3.1.1" % "compile,test" classifier "" classifier "tests",
+  "org.apache.hadoop" % "hadoop-yarn-server-web-proxy" % "3.1.1" % "compile,test" classifier "" classifier "tests",
+  "org.apache.hadoop" % "hadoop-minicluster" % "3.1.1" % "compile,test"))
+  
 libraryDependencies ++= miniClusterDependencies
+
+dependencyOverrides += "com.fasterxml.jackson.core" % "jackson-core" % "2.6.7"
+dependencyOverrides += "com.fasterxml.jackson.core" % "jackson-databind" % "2.6.7"
+dependencyOverrides += "com.fasterxml.jackson.module" % "jackson-module-scala_2.11" % "2.6.7"
+libraryDependencies += "org.apache.hive" % "hive-common" % "3.1.1"
+
+excludeDependencies += "org.spark-project.spark" % "hive-exec"
 
 scalacOptions ++= Seq("-deprecation", "-unchecked")
 
