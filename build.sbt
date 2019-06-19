@@ -61,6 +61,10 @@ coverageHighlighting := {
   else true
 }
 
+artifactName := { (sv: ScalaVersion, module: ModuleID, artifact: Artifact) =>
+  artifact.name + "_" + "2.11" + "-" + module.revision + "_" + "hadoop3.1.1" + "." + artifact.extension 
+}
+
 scalastyleSources in Compile ++= {unmanagedSourceDirectories in Compile}.value
 scalastyleSources in Test ++= {unmanagedSourceDirectories in Test}.value
 
