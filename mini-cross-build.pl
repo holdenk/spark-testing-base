@@ -15,6 +15,9 @@ my $input = read_file("build.sbt");
 foreach my $spark_version (@spark_versions) {
     print "Next spark version ".$spark_version;
     print "\nbuilding\n";
+    # Publish local first so kafka sub project can resolve
+    print "\nGoing to run: ./sbt/sbt  -DsparkVersion=$spark_version version clean +publishLocal\n";
+    print `./sbt/sbt  -DsparkVersion=$spark_version version clean +publishLocal`;
     print "\nGoing to run: ./sbt/sbt  -DsparkVersion=$spark_version version clean +publishSigned\n";
     print `./sbt/sbt  -DsparkVersion=$spark_version version clean +publishSigned`;
     print "\nbuilt\n";
