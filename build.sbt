@@ -14,7 +14,7 @@ lazy val core = (project in file("core"))
     coreTestSources,
     crossScalaVersions := {
       if (sparkVersion.value >= "2.4.0") {
-        Seq("2.11.11", "2.12.7")
+        Seq("2.11.11", "2.12.8")
       } else if (sparkVersion.value >= "2.3.0") {
         Seq("2.11.11")
       } else {
@@ -72,7 +72,9 @@ val commonSettings = Seq(
   sparkTestingVersion := "0.12.0",
   version := sparkVersion.value + "_" + sparkTestingVersion.value,
   scalaVersion := {
-    if (sparkVersion.value >= "2.0.0") {
+    if (sparkVersion.value >= "2.4.0") {
+      "2.12.8"
+    } else if (sparkVersion.value >= "2.0.0") {
       "2.11.11"
     } else {
       "2.10.6"
