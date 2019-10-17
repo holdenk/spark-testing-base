@@ -140,7 +140,7 @@ class SampleScalaCheckTest extends FunSuite
 
   test("assert rows' types like schema type") {
     val schema = StructType(
-      List(StructField("name", StringType), StructField("age", IntegerType)))
+      List(StructField("name", StringType, nullable = false), StructField("age", IntegerType, nullable = false)))
     val rowGen: Gen[Row] = DataframeGenerator.getRowGenerator(schema)
     val property =
       forAll(rowGen) {
@@ -316,24 +316,24 @@ class SampleScalaCheckTest extends FunSuite
     check(property)
   }
 
+  val fields = StructField("byteType", ByteType) ::
+    StructField("shortType", ShortType) ::
+    StructField("intType", IntegerType) ::
+    StructField("longType", LongType) ::
+    StructField("doubleType", DoubleType) ::
+    StructField("stringType", StringType) ::
+    StructField("binaryType", BinaryType) ::
+    StructField("booleanType", BooleanType) ::
+    StructField("timestampType", TimestampType) ::
+    StructField("dateType", DateType) ::
+    StructField("arrayType", ArrayType(TimestampType)) ::
+    StructField("mapType",
+      MapType(LongType, TimestampType, valueContainsNull = true)) ::
+    StructField("structType",
+      StructType(StructField("timestampType", TimestampType) :: Nil)) :: Nil
   test("second dataframe's evaluation has the same values as first") {
     implicit val generatorDrivenConfig =
       PropertyCheckConfig(minSize = 1, maxSize = 1)
-    val fields = StructField("byteType", ByteType) ::
-      StructField("shortType", ShortType) ::
-      StructField("intType", IntegerType) ::
-      StructField("longType", LongType) ::
-      StructField("doubleType", DoubleType) ::
-      StructField("stringType", StringType) ::
-      StructField("binaryType", BinaryType) ::
-      StructField("booleanType", BooleanType) ::
-      StructField("timestampType", TimestampType) ::
-      StructField("dateType", DateType) ::
-      StructField("arrayType", ArrayType(TimestampType)) ::
-      StructField("mapType",
-        MapType(LongType, TimestampType, valueContainsNull = true)) ::
-      StructField("structType",
-        StructType(StructField("timestampType", TimestampType) :: Nil)) :: Nil
 
     val sqlContext = new SQLContext(sc)
     val dataframeGen =
@@ -347,6 +347,38 @@ class SampleScalaCheckTest extends FunSuite
           val zipped = firstEvaluation.zip(secondEvaluation)
           zipped.forall {
             case (r1, r2) => DataFrameSuiteBase.approxEquals(r1, r2, 0.0) }
+        }
+      }
+
+    check(property)
+  }
+  test("nullable fields contain null values as well") {
+    implicit val generatorDrivenConfig =
+      PropertyCheckConfig(minSize = 1, maxSize = 1)
+    val nullableFields = fields.map(f => f.copy(nullable = true, name = s"${f.name}Nullable"))
+    val sqlContext = new SQLContext(sc)
+    val allFields = fields ::: nullableFields
+    val dataframeGen =
+      DataframeGenerator.arbitraryDataFrame(sqlContext, StructType(allFields))
+
+    val property =
+      forAll(Gen.resize(100, dataframeGen.arbitrary)) {
+        dataframe => {
+          allFields.forall { f =>
+            val colValues = dataframe.select(f.name).collect().map(_.get(0))
+            if (f.nullable)
+              colValues.contains(null) ||
+                // Unfortunately, dataframeGen.arbitrary sometimes generates DataFrames where all
+                // rows have exactly identical values.
+                // In that case, even generating many rows doesn't help to get some nulls...
+                // To work around this we check if we generated at least some distinct values.
+                colValues.distinct.size < 4 ||
+                // This is needed for Array-valued fields where .distinct returns all values, even when
+                // they're identical.
+                colValues.size == colValues.distinct.size
+            else
+              !colValues.contains(null)
+          }
         }
       }
 
