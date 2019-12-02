@@ -12,10 +12,10 @@ This is not my beautiful code.
 
 ## How?
 
-So you include com.holdenkarau.spark-testing-base [spark_version]_0.10.0 and extend one of the classes and write some simple tests instead.  For example to include this in a project using Spark 2.3.1:
+So you include com.holdenkarau.spark-testing-base [spark_version]_0.12.0 and extend one of the classes and write some simple tests instead.  For example to include this in a project using Spark 2.3.1:
 
 ```scala
-"com.holdenkarau" %% "spark-testing-base" % "2.3.1_0.10.0" % "test"
+"com.holdenkarau" %% "spark-testing-base" % "2.3.1_0.12.0" % "test"
 ```
 
 or
@@ -24,10 +24,29 @@ or
 <dependency>
     <groupId>com.holdenkarau</groupId>
     <artifactId>spark-testing-base_2.11</artifactId>
-    <version>${spark.version}_0.10.0</version>
+    <version>${spark.version}_0.11.0</version>
     <scope>test</scope>
 </dependency>
 ```
+
+If you'd like to use Kafka related features you need to include this artefact to your dependencies as well:
+
+```scala
+"com.holdenkarau" %% "spark-testing-kafka-0_8" % "2.3.1_0.12.0" % "test"
+```
+
+or
+
+```
+<dependency>
+    <groupId>com.holdenkarau</groupId>
+    <artifactId>spark-testing-kafka-0_8_2.11</artifactId>
+    <version>${spark.version}_0.12.0</version>
+    <scope>test</scope>
+</dependency>
+```
+
+Currently the Kafka dependency is *only* built for Scala 2.11.
 
 How to use it inside your code? have a look at the [wiki](https://github.com/holdenk/spark-testing-base/wiki) page.
 
