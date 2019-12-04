@@ -26,7 +26,7 @@ import scala.math.abs
 
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql._
-import org.apache.spark.sql.functions.col
+import org.apache.spark.sql.functions._
 import org.apache.spark.sql.hive._
 import org.apache.hadoop.hive.conf.HiveConf
 import org.apache.hadoop.hive.conf.HiveConf.ConfVars
@@ -183,10 +183,10 @@ trait DataFrameSuiteBaseLike extends SparkContextProvider
     val columns = expected.columns.map(s => col(s))
     val expectedElementsCount = expected
       .groupBy(columns: _*)
-      .agg(functions.expr(s"count(*) as $expectedCol"))
+      .agg(count(lit(1)).as(expectedCol))
     val resultElementsCount = result
       .groupBy(columns: _*)
-      .agg(functions.expr(s"count(*) as $actualCol"))
+      .agg(count(lit(1)).as(actualCol))
 
     val diff = expectedElementsCount
       .join(resultElementsCount, expected.columns, "full_outer")
