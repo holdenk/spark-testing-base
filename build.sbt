@@ -14,7 +14,7 @@ lazy val core = (project in file("core"))
     coreTestSources,
     crossScalaVersions := {
       if (sparkVersion.value >= "2.4.0") {
-        Seq("2.12.8")
+        Seq("2.12.10", "2.11.12")
       } else if (sparkVersion.value >= "2.3.0") {
         Seq("2.11.11")
       } else {
