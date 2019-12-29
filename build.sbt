@@ -211,9 +211,10 @@ val coreTestSources = unmanagedSourceDirectories in Test  := {
 
 // additional libraries
 lazy val commonDependencies = Seq(
-  "org.scalatest" %% "scalatest" % "3.0.5",
+  "org.scalatest" %% "scalatest" % "3.1.0",
+  "org.scalatestplus" %% "scalatestplus-scalacheck" % "3.1.0.0-RC2",
   "io.github.nicolasstucki" %% "multisets" % "0.4",
-  "org.scalacheck" %% "scalacheck" % "1.14.0",
+  "org.scalacheck" %% "scalacheck" % "1.14.3",
   "junit" % "junit" % "4.12",
   "org.eclipse.jetty" % "jetty-util" % "9.3.11.v20160721",
   "com.novocode" % "junit-interface" % "0.11" % "test->default")
@@ -290,3 +291,7 @@ lazy val publishSettings = Seq(
 
 lazy val noPublishSettings =
   skip in publish := true
+
+scalafixDependencies in ThisBuild += "org.scalatest" %% "autofix" % "3.1.0.0"
+
+addCompilerPlugin(scalafixSemanticdb)

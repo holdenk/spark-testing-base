@@ -21,10 +21,10 @@ import org.apache.spark.sql.{DataFrame, Row, SQLContext}
 import org.apache.spark.sql.types._
 import org.scalacheck.{Arbitrary, Gen}
 import org.scalacheck.Prop.forAll
-import org.scalatest.FunSuite
-import org.scalatest.prop.Checkers
+import org.scalatestplus.scalacheck.Checkers
+import org.scalatest.funsuite.AnyFunSuite
 
-class SampleScalaCheckTest extends FunSuite
+class SampleScalaCheckTest extends AnyFunSuite
     with SharedSparkContext with RDDComparisons with Checkers {
   // tag::propertySample[]
   // A trivial property that the map doesn't change the number of elements
@@ -257,7 +257,7 @@ class SampleScalaCheckTest extends FunSuite
 
   test("generate rdd of specific size") {
     implicit val generatorDrivenConfig =
-      PropertyCheckConfig(minSize = 10, maxSize = 20)
+      PropertyCheckConfiguration(minSize = 10, sizeRange = 20)
     val prop = forAll(RDDGenerator.genRDD[String](sc)(Arbitrary.arbitrary[String])){
       rdd => rdd.count() <= 20
     }
@@ -333,7 +333,7 @@ class SampleScalaCheckTest extends FunSuite
       StructType(StructField("timestampType", TimestampType) :: Nil)) :: Nil
   test("second dataframe's evaluation has the same values as first") {
     implicit val generatorDrivenConfig =
-      PropertyCheckConfig(minSize = 1, maxSize = 1)
+      PropertyCheckConfiguration(minSize = 1, sizeRange = 1)
 
     val sqlContext = new SQLContext(sc)
     val dataframeGen =
@@ -354,7 +354,7 @@ class SampleScalaCheckTest extends FunSuite
   }
   test("nullable fields contain null values as well") {
     implicit val generatorDrivenConfig =
-      PropertyCheckConfig(minSize = 1, maxSize = 1)
+      PropertyCheckConfiguration(minSize = 1, sizeRange = 1)
     val nullableFields = fields.map(f => f.copy(nullable = true, name = s"${f.name}Nullable"))
     val sqlContext = new SQLContext(sc)
     val allFields = fields ::: nullableFields

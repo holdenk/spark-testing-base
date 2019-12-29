@@ -4,10 +4,10 @@ import org.apache.spark.ml.linalg.SQLDataTypes.{MatrixType, VectorType}
 import org.apache.spark.sql.SQLContext
 import org.apache.spark.sql.types.{StructField, StructType}
 import org.scalacheck.Prop.forAll
-import org.scalatest.FunSuite
-import org.scalatest.prop.Checkers
+import org.scalatestplus.scalacheck.Checkers
+import org.scalatest.funsuite.AnyFunSuite
 
-class MLScalaCheckTest extends FunSuite with SharedSparkContext with Checkers {
+class MLScalaCheckTest extends AnyFunSuite with SharedSparkContext with Checkers {
   // re-use the spark context
   override implicit def reuseContextIfPossible: Boolean = false
 

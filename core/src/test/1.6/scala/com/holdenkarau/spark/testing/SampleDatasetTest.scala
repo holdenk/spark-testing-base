@@ -2,9 +2,9 @@ package com.holdenkarau.spark.testing
 
 import java.sql.Timestamp
 
-import org.scalatest.FunSuite
+import org.scalatest.funsuite.AnyFunSuite
 
-class SampleDatasetTest extends FunSuite with DatasetSuiteBase {
+class SampleDatasetTest extends AnyFunSuite with DatasetSuiteBase {
 
   test("equal empty dataset") {
     import sqlContext.implicits._
