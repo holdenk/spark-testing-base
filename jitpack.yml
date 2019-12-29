@@ -1,2 +1,2 @@
 install:
-   - sbt publishM2
+   - sbt `echo $ARTIFACT | sed 's/.*2.11$/++2.11.12/;s/.*2.12$/++2.12.10/'` publishM2
