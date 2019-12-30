@@ -19,14 +19,14 @@ package com.holdenkarau.spark.testing
 import java.nio.file.Files
 
 import org.apache.spark._
-import org.scalatest.FunSuite
+import org.scalatest.funsuite.AnyFunSuite
 
 /**
  * Illustrate using per-test sample test. This is the one to use
  * when your tests may be destructive to the Spark context
  * (e.g. stopping it)
  */
-class PerfSampleTest extends FunSuite with PerTestSparkContext {
+class PerfSampleTest extends AnyFunSuite with PerTestSparkContext {
   val tempPath = Files.createTempDirectory(null).toString()
 
   //tag::samplePerfTest[]

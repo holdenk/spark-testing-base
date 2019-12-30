@@ -1,5 +1,5 @@
 lazy val root = (project in file("."))
-  .aggregate(core, kafka_0_8)
+  .aggregate(core)
   .settings(noPublishSettings, commonSettings)
 
 val sparkVersion = settingKey[String]("Spark version")
@@ -14,7 +14,7 @@ lazy val core = (project in file("core"))
     coreTestSources,
     crossScalaVersions := {
       if (sparkVersion.value >= "2.4.0") {
-        Seq("2.12.8")
+        Seq("2.12.10", "2.11.12")
       } else if (sparkVersion.value >= "2.3.0") {
         Seq("2.11.11")
       } else {
@@ -32,6 +32,7 @@ lazy val core = (project in file("core"))
     ) ++ commonDependencies ++ miniClusterDependencies
   )
 
+/*
 lazy val kafka_0_8 = {
   Project("kafka_0_8", file("kafka-0.8"))
     .dependsOn(core)
@@ -64,6 +65,7 @@ lazy val kafka_0_8 = {
       )
     )
 }
+*/
 
 val commonSettings = Seq(
   organization := "com.holdenkarau",
@@ -211,9 +213,10 @@ val coreTestSources = unmanagedSourceDirectories in Test  := {
 
 // additional libraries
 lazy val commonDependencies = Seq(
-  "org.scalatest" %% "scalatest" % "3.0.5",
+  "org.scalatest" %% "scalatest" % "3.1.0",
+  "org.scalatestplus" %% "scalatestplus-scalacheck" % "3.1.0.0-RC2",
   "io.github.nicolasstucki" %% "multisets" % "0.4",
-  "org.scalacheck" %% "scalacheck" % "1.14.0",
+  "org.scalacheck" %% "scalacheck" % "1.14.3",
   "junit" % "junit" % "4.12",
   "org.eclipse.jetty" % "jetty-util" % "9.3.11.v20160721",
   "com.novocode" % "junit-interface" % "0.11" % "test->default")
@@ -231,7 +234,7 @@ def excludeJpountz(items: Seq[ModuleID]) =
 
 libraryDependencies ++= excludeJpountz(
   // For Spark 2.4 w/ Scala 2.12 we're going to need some special logic
-  if (sparkVersion.value >= "2.3.0") {
+  if (sparkVersion.value >= "2.3.0" && scalaVersion.value < "2.12.0") {
     Seq(
       "org.apache.spark" %% "spark-streaming-kafka-0-8" % sparkVersion.value
     )
@@ -290,3 +293,7 @@ lazy val publishSettings = Seq(
 
 lazy val noPublishSettings =
   skip in publish := true
+
+scalafixDependencies in ThisBuild += "org.scalatest" %% "autofix" % "3.1.0.0"
+
+addCompilerPlugin(scalafixSemanticdb)

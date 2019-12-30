@@ -128,7 +128,11 @@ trait DataFrameSuiteBaseLike extends SparkContextProvider
     * @param tol max acceptable tolerance, should be less than 1.
     */
   def assertDataFrameApproximateEquals(
-    expected: DataFrame, result: DataFrame, tol: Double) {
+    expected: DataFrame,
+    result: DataFrame,
+    tol: Double = 0.0,
+    relTol: Double = 0.0
+  ) {
 
     assert(expected.schema, result.schema)
 
@@ -142,7 +146,7 @@ trait DataFrameSuiteBaseLike extends SparkContextProvider
 
       val unequalRDD = expectedIndexValue.join(resultIndexValue).
         filter{case (idx, (r1, r2)) =>
-          !(r1.equals(r2) || DataFrameSuiteBase.approxEquals(r1, r2, tol))}
+          !(r1.equals(r2) || DataFrameSuiteBase.approxEquals(r1, r2, tol, relTol))}
 
       assertEmpty(unequalRDD.take(maxUnequalRowsToShow))
     } finally {
@@ -160,15 +164,67 @@ trait DataFrameSuiteBaseLike extends SparkContextProvider
     rdd.zipWithIndex().map{ case (row, idx) => (idx, row) }
   }
 
-  def approxEquals(r1: Row, r2: Row, tol: Double): Boolean = {
-    DataFrameSuiteBase.approxEquals(r1, r2, tol)
+  def approxEquals(
+    r1: Row,
+    r2: Row,
+    tol: Double = 0.0,
+    relTol: Double = 0.0
+  ): Boolean = {
+    DataFrameSuiteBase.approxEquals(r1, r2, tol, relTol)
   }
 }
 
 object DataFrameSuiteBase {
+  trait WithinToleranceChecker {
+    def apply(a: Double, b: Double): Boolean
+    def apply(a: BigDecimal, b: BigDecimal): Boolean
+  }
+  object WithinToleranceChecker {
+    def apply(tol: Double = 0.0, relTol: Double = 0.0) =
+      if(tol != 0.0 || relTol == 0.0) {
+        new WithinAbsoluteToleranceChecker(tol)
+      } else {
+        new WithinRelativeToleranceChecker(relTol)
+      }
+  }
+
+  class WithinAbsoluteToleranceChecker(tolerance: Double)
+      extends WithinToleranceChecker {
+    def apply(a: Double, b: Double): Boolean =
+      (a - b).abs <= tolerance
+    def apply(a: BigDecimal, b: BigDecimal): Boolean =
+      (a - b).abs <= tolerance
+  }
+
+  class WithinRelativeToleranceChecker(relativeTolerance: Double)
+      extends WithinToleranceChecker {
+    def apply(a: Double, b: Double): Boolean = {
+      val max = (a.abs max b.abs)
+      if (max == 0.0) {
+        true
+      } else {
+        (a - b).abs / max  <= relativeTolerance
+      }
+    }
+    def apply(a: BigDecimal, b: BigDecimal): Boolean = {
+      val max = (a.abs max b.abs)
+      if (max == 0.0) {
+        true
+      } else {
+        (a - b).abs / max  <= relativeTolerance
+      }
+    }
+  }
 
   /** Approximate equality, based on equals from [[Row]] */
-  def approxEquals(r1: Row, r2: Row, tol: Double): Boolean = {
+  def approxEquals(
+    r1: Row,
+    r2: Row,
+    tol: Double = 0.0,
+    relTol: Double = 0.0
+  ): Boolean = {
+    val withinTolerance = WithinToleranceChecker(tol, relTol)
+
     if (r1.length != r2.length) {
       return false
     } else {
@@ -192,7 +248,7 @@ object DataFrameSuiteBase {
               {
                 return false
               }
-              if (abs(f1 - o2.asInstanceOf[Float]) > tol) {
+              if (!withinTolerance(f1, o2.asInstanceOf[Float])) {
                 return false
               }
 
@@ -202,12 +258,20 @@ object DataFrameSuiteBase {
               {
                 return false
               }
-              if (abs(d1 - o2.asInstanceOf[Double]) > tol) {
+              if (!withinTolerance(d1, o2.asInstanceOf[Double])) {
                 return false
               }
 
             case d1: java.math.BigDecimal =>
-              if (d1.compareTo(o2.asInstanceOf[java.math.BigDecimal]) != 0) {
+              if (!withinTolerance(
+                    BigDecimal(d1),
+                    BigDecimal(o2.asInstanceOf[java.math.BigDecimal]
+                    ))) {
+                return false
+              }
+
+            case d1: scala.math.BigDecimal =>
+              if (!withinTolerance(d1, o2.asInstanceOf[scala.math.BigDecimal])) {
                 return false
               }
 
