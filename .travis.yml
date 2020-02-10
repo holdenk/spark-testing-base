@@ -1,6 +1,6 @@
 language: scala
 sudo: required
-dist: precise
+dist: xenial
 cache:
   directories:
     - $HOME/.ivy2
