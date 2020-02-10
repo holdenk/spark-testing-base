@@ -9,9 +9,9 @@ cache:
     - $HOME/.pip-cache
     - $HOME/.sbt/launchers
 jdk:
-  - oraclejdk8
+  - openjdk8
 scala:
-   - 2.10.4
+   - 2.10.7
 sudo: false
 addons:
   apt:
