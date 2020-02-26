@@ -38,12 +38,12 @@ import org.apache.hadoop.hive.conf.HiveConf.ConfVars
 
 trait DataFrameSuiteBase extends TestSuite
     with SharedSparkContext with DataFrameSuiteBaseLike { self: Suite =>
-  override def beforeAll() {
+  override def beforeAll(): Unit = {
     super.beforeAll()
     super.sqlBeforeAllTestCases()
   }
 
-  override def afterAll() {
+  override def afterAll(): Unit = {
     super.afterAll()
     if (!reuseContextIfPossible) {
       SparkSessionProvider._sparkSession = null
@@ -61,7 +61,7 @@ trait DataFrameSuiteBaseLike extends SparkContextProvider
 
   protected implicit def enableHiveSupport: Boolean = true
 
-  def sqlBeforeAllTestCases() {
+  def sqlBeforeAllTestCases(): Unit = {
     if ((SparkSessionProvider._sparkSession ne null) &&
       !SparkSessionProvider._sparkSession.sparkContext.isStopped) {
       // Use existing session if its around and running.
@@ -121,7 +121,7 @@ trait DataFrameSuiteBaseLike extends SparkContextProvider
    * Compares if two [[DataFrame]]s are equal, checks the schema and then if that
    * matches checks if the rows are equal.
    */
-  def assertDataFrameEquals(expected: DataFrame, result: DataFrame) {
+  def assertDataFrameEquals(expected: DataFrame, result: DataFrame): Unit = {
     assertDataFrameApproximateEquals(expected, result, 0.0)
   }
 
@@ -132,7 +132,7 @@ trait DataFrameSuiteBaseLike extends SparkContextProvider
     * @param tol max acceptable tolerance, should be less than 1.
     */
   def assertDataFrameApproximateEquals(
-    expected: DataFrame, result: DataFrame, tol: Double) {
+    expected: DataFrame, result: DataFrame, tol: Double): Unit = {
 
     assert(expected.schema, result.schema)
 
@@ -271,6 +271,6 @@ object DataFrameSuiteBase {
 
 object SparkSessionProvider {
   @transient var _sparkSession: SparkSession = _
-  def sqlContext = EvilSessionTools.extractSQLContext(_sparkSession)
+  def sqlContext: SQLContext = EvilSessionTools.extractSQLContext(_sparkSession)
   def sparkSession = _sparkSession
 }

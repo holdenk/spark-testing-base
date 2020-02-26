@@ -39,7 +39,7 @@ trait SharedMiniCluster extends BeforeAndAfterAll
 
   val master = "yarn-client"
 
-  override def beforeAll() {
+  override def beforeAll(): Unit = {
     // Try and do setup, and in-case we fail shutdown
     try {
       super.startHDFS()
@@ -60,7 +60,7 @@ trait SharedMiniCluster extends BeforeAndAfterAll
     super.beforeAll()
   }
 
-  override def afterAll() {
+  override def afterAll(): Unit = {
     Option(sc).foreach(_.stop())
     _sc = null
 

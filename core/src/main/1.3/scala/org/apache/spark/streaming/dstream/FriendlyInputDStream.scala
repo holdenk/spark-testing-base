@@ -17,7 +17,6 @@
 
 package org.apache.spark.streaming.dstream
 
-import scala.language.implicitConversions
 import scala.reflect.ClassTag
 
 import org.apache.spark.streaming._
@@ -31,7 +30,7 @@ abstract class FriendlyInputDStream[T: ClassTag](
 
   var ourZeroTime: Time = null
 
-  override def initialize(time: Time) {
+  override def initialize(time: Time): Unit = {
     ourZeroTime = time
     super.initialize(time)
   }

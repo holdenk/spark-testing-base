@@ -158,7 +158,7 @@ private[testing] class WrappedGenerator[T](getGenerator: => Gen[T])
     extends WrappedGen[T] {
   lazy val generator: Gen[T] = getGenerator
 
-  def copy() = {
+  def copy(): WrappedGenerator[T] = {
     new WrappedGenerator(generator)
   }
 }
@@ -168,7 +168,7 @@ private[testing] class WrappedSizedGenerator[T]
   extends WrappedGen[T] {
   lazy val generator: Gen[T] = getGenerator(size)
 
-  def copy() = {
+  def copy(): WrappedSizedGenerator[T] = {
     new WrappedSizedGenerator(size, getGenerator)
   }
 }

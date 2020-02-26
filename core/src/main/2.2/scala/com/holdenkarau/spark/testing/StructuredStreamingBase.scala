@@ -22,7 +22,7 @@ import org.apache.spark.sql.execution.streaming._
 
 import org.scalatest.Suite
 
-import scala.reflect.ClassTag
+import org.scalatest.Assertion
 
 /**
  * Early Experimental Structured Streaming Base.
@@ -37,7 +37,7 @@ trait StructuredStreamingBase extends DataFrameSuiteBase
     input: Seq[Seq[T]],
     expected: Seq[R],
     mode: String,
-    queryFunction: Dataset[T] => Dataset[R]) = {
+    queryFunction: Dataset[T] => Dataset[R]): Assertion = {
     val result = runSimpleStreamEndState(spark, input, mode, queryFunction)
     assert(result === expected)
   }
