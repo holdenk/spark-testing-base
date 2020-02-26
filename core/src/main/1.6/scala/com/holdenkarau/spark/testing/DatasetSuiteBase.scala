@@ -19,7 +19,7 @@ class JavaDatasetSuiteBase extends JavaDataFrameSuiteBase
    * This method could be customized by overriding equals method for
    * the given class type.
    */
-  def assertDatasetEquals[U](expected: Dataset[U], result: Dataset[U]) = {
+  def assertDatasetEquals[U](expected: Dataset[U], result: Dataset[U]): Unit = {
     super.assertDatasetEquals(expected, result)(Utils.fakeClassTag[U])
   }
 
@@ -30,7 +30,7 @@ class JavaDatasetSuiteBase extends JavaDataFrameSuiteBase
     * @param tol max acceptable tolerance, should be less than 1.
     */
   def assertDatasetApproximateEquals[U]
-    (expected: Dataset[U], result: Dataset[U], tol: Double) = {
+    (expected: Dataset[U], result: Dataset[U], tol: Double): Unit = {
     super.assertDatasetApproximateEquals(
       expected, result, tol)(Utils.fakeClassTag[U])
   }
@@ -44,7 +44,7 @@ trait DatasetSuiteBaseLike extends DataFrameSuiteBaseLike {
    * the given class type.
    */
   def assertDatasetEquals[U](expected: Dataset[U], result: Dataset[U])
-                            (implicit UCT: ClassTag[U]) = {
+                            (implicit UCT: ClassTag[U]): Unit = {
     try {
       expected.rdd.cache
       result.rdd.cache
@@ -70,7 +70,7 @@ trait DatasetSuiteBaseLike extends DataFrameSuiteBaseLike {
     */
   def assertDatasetApproximateEquals[U]
     (expected: Dataset[U], result: Dataset[U], tol: Double)
-    (implicit UCT: ClassTag[U]) = {
+    (implicit UCT: ClassTag[U]): Unit = {
 
     assertDataFrameApproximateEquals(expected.toDF, result.toDF, tol)
   }

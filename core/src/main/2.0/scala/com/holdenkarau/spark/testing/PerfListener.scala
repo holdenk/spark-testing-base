@@ -17,8 +17,6 @@
 
 package com.holdenkarau.spark.testing
 
-import scala.collection.mutable
-import scala.collection.immutable
 
 import org.apache.spark.scheduler._
 import org.apache.spark.executor.TaskMetrics
@@ -40,7 +38,7 @@ class PerfListener extends SparkListener {
   /**
    * Called when a task ends
    */
-  override def onTaskEnd(taskEnd: SparkListenerTaskEnd) {
+  override def onTaskEnd(taskEnd: SparkListenerTaskEnd): Unit = {
     val info = taskEnd.taskInfo
     val metrics = taskEnd.taskMetrics
     updateMetricsForTask(metrics)

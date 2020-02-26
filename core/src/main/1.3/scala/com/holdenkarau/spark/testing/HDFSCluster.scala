@@ -11,7 +11,7 @@ class HDFSCluster extends HDFSClusterLike
 trait HDFSClusterLike {
   @transient private var hdfsCluster: MiniDFSCluster = null
 
-  def startHDFS() = {
+  def startHDFS(): Unit = {
     println("Starting HDFS Cluster...")
     val baseDir = new File(PathUtils.getTestDir(getClass()), "miniHDFS")
 

@@ -28,7 +28,6 @@ import org.scalatest.concurrent.PatienceConfiguration
 import org.scalatest.time.{Seconds => ScalaTestSeconds, Span}
 
 import scala.collection.mutable.{ArrayBuffer, SynchronizedBuffer}
-import scala.language.implicitConversions
 import scala.reflect.ClassTag
 
 /**
@@ -89,7 +88,7 @@ private[holdenkarau] trait StreamingSuiteCommon extends Logging
   def master = "local[4]"
 
   // Directory where the checkpoint data will be saved
-  lazy val checkpointDir = {
+  lazy val checkpointDir: String = {
     val dir = Utils.createTempDir()
     logDebug(s"checkpointDir: $dir")
     dir.toString
@@ -98,7 +97,7 @@ private[holdenkarau] trait StreamingSuiteCommon extends Logging
 
   // A SparkConf to use in tests.
   // Can be modified before calling setupStreams to configure things.
-  override def conf = new SparkConf()
+  override def conf: SparkConf = new SparkConf()
     .setMaster(master)
     .setAppName(framework)
     .set("spark.driver.host", "localhost")

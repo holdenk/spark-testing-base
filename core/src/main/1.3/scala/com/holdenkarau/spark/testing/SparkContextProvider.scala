@@ -25,7 +25,7 @@ trait SparkContextProvider {
   def appID: String = (this.getClass.getName
     + math.floor(math.random * 10E4).toLong.toString)
 
-  def conf = {
+  def conf: SparkConf = {
     new SparkConf().
       setMaster("local[*]").
       setAppName("test").

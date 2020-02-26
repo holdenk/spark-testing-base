@@ -41,7 +41,7 @@ trait StreamingActionBase extends StreamingSuiteBase {
    * @param input     Sequence of input collections
    * @param operation Unary DStream operation to be applied to the input
    */
-  def runAction[U: ClassTag](input: Seq[Seq[U]], operation: DStream[U] => Unit) {
+  def runAction[U: ClassTag](input: Seq[Seq[U]], operation: DStream[U] => Unit): Unit = {
 
     val numBatches_ = input.size
     withStreamingContext(setupStream[U](input, operation)) { ssc =>
@@ -79,7 +79,7 @@ trait StreamingActionBase extends StreamingSuiteBase {
     ssc
   }
 
-  private def runActionStream(ssc: TestStreamingContext, numBatches: Int) {
+  private def runActionStream(ssc: TestStreamingContext, numBatches: Int): Unit = {
     assert(numBatches > 0, "Number of batches to run stream computation is zero")
     batchCountListener.batchCount = 0
 

@@ -85,7 +85,7 @@ object Utils extends Logging {
     * Don't follow directories if they are symlinks.
     * Throws an exception if deletion is unsuccessful.
     */
-  def deleteRecursively(file: File) {
+  def deleteRecursively(file: File): Unit = {
     if (file != null) {
       try {
         if (file.isDirectory && !isSymlink(file)) {
@@ -118,7 +118,7 @@ object Utils extends Logging {
 
 
   // Register the path to be deleted via shutdown hook
-  def registerShutdownDeleteDir(file: File) {
+  def registerShutdownDeleteDir(file: File): Unit = {
     val absolutePath = file.getAbsolutePath()
     shutdownDeletePaths.synchronized {
       shutdownDeletePaths += absolutePath
