@@ -5,6 +5,9 @@ lazy val root = (project in file("."))
 val sparkVersion = settingKey[String]("Spark version")
 val sparkTestingVersion = settingKey[String]("Spark testing base version without Spark version part")
 
+scalafixDependencies in ThisBuild +=
+  "com.holdenkarau" %% "spark-scalafix-rules" % "0.1.0-SNAPSHOT"
+
 lazy val core = (project in file("core"))
   .settings(
     name := "spark-testing-base",
@@ -12,8 +15,11 @@ lazy val core = (project in file("core"))
     publishSettings,
     coreSources,
     coreTestSources,
+    addCompilerPlugin(scalafixSemanticdb),
     crossScalaVersions := {
-      if (sparkVersion.value >= "2.4.0") {
+      if (sparkVersion.value >= "2.4.5") {
+        Seq("2.12.10")
+      } else if (sparkVersion.value >= "2.4.0") {
         Seq("2.11.11", "2.12.7")
       } else if (sparkVersion.value >= "2.3.0") {
         Seq("2.11.11")
@@ -53,32 +59,43 @@ lazy val kafka_0_8 = {
         sparkVersion.value < "1.4" || scalaVersion.value >= "2.12.0"
       },
       crossScalaVersions := {
-        if (sparkVersion.value >= "2.3.0") {
+        if (sparkVersion.value >= "2.4.5") {
+          Seq("2.12.10")
+        } else if (sparkVersion.value >= "2.3.0") {
           Seq("2.11.11")
         } else {
           Seq("2.10.6", "2.11.11")
         }
       },
-      libraryDependencies ++= Seq(
-        "org.apache.spark" %% "spark-streaming-kafka-0-8" % sparkVersion.value
-      )
+      libraryDependencies ++= {
+        excludeJpountz(
+          if (sparkVersion.value >= "2.4.5") {
+            Seq()
+          } else {
+            Seq(
+              "org.apache.spark" %% "spark-streaming-kafka-0-8" % sparkVersion.value)
+          }
+        )
+      }
     )
 }
 
 val commonSettings = Seq(
   organization := "com.holdenkarau",
   publishMavenStyle := true,
-  sparkVersion := System.getProperty("sparkVersion", "2.4.0"),
+  sparkVersion := System.getProperty("sparkVersion", "2.4.5"),
   sparkTestingVersion := "0.12.0",
   version := sparkVersion.value + "_" + sparkTestingVersion.value,
   scalaVersion := {
-    if (sparkVersion.value >= "2.0.0") {
+    if (sparkVersion.value >= "2.4.5") {
+      "2.12.10"
+    } else if (sparkVersion.value >= "2.0.0") {
       "2.11.11"
     } else {
       "2.10.6"
     }
   },
-  scalacOptions ++= Seq("-deprecation", "-unchecked"),
+  scalacOptions ++= Seq("-deprecation", "-unchecked", "-Yrangepos", "-Ywarn-unused-import"),
   javacOptions ++= {
     if (sparkVersion.value >= "2.1.1") {
       Seq("-source", "1.8", "-target", "1.8")
@@ -226,19 +243,6 @@ def excludeJavaxServlet(items: Seq[ModuleID]) =
 
 def excludeJpountz(items: Seq[ModuleID]) =
   excludeFromAll(items, "net.jpountz.lz4", "lz4")
-
-libraryDependencies ++= excludeJpountz(
-  // For Spark 2.4 w/ Scala 2.12 we're going to need some special logic
-  if (sparkVersion.value >= "2.3.0") {
-    Seq(
-      "org.apache.spark" %% "spark-streaming-kafka-0-8" % sparkVersion.value
-    )
-  } else {
-    // We still have Kafka it's just done through sparkComponents
-    Seq()
-  }
-)
-
 
 lazy val miniClusterDependencies = excludeJavaxServlet(Seq(
   "org.apache.hadoop" % "hadoop-hdfs" % "2.8.3" % "compile,test" classifier "" classifier "tests",
