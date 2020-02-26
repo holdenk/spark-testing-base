@@ -17,7 +17,6 @@
 package com.holdenkarau.spark.testing
 
 import scala.collection.mutable
-import scala.language.implicitConversions
 import scala.reflect.ClassTag
 
 import org.apache.spark.Logging
@@ -38,14 +37,14 @@ trait StreamingSuiteBase extends BeforeAndAfterAll with Logging
 
   // Default before function for any streaming test suite. Override this
   // if you want to add your stuff to "before" (i.e., don't call before { } )
-  override def beforeAll() {
+  override def beforeAll(): Unit = {
     setupClock()
     super.beforeAll()
   }
 
   // Default after function for any streaming test suite. Override this
   // if you want to add your stuff to "after" (i.e., don't call after { } )
-  override def afterAll() {
+  override def afterAll(): Unit = {
     System.clearProperty("spark.streaming.clock")
     super.afterAll()
   }

@@ -60,7 +60,7 @@ trait YARNClusterLike {
   private var tempDir: File = _
   private var logConfDir: File = _
 
-  def startYARN() {
+  def startYARN(): Unit = {
     tempDir = Utils.createTempDir()
     logConfDir = new File(tempDir, "log4j")
     logConfDir.mkdir()
@@ -103,7 +103,7 @@ trait YARNClusterLike {
     writer.close()
   }
 
-  def setupSparkProperties() = {
+  def setupSparkProperties(): Properties = {
     // Find the spark assembly jar
     // TODO: Better error messaging
 
@@ -210,7 +210,7 @@ trait YARNClusterLike {
     ).map(x => Option(x.getAbsolutePath)).flatMap(x => x)
   }
 
-  def shutdownYARN() {
+  def shutdownYARN(): Unit = {
     yarnCluster.foreach(_.stop())
     System.clearProperty("SPARK_YARN_MODE")
     yarnCluster = None

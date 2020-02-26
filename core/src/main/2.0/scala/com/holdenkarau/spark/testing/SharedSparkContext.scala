@@ -17,7 +17,6 @@
 
 package com.holdenkarau.spark.testing
 
-import java.util.Date
 
 import org.apache.spark._
 import org.scalatest.{BeforeAndAfterAll, Suite}
@@ -36,7 +35,7 @@ trait SharedSparkContext extends BeforeAndAfterAll with SparkContextProvider {
 
   protected implicit def reuseContextIfPossible: Boolean = false
 
-  override def beforeAll() {
+  override def beforeAll(): Unit = {
     // This is kind of a hack, but if we've got an existing Spark Context
     // hanging around we need to kill it.
     if (!reuseContextIfPossible) {
@@ -47,7 +46,7 @@ trait SharedSparkContext extends BeforeAndAfterAll with SparkContextProvider {
     super.beforeAll()
   }
 
-  override def afterAll() {
+  override def afterAll(): Unit = {
     try {
       if (!reuseContextIfPossible) {
         LocalSparkContext.stop(_sc)

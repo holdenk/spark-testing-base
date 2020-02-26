@@ -19,7 +19,7 @@ package com.holdenkarau.spark.testing
 
 import org.apache.spark._
 
-import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach, Suite}
+import org.scalatest.{BeforeAndAfterEach, Suite}
 
 /**
  * Provides a local `sc`
@@ -29,17 +29,17 @@ import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach, Suite}
 trait PerTestSparkContext extends LocalSparkContext with BeforeAndAfterEach
     with SparkContextProvider { self: Suite =>
 
-  override def beforeAll() {
+  override def beforeAll(): Unit = {
     EvilSparkContext.stopActiveSparkContext()
   }
 
-  override def beforeEach() {
+  override def beforeEach(): Unit = {
     sc = new SparkContext(conf)
     setup(sc)
     super.beforeEach()
   }
 
-  override def afterEach() {
+  override def afterEach(): Unit = {
     super.afterEach()
   }
 }

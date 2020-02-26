@@ -26,8 +26,8 @@ import org.junit.Assert._
 
 import scala.collection.JavaConversions._
 import scala.collection.immutable.{HashBag => Bag}
-import scala.language.implicitConversions
 import scala.reflect.ClassTag
+import org.apache.spark.SparkConf
 
 /**
  * This is the base trait for Spark Streaming testsuite. This provides basic
@@ -40,7 +40,7 @@ import scala.reflect.ClassTag
  */
 class JavaStreamingSuiteBase extends JavaSuiteBase with StreamingSuiteCommon {
 
-  override def conf = super.conf
+  override def conf: SparkConf = super.conf
     .set("spark.streaming.clock", "org.apache.spark.streaming.util.TestManualClock")
 
   /**

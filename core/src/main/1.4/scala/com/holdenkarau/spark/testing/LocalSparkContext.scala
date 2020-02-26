@@ -31,12 +31,12 @@ trait LocalSparkContext extends BeforeAndAfterEach
   @transient var sc: SparkContext = _
 
 
-  override def afterEach() {
+  override def afterEach(): Unit = {
     resetSparkContext()
     super.afterEach()
   }
 
-  def resetSparkContext() {
+  def resetSparkContext(): Unit = {
     LocalSparkContext.stop(sc)
     sc = null
   }
@@ -44,7 +44,7 @@ trait LocalSparkContext extends BeforeAndAfterEach
 }
 
 object LocalSparkContext {
-  def stop(sc: SparkContext) {
+  def stop(sc: SparkContext): Unit = {
     Option(sc).foreach{ctx =>
       ctx.stop()
     }

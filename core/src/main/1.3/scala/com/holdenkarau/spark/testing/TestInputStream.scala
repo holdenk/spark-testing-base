@@ -19,9 +19,7 @@ package com.holdenkarau.spark.testing
 import org.apache.spark.streaming._
 import org.apache.spark._
 import org.apache.spark.rdd.RDD
-import org.apache.spark.SparkContext._
 
-import scala.language.implicitConversions
 import scala.reflect.ClassTag
 import org.apache.spark.streaming.dstream.FriendlyInputDStream
 
@@ -37,9 +35,9 @@ class TestInputStream[T: ClassTag](@transient var sc: SparkContext,
   ssc_ : StreamingContext, input: Seq[Seq[T]], numPartitions: Int)
   extends FriendlyInputDStream[T](ssc_) {
 
-  def start() {}
+  def start(): Unit = {}
 
-  def stop() {}
+  def stop(): Unit = {}
 
   def compute(validTime: Time): Option[RDD[T]] = {
     logInfo("Computing RDD for time " + validTime)
