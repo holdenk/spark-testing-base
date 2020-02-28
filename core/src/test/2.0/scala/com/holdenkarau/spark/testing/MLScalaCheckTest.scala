@@ -13,7 +13,7 @@ class MLScalaCheckTest extends FunSuite with SharedSparkContext with Checkers {
 
   test("vector generation") {
     val schema = StructType(List(StructField("vector", VectorType)))
-    val sqlContext = SparkSession.builder.getOrCreate().sqlContext
+    val sqlContext = new SQLContext(sc)
     val dataframeGen = DataframeGenerator.arbitraryDataFrame(sqlContext, schema)
 
     val property =
@@ -28,7 +28,7 @@ class MLScalaCheckTest extends FunSuite with SharedSparkContext with Checkers {
 
   test("matrix generation") {
     val schema = StructType(List(StructField("matrix", MatrixType)))
-    val sqlContext = SparkSession.builder.getOrCreate().sqlContext
+    val sqlContext = new SQLContext(sc)
     val dataframeGen = DataframeGenerator.arbitraryDataFrame(sqlContext, schema)
 
     val property =
