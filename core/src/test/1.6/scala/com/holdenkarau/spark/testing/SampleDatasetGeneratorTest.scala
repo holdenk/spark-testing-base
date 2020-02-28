@@ -5,12 +5,13 @@ import org.scalacheck.{Gen, Arbitrary}
 import org.scalacheck.Prop.forAll
 import org.scalatest.FunSuite
 import org.scalatest.prop.Checkers
+import org.apache.spark.sql.SparkSession
 
 class SampleDatasetGeneratorTest extends FunSuite
     with SharedSparkContext with Checkers {
 
   test("test generating Datasets[String]") {
-    val sqlContext = new SQLContext(sc)
+    val sqlContext = SparkSession.builder.getOrCreate().sqlContext
     import sqlContext.implicits._
 
     val property =
@@ -24,7 +25,7 @@ class SampleDatasetGeneratorTest extends FunSuite
   }
 
   test("test generating sized Datasets[String]") {
-    val sqlContext = new SQLContext(sc)
+    val sqlContext = SparkSession.builder.getOrCreate().sqlContext
     import sqlContext.implicits._
 
     val property =
@@ -44,7 +45,7 @@ class SampleDatasetGeneratorTest extends FunSuite
   }
 
   test("test generating Datasets[Custom Class]") {
-    val sqlContext = new SQLContext(sc)
+    val sqlContext = SparkSession.builder.getOrCreate().sqlContext
     import sqlContext.implicits._
 
     val carGen: Gen[Dataset[Car]] =
