@@ -112,7 +112,7 @@ val commonSettings = Seq(
       Seq("-source", "1.7", "-target", "1.7")
     }
   },
-  javaOptions ++= Seq("-Xms2G", "-Xmx2G", "-XX:MaxPermSize=2048M", "-XX:+CMSClassUnloadingEnabled"),
+  javaOptions ++= Seq("-Xms4G", "-Xmx4G", "-XX:MaxPermSize=4048M", "-XX:+CMSClassUnloadingEnabled"),
 
   // See https://github.com/scala/scala/pull/3799
   coverageHighlighting := sparkVersion.value >= "2.0.0" && scalaBinaryVersion.value != "2.10",
