@@ -83,7 +83,7 @@ lazy val kafka_0_8 = {
 val commonSettings = Seq(
   organization := "com.holdenkarau",
   publishMavenStyle := true,
-  sparkVersion := System.getProperty("sparkVersion", "3.0.0-preview2"),
+  sparkVersion := System.getProperty("sparkVersion", "2.4.5"),//3.0.0-preview2"),
   sparkTestingVersion := "0.12.0",
   version := sparkVersion.value + "_" + sparkTestingVersion.value,
   scalaVersion := {
@@ -103,7 +103,7 @@ val commonSettings = Seq(
       Seq("-source", "1.7", "-target", "1.7")
     }
   },
-  javaOptions ++= Seq("-Xms2G", "-Xmx2G", "-XX:MaxPermSize=2048M", "-XX:+CMSClassUnloadingEnabled"),
+  javaOptions ++= Seq("-Xms4G", "-Xmx4G", "-XX:MaxPermSize=4048M", "-XX:+CMSClassUnloadingEnabled"),
 
   // See https://github.com/scala/scala/pull/3799
   coverageHighlighting := sparkVersion.value >= "2.0.0" && scalaBinaryVersion.value != "2.10",
