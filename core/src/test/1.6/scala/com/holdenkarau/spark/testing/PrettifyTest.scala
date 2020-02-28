@@ -8,13 +8,14 @@ import org.scalacheck.util.Pretty
 import org.scalatest.FunSuite
 import org.scalatest.exceptions.GeneratorDrivenPropertyCheckFailedException
 import org.scalatest.prop.Checkers
+import org.apache.spark.sql.SparkSession
 
 class PrettifyTest extends FunSuite with SharedSparkContext with Checkers with Prettify {
   implicit val propertyCheckConfig = PropertyCheckConfig(minSize = 2, maxSize = 2)
 
   test("pretty output of DataFrame's check") {
     val schema = StructType(List(StructField("name", StringType), StructField("age", IntegerType)))
-    val sqlContext = new SQLContext(sc)
+    val sqlContext = SparkSession.builder.getOrCreate().sqlContext
     val nameGenerator = new Column("name", Gen.const("Holden Hanafy"))
     val ageGenerator = new Column("age", Gen.const(20))
 
@@ -41,7 +42,7 @@ class PrettifyTest extends FunSuite with SharedSparkContext with Checkers with P
   }
 
   test("pretty output of Dataset's check") {
-    val sqlContext = new SQLContext(sc)
+    val sqlContext = SparkSession.builder.getOrCreate().sqlContext
     import sqlContext.implicits._
 
     val datasetGen = DatasetGenerator.genDataset[(String, Int)](sqlContext) {

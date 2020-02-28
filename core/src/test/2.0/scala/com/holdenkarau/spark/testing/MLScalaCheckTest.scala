@@ -6,6 +6,7 @@ import org.apache.spark.sql.types.{StructField, StructType}
 import org.scalacheck.Prop.forAll
 import org.scalatest.FunSuite
 import org.scalatest.prop.Checkers
+import org.apache.spark.sql.SparkSession
 
 class MLScalaCheckTest extends FunSuite with SharedSparkContext with Checkers {
   // re-use the spark context
@@ -13,7 +14,7 @@ class MLScalaCheckTest extends FunSuite with SharedSparkContext with Checkers {
 
   test("vector generation") {
     val schema = StructType(List(StructField("vector", VectorType)))
-    val sqlContext = new SQLContext(sc)
+    val sqlContext = SparkSession.builder.getOrCreate().sqlContext
     val dataframeGen = DataframeGenerator.arbitraryDataFrame(sqlContext, schema)
 
     val property =
@@ -28,7 +29,7 @@ class MLScalaCheckTest extends FunSuite with SharedSparkContext with Checkers {
 
   test("matrix generation") {
     val schema = StructType(List(StructField("matrix", MatrixType)))
-    val sqlContext = new SQLContext(sc)
+    val sqlContext = SparkSession.builder.getOrCreate().sqlContext
     val dataframeGen = DataframeGenerator.arbitraryDataFrame(sqlContext, schema)
 
     val property =
