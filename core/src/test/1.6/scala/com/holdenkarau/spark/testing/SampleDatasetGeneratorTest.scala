@@ -10,7 +10,7 @@ class SampleDatasetGeneratorTest extends FunSuite
     with SharedSparkContext with Checkers {
 
   test("test generating Datasets[String]") {
-    val sqlContext = SparkSession.builder.getOrCreate().sqlContext
+    val sqlContext = new SQLContext(sc)
     import sqlContext.implicits._
 
     val property =
@@ -24,7 +24,7 @@ class SampleDatasetGeneratorTest extends FunSuite
   }
 
   test("test generating sized Datasets[String]") {
-    val sqlContext = SparkSession.builder.getOrCreate().sqlContext
+    val sqlContext = new SQLContext(sc)
     import sqlContext.implicits._
 
     val property =
@@ -44,7 +44,7 @@ class SampleDatasetGeneratorTest extends FunSuite
   }
 
   test("test generating Datasets[Custom Class]") {
-    val sqlContext = SparkSession.builder.getOrCreate().sqlContext
+    val sqlContext = new SQLContext(sc)
     import sqlContext.implicits._
 
     val carGen: Gen[Dataset[Car]] =

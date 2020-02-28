@@ -153,7 +153,7 @@ class SampleScalaCheckTest extends FunSuite
   test("test generating Dataframes") {
     val schema = StructType(
       List(StructField("name", StringType), StructField("age", IntegerType)))
-    val sqlContext = SparkSession.builder.getOrCreate().sqlContext
+    val sqlContext = new SQLContext(sc)
     val dataframeGen = DataframeGenerator.arbitraryDataFrame(sqlContext, schema)
 
     val property =
@@ -167,7 +167,7 @@ class SampleScalaCheckTest extends FunSuite
   test("test custom columns generators") {
     val schema = StructType(
       List(StructField("name", StringType), StructField("age", IntegerType)))
-    val sqlContext = SparkSession.builder.getOrCreate().sqlContext
+    val sqlContext = new SQLContext(sc)
     val ageGenerator = new Column("age", Gen.choose(10, 100))
     val dataframeGen =
       DataframeGenerator.arbitraryDataFrameWithCustomFields(
@@ -186,7 +186,7 @@ class SampleScalaCheckTest extends FunSuite
   test("test multiple columns generators") {
     val schema = StructType(
       List(StructField("name", StringType), StructField("age", IntegerType)))
-    val sqlContext = SparkSession.builder.getOrCreate().sqlContext
+    val sqlContext = new SQLContext(sc)
     // name should be on of Holden or Hanafy
     val nameGenerator = new Column("name", Gen.oneOf("Holden", "Hanafy"))
     val ageGenerator = new Column("age", Gen.choose(10, 100))
@@ -216,7 +216,7 @@ class SampleScalaCheckTest extends FunSuite
         )))
       )))
     ))
-    val sqlContext = SparkSession.builder.getOrCreate().sqlContext
+    val sqlContext = new SQLContext(sc)
     val userGenerator = new ColumnList("user", Seq(
        // name should be on of Holden or Hanafy
       new Column("name", Gen.oneOf("Holden", "Hanafy")),
@@ -272,7 +272,7 @@ class SampleScalaCheckTest extends FunSuite
         StructField("happy", BooleanType, true),
         StructField("attributes", ArrayType(FloatType), true)))))))
 
-    val sqlContext = SparkSession.builder.getOrCreate().sqlContext
+    val sqlContext = new SQLContext(sc)
     val dataframeGen: Arbitrary[DataFrame] =
       DataframeGenerator.arbitraryDataFrame(sqlContext, schema)
     val property =
@@ -287,7 +287,7 @@ class SampleScalaCheckTest extends FunSuite
   test("timestamp and type generation") {
     val schema = StructType(
       List(StructField("timeStamp", TimestampType), StructField("date", DateType)))
-    val sqlContext = SparkSession.builder.getOrCreate().sqlContext
+    val sqlContext = new SQLContext(sc)
     val dataframeGen = DataframeGenerator.arbitraryDataFrame(sqlContext, schema)
 
     val property =
@@ -303,7 +303,7 @@ class SampleScalaCheckTest extends FunSuite
   test("map type generation") {
     val schema = StructType(
       List(StructField("map", MapType(LongType, IntegerType, true))))
-    val sqlContext = SparkSession.builder.getOrCreate().sqlContext
+    val sqlContext = new SQLContext(sc)
     val dataframeGen = DataframeGenerator.arbitraryDataFrame(sqlContext, schema)
 
     val property =
@@ -335,7 +335,7 @@ class SampleScalaCheckTest extends FunSuite
       StructField("structType",
         StructType(StructField("timestampType", TimestampType) :: Nil)) :: Nil
 
-    val sqlContext = SparkSession.builder.getOrCreate().sqlContext
+    val sqlContext = new SQLContext(sc)
     val dataframeGen =
       DataframeGenerator.arbitraryDataFrame(sqlContext, StructType(fields))
 
