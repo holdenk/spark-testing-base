@@ -10,7 +10,7 @@ class DatasetGeneratorSizeSpecial extends FunSuite
     with SharedSparkContext with Checkers {
 
   test("test generating sized Datasets[Custom Class]") {
-    val sqlContext = new SQLContext(sc)
+    val sqlContext = SparkSession.builder.getOrCreate().sqlContext
     import sqlContext.implicits._
 
     // In 2.3 List is fine, however prior to 2.1 the generator returns
