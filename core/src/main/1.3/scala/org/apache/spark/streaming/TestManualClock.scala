@@ -16,6 +16,9 @@
  */
 
 package org.apache.spark.streaming.util
+
+import java.util.concurrent.TimeUnit
+
 import org.apache.spark.util._
 
 /*
@@ -34,6 +37,10 @@ class TestManualClock(var time: Long) extends Clock {
     synchronized {
       time
     }
+
+  def nanoTime(): Long = {
+    TimeUnit.MILLISECONDS.toNanos(getTimeMillis())
+  }
 
   /**
    * @param timeToSet new time (in milliseconds) that the clock should represent
