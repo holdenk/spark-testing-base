@@ -72,7 +72,7 @@ trait DataFrameSuiteBaseLike extends SparkContextProvider
        */
       val tempDir = Utils.createTempDir()
       val localMetastorePath = new File(tempDir, "metastore").getCanonicalPath
-      val localWarehousePath = new File(tempDir, "wharehouse").getCanonicalPath
+      val localWarehousePath = new File(tempDir, "warehouse").getCanonicalPath
       def newBuilder() = {
         val builder = SparkSession.builder()
         // Long story with lz4 issues in 2.3+
