@@ -95,20 +95,20 @@ object DataframeGenerator {
       List[Gen[Any]] = {
     val generatorMap = userGenerators.map(
       generator => (generator.columnName -> generator)).toMap
-    (0 until fields.length).toList.map(index => {
-      if (generatorMap.contains(fields(index).name)) {
-        generatorMap.get(fields(index).name) match {
+    fields.toList.map { field =>
+    if (generatorMap.contains(field.name)) {
+        generatorMap.get(field.name) match {
           case Some(gen: Column) => gen.gen
-          case Some(list: ColumnList) => getGenerator(fields(index).dataType, list.gen)
+          case Some(list: ColumnList) => getGenerator(field.dataType, list.gen, nullable = field.nullable)
         }
       }
-      else getGenerator(fields(index).dataType)
-    })
+      else getGenerator(field.dataType, nullable = field.nullable)
+    }
   }
 
   private def getGenerator(
-    dataType: DataType, generators: Seq[ColumnGenerator] = Seq()): Gen[Any] = {
-    dataType match {
+    dataType: DataType, generators: Seq[ColumnGenerator] = Seq(), nullable: Boolean = false): Gen[Any] = {
+    val nonNullGen = dataType match {
       case ByteType => Arbitrary.arbitrary[Byte]
       case ShortType => Arbitrary.arbitrary[Short]
       case IntegerType => Arbitrary.arbitrary[Int]
@@ -121,12 +121,12 @@ object DataframeGenerator {
       case TimestampType => Arbitrary.arbLong.arbitrary.map(new Timestamp(_))
       case DateType => Arbitrary.arbLong.arbitrary.map(new Date(_))
       case arr: ArrayType => {
-        val elementGenerator = getGenerator(arr.elementType)
+        val elementGenerator = getGenerator(arr.elementType, nullable = arr.containsNull)
         Gen.listOf(elementGenerator)
       }
       case map: MapType => {
         val keyGenerator = getGenerator(map.keyType)
-        val valueGenerator = getGenerator(map.valueType)
+        val valueGenerator = getGenerator(map.valueType, nullable = map.valueContainsNull)
         val keyValueGenerator: Gen[(Any, Any)] = for {
           key <- keyGenerator
           value <- valueGenerator
@@ -139,6 +139,10 @@ object DataframeGenerator {
       case _ => throw new UnsupportedOperationException(
         s"Type: $dataType not supported")
     }
+    if (nullable)
+      Gen.oneOf(nonNullGen, Gen.const(null))
+    else
+      nonNullGen
   }
 
 }
