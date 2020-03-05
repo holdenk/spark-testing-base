@@ -38,12 +38,59 @@ class SampleDataFrameTest extends FunSuite with DataFrameSuiteBase {
     assertDataFrameEquals(input, input)
   }
 
+  test("dataframe should be equal with different order of rows") {
+    import sqlContext.implicits._
+    val inputListWithDuplicates = inputList ++ List(inputList.head)
+    val input = sc.parallelize(inputListWithDuplicates).toDF
+    val reverseInput = sc.parallelize(inputListWithDuplicates.reverse).toDF
+    assertDataFrameNoOrderEquals(input, reverseInput)
+  }
+
+  test("empty dataframes should be equal") {
+    import sqlContext.implicits._
+    val emptyList = spark.emptyDataset[Magic].toDF()
+    val emptyList2 = spark.emptyDataset[Magic].toDF()
+    assertDataFrameEquals(emptyList, emptyList2)
+    assertDataFrameNoOrderEquals(emptyList, emptyList2)
+  }
+
+  test("empty dataframes should be not be equal to nonempty ones") {
+    import sqlContext.implicits._
+    val emptyList = spark.emptyDataset[Magic].toDF()
+    val input = sc.parallelize(inputList).toDF
+    assertThrows[org.scalatest.exceptions.TestFailedException] {
+      assertDataFrameEquals(emptyList, input)
+    }
+    assertThrows[org.scalatest.exceptions.TestFailedException] {
+      assertDataFrameNoOrderEquals(emptyList, input)
+    }
+    assertThrows[org.scalatest.exceptions.TestFailedException] {
+      assertDataFrameEquals(input, emptyList)
+    }
+    assertThrows[org.scalatest.exceptions.TestFailedException] {
+      assertDataFrameNoOrderEquals(input, emptyList)
+    }
+  }
+
   test("unequal dataframes should not be equal") {
     import sqlContext.implicits._
     val input = sc.parallelize(inputList).toDF
     val input2 = sc.parallelize(inputList2).toDF
     intercept[org.scalatest.exceptions.TestFailedException] {
       assertDataFrameEquals(input, input2)
+    }
+  }
+
+  test("unequal dataframe with different order should not equal") {
+    import sqlContext.implicits._
+    val inputListWithDuplicates = inputList ++ List(inputList.head)
+    val input = sc.parallelize(inputListWithDuplicates).toDF
+    val input2 = sc.parallelize(inputList).toDF
+    intercept[org.scalatest.exceptions.TestFailedException] {
+      assertDataFrameNoOrderEquals(input, input2)
+    }
+    intercept[org.scalatest.exceptions.TestFailedException] {
+      assertDataFrameNoOrderEquals(input2, input)
     }
   }
 

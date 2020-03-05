@@ -26,6 +26,10 @@ import scala.math.abs
 
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql._
+import org.apache.spark.sql.functions._
+import org.apache.spark.sql.hive._
+import org.apache.hadoop.hive.conf.HiveConf
+import org.apache.hadoop.hive.conf.HiveConf.ConfVars
 
 /**
  * :: Experimental ::
@@ -149,6 +153,45 @@ trait DataFrameSuiteBaseLike extends SparkContextProvider
       expected.rdd.unpersist()
       result.rdd.unpersist()
     }
+  }
+
+  /**
+    * Compares if two [[DataFrame]]s are equal without caring about order of rows, by
+    * finding elements in one DataFrame that is not in the other. The resulting
+    * DataFrame should be empty inferring the two DataFrames have the same elements.
+    * Also verifies that the schema is identical.
+    */
+  def assertDataFrameNoOrderEquals(expected: DataFrame, result: DataFrame) {
+    assert(expected.schema, result.schema)
+    assertDataFrameDataEquals(expected, result)
+  }
+
+
+  /**
+   * Compares if two [[DataFrame]]s are equal without caring about order of rows, by
+   * finding elements in one DataFrame that is not in the other. The resulting
+   * DataFrame should be empty inferring the two DataFrames have the same elements.
+   * Does not compare the schema.
+   */
+  def assertDataFrameDataEquals(expected: DataFrame, result: DataFrame): Unit = {
+    val expectedCol = "assertDataFrameNoOrderEquals_expected"
+    val actualCol = "assertDataFrameNoOrderEquals_actual"
+    expected.rdd.cache
+    result.rdd.cache
+    assert("Length not Equal", expected.rdd.count, result.rdd.count)
+
+    val columns = expected.columns.map(s => col(s))
+    val expectedElementsCount = expected
+      .groupBy(columns: _*)
+      .agg(count(lit(1)).as(expectedCol))
+    val resultElementsCount = result
+      .groupBy(columns: _*)
+      .agg(count(lit(1)).as(actualCol))
+
+    val diff = expectedElementsCount
+      .join(resultElementsCount, expected.columns, "full_outer")
+      .filter(col(expectedCol) =!= col(actualCol))
+    assertEmpty(diff.take(maxUnequalRowsToShow))
   }
 
   /**
