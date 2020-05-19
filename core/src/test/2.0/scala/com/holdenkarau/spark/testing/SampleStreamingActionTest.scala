@@ -20,9 +20,9 @@ import org.apache.spark._
 import org.apache.spark.util.LongAccumulator
 import org.apache.spark.rdd.RDD
 import org.apache.spark.streaming.dstream._
-import org.scalatest.FunSuite
+import org.scalatest.funsuite.AnyFunSuite
 
-class SampleStreamingActionTest extends FunSuite with StreamingActionBase {
+class SampleStreamingActionTest extends AnyFunSuite with StreamingActionBase {
 
   test("a simple action") {
     val input = List(List("hi"), List("bye"))

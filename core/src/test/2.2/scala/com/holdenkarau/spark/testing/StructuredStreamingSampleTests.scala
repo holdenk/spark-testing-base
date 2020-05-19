@@ -2,10 +2,10 @@ package com.holdenkarau.spark.testing
 
 import org.apache.spark.sql._
 
-import org.scalatest.FunSuite
+import org.scalatest.funsuite.AnyFunSuite
 
 class StructuredStreamingTests
-    extends FunSuite with SharedSparkContext with StructuredStreamingBase {
+    extends AnyFunSuite with SharedSparkContext with StructuredStreamingBase {
   // re-use the spark context
   override implicit def reuseContextIfPossible: Boolean = true
 

@@ -3,11 +3,11 @@ package com.holdenkarau.spark.testing
 import org.apache.spark.sql.{Dataset, SQLContext}
 import org.scalacheck.{Gen, Arbitrary}
 import org.scalacheck.Prop.forAll
-import org.scalatest.FunSuite
+import org.scalatest.funsuite.AnyFunSuite
 import org.scalatestplus.scalacheck.Checkers
 import org.apache.spark.sql.SparkSession
 
-class SampleDatasetGeneratorTest extends FunSuite
+class SampleDatasetGeneratorTest extends AnyFunSuite
     with SharedSparkContext with Checkers {
 
   test("test generating Datasets[String]") {

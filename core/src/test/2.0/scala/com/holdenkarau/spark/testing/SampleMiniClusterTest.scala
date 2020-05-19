@@ -17,11 +17,13 @@
 package com.holdenkarau.spark.testing
 
 import org.apache.spark.rdd.RDD
-import org.scalatest.FunSuite
+import org.scalatest.funsuite.AnyFunSuite
 
 // Commented out because it's a pain to run in CI with different versions and @Ignore doesn't do the trick.
 /*
 class SampleMiniClusterTest extends FunSuite with SharedMiniCluster {
+
+class SampleMiniClusterTest extends AnyFunSuite with SharedMiniCluster {
 
   test("really simple transformation") {
     val input = List("hi", "hi holden", "bye")

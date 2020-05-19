@@ -5,13 +5,13 @@ import org.apache.spark.sql.types.{IntegerType, StringType, StructField, StructT
 import org.scalacheck.Gen
 import org.scalacheck.Prop._
 import org.scalacheck.util.Pretty
-import org.scalatest.FunSuite
 import org.scalatest.exceptions.GeneratorDrivenPropertyCheckFailedException
+import org.scalatest.funsuite.AnyFunSuite
 import org.scalatestplus.scalacheck.Checkers
 import org.apache.spark.sql.SparkSession
 
-class PrettifyTest extends FunSuite with SharedSparkContext with Checkers with Prettify {
-  implicit val propertyCheckConfig = PropertyCheckConfig(minSize = 2, maxSize = 2)
+class PrettifyTest extends AnyFunSuite with SharedSparkContext with Checkers with Prettify {
+  implicit val propertyCheckConfig = PropertyCheckConfiguration(minSize = 2, sizeRange = 0)
 
   test("pretty output of DataFrame's check") {
     val schema = StructType(List(StructField("name", StringType), StructField("age", IntegerType)))
