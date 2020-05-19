@@ -22,7 +22,7 @@ import org.apache.spark.sql.types._
 import org.scalacheck.{Arbitrary, Gen}
 import org.scalacheck.Prop.forAll
 import org.scalatest.FunSuite
-import org.scalatest.prop.Checkers
+import org.scalatestplus.scalacheck.Checkers
 import org.apache.spark.sql.SparkSession
 
 class SampleScalaCheckTest extends FunSuite
