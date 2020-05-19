@@ -16,14 +16,14 @@
  */
 package com.holdenkarau.spark.testing
 
-import org.scalatest.FunSuite
+import org.scalatest.funsuite.AnyFunSuite
 
 /**
  * Illustrate using per-test sample test. This is the one to use
  * when your tests may be destructive to the Spark context
  * (e.g. stopping it)
  */
-class PerTestSampleTest extends FunSuite with PerTestSparkContext {
+class PerTestSampleTest extends AnyFunSuite with PerTestSparkContext {
 
   test("sample test stops a context") {
     sc.stop()

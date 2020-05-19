@@ -21,11 +21,11 @@ import org.apache.spark.sql.{DataFrame, Row, SQLContext}
 import org.apache.spark.sql.types._
 import org.scalacheck.{Arbitrary, Gen}
 import org.scalacheck.Prop.forAll
-import org.scalatest.FunSuite
+import org.scalatest.funsuite.AnyFunSuite
 import org.scalatestplus.scalacheck.Checkers
 import org.apache.spark.sql.SparkSession
 
-class SampleScalaCheckTest extends FunSuite
+class SampleScalaCheckTest extends AnyFunSuite
     with SharedSparkContext with RDDComparisons with Checkers {
   // tag::propertySample[]
   // A trivial property that the map doesn't change the number of elements
@@ -258,7 +258,7 @@ class SampleScalaCheckTest extends FunSuite
 
   test("generate rdd of specific size") {
     implicit val generatorDrivenConfig =
-      PropertyCheckConfig(minSize = 10, maxSize = 20)
+      PropertyCheckConfiguration(minSize = 10, sizeRange = 10)
     val prop = forAll(RDDGenerator.genRDD[String](sc)(Arbitrary.arbitrary[String])){
       rdd => rdd.count() <= 20
     }
@@ -372,7 +372,7 @@ class SampleScalaCheckTest extends FunSuite
 
   test("second dataframe's evaluation has the same values as first") {
     implicit val generatorDrivenConfig =
-      PropertyCheckConfig(minSize = 1, maxSize = 1)
+      PropertyCheckConfiguration(minSize = 1, sizeRange = 0)
 
     val sqlContext = SparkSession.builder.getOrCreate().sqlContext
     val dataframeGen =

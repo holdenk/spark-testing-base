@@ -20,9 +20,9 @@ import java.sql.Timestamp
 
 import org.apache.spark.sql.{DataFrame, Row}
 import org.apache.spark.sql.types._
-import org.scalatest.FunSuite
+import org.scalatest.funsuite.AnyFunSuite
 
-class SampleDataFrameTest extends FunSuite with DataFrameSuiteBase {
+class SampleDataFrameTest extends AnyFunSuite with DataFrameSuiteBase {
   val byteArray = new Array[Byte](1)
   val diffByteArray = Array[Byte](192.toByte)
   val inputList = List(
