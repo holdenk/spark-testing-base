@@ -28,6 +28,8 @@ class TestManualClock(var time: Long) extends Clock {
    */
   def this() = this(0L)
 
+  private val nsInMs = 1000000
+  def nanoTime(): Long = getTimeMillis() * nsInMs // Compat
   def getTime(): Long = getTimeMillis() // Compat
   def currentTime(): Long = getTimeMillis() // Compat
   def getTimeMillis(): Long =
