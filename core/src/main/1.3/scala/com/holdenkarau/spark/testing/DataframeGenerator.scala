@@ -1,5 +1,6 @@
 package com.holdenkarau.spark.testing
 
+import java.math.{BigDecimal => JavaBigDecimal, RoundingMode}
 import java.sql.{Date, Timestamp}
 
 import org.apache.spark.sql.types._
@@ -120,6 +121,11 @@ object DataframeGenerator {
       case BooleanType => Arbitrary.arbitrary[Boolean]
       case TimestampType => Arbitrary.arbLong.arbitrary.map(new Timestamp(_))
       case DateType => Arbitrary.arbLong.arbitrary.map(new Date(_))
+      case dec: DecimalType => {
+        Arbitrary.arbitrary[BigDecimal]
+          .retryUntil(_.precision <= dec.precision)
+          .map(_.bigDecimal.setScale(dec.scale, RoundingMode.HALF_UP))
+      }
       case arr: ArrayType => {
         val elementGenerator = getGenerator(arr.elementType, nullable = arr.containsNull)
         Gen.listOf(elementGenerator)
