@@ -13,7 +13,9 @@ lazy val core = (project in file("core"))
     coreSources,
     coreTestSources,
     crossScalaVersions := {
-      if (sparkVersion.value >= "2.4.0") {
+      if (sparkVersion.value >= "3.0.0") {
+        Seq("2.12.10")
+      } else if (sparkVersion.value >= "2.4.0") {
         Seq("2.12.10", "2.11.11")
       } else if (sparkVersion.value >= "2.3.0") {
         Seq("2.11.11")
@@ -59,7 +61,9 @@ lazy val kafka_0_8 = {
         sparkVersion.value < "1.4" || scalaVersion.value >= "2.12.0"
       },
       crossScalaVersions := {
-        if (sparkVersion.value >= "2.4.0") {
+        if (sparkVersion.value >= "3.0.0") {
+          Seq("2.12.10")
+        } else if (sparkVersion.value >= "2.4.0") {
           Seq("2.12.10", "2.11.11")
         } else if (sparkVersion.value >= "2.3.0") {
           Seq("2.11.11")
@@ -83,7 +87,7 @@ lazy val kafka_0_8 = {
 val commonSettings = Seq(
   organization := "com.holdenkarau",
   publishMavenStyle := true,
-  sparkVersion := System.getProperty("sparkVersion", "2.4.5"),
+  sparkVersion := System.getProperty("sparkVersion", "3.0.0"),
   sparkTestingVersion := "0.14.0",
   version := sparkVersion.value + "_" + sparkTestingVersion.value,
   scalaVersion := {
@@ -116,7 +120,6 @@ val commonSettings = Seq(
 
   resolvers ++= Seq(
     "JBoss Repository" at "http://repository.jboss.org/nexus/content/repositories/releases/",
-    "Spray Repository" at "http://repo.spray.cc/",
     "Cloudera Repository" at "https://repository.cloudera.com/artifactory/cloudera-repos/",
     "Apache HBase" at "https://repository.apache.org/content/repositories/releases",
     "Twitter Maven Repo" at "http://maven.twttr.com/",

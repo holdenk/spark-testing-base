@@ -12,10 +12,10 @@ This is not my beautiful code.
 
 ## How?
 
-So you include com.holdenkarau.spark-testing-base [spark_version]_0.14.0 and extend one of the classes and write some simple tests instead.  For example to include this in a project using Spark 2.4.5:
+So you include com.holdenkarau.spark-testing-base [spark_version]_0.14.0 and extend one of the classes and write some simple tests instead.  For example to include this in a project using Spark 3.0.0:
 
 ```scala
-"com.holdenkarau" %% "spark-testing-base" % "2.4.5_0.14.0" % "test"
+"com.holdenkarau" %% "spark-testing-base" % "3.0.0_0.14.0" % "test"
 ```
 
 or
@@ -32,7 +32,7 @@ or
 If you'd like to use Kafka related features you need to include this artefact to your dependencies as well:
 
 ```scala
-"com.holdenkarau" %% "spark-testing-kafka-0_8" % "2.4.5_0.14.0" % "test"
+"com.holdenkarau" %% "spark-testing-kafka-0_8" % "3.0.0_0.14.0" % "test"
 ```
 
 or

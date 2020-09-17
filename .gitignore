@@ -150,3 +150,8 @@ docs/_build/
 .env
 *~
 
+# Bloop
+.bloop/
+
+# Metals server
+.metals/
