@@ -40,10 +40,6 @@ class TestManualClock(var time: Long) extends Clock {
       time
     }
 
-  def nanoTime(): Long = {
-    TimeUnit.MILLISECONDS.toNanos(getTimeMillis())
-  }
-
   /**
    * @param timeToSet new time (in milliseconds) that the clock should represent
    */
