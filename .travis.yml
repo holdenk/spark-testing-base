@@ -40,9 +40,13 @@ install:
   - conda create -p $HOME/py --yes $deps "python=2.7"
   - export PATH=$HOME/py/bin:$PATH
   - pip install --upgrade unittest2 codecov
+  - wget https://piccolo.link/sbt-1.3.4.tgz
+  # Add sbt
+  - tar -xvf sbt-1.3.4.tgz
+  - export PATH=$PATH:"$(pwd)/sbt/bin/"
 script:
-  - ./sbt/sbt scalastyle
-  - SPARK_CONF_DIR=./log4j/ ./sbt/sbt clean coverage test coverageReport
+  - sbt scalastyle
+  - SPARK_CONF_DIR=./log4j/ sbt clean coverage test coverageReport
   - bash <(curl -s https://codecov.io/bash) -cF scala
   - cp ./log4j/log4j.properties $SPARK_HOME/conf/
   - ./python/run-tests
