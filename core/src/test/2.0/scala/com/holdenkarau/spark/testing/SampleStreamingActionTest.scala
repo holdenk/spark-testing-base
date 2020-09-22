@@ -17,6 +17,7 @@
 package com.holdenkarau.spark.testing
 
 import org.apache.spark._
+import org.apache.spark.util.LongAccumulator
 import org.apache.spark.rdd.RDD
 import org.apache.spark.streaming.dstream._
 import org.scalatest.FunSuite
@@ -25,16 +26,16 @@ class SampleStreamingActionTest extends FunSuite with StreamingActionBase {
 
   test("a simple action") {
     val input = List(List("hi"), List("bye"))
-    val acc = sc.accumulator(0)
+    val acc = sc.longAccumulator("acc lengths")
     val cw = countWordsLength(acc)
     runAction(input, cw)
-    assert(5 === acc.value)
+    assert(5L === acc.value)
   }
 
-  def countWordsLength(acc: Accumulator[Int]): (DStream[String] => Unit) = {
+  def countWordsLength(acc: LongAccumulator): (DStream[String] => Unit) = {
     def c(input: DStream[String]): Unit = {
       input.foreachRDD{r: RDD[String] =>
-        r.foreach{e: String => acc += e.length()}}
+        r.foreach{e: String => acc.add(e.length())}}
     }
     c _
   }

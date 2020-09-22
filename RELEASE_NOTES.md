@@ -1,3 +1,9 @@
+# 1.0.0
+- Minimum supported version of Spark is now 2.4
+- Add support for Spark 3.0 & 3.0.1
+- Drop scala 2.10.X & 2.11.X support
+- Switch JDK target to JDK8 (drop JDK7 support)
+- Clean up a lot of dead code (yay!)
 # 0.10.0
 - Add support for Spark 2.3.1, 2.1.3
 - Add better sized generators

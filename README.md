@@ -87,9 +87,13 @@ In surefire make sure that forkCount is set to 1 and reuseForks is true.
 
 ## Where is this from?
 
-Much of this code is a stripped down version of the test suite bases that are in Apache Spark but are not accessible. Other parts are also inspired by sscheck (scalacheck generators for Spark).
+Some of this code is a stripped down version of the test suite bases that are in Apache Spark but are not accessible. Other parts are also inspired by sscheck (scalacheck generators for Spark).
 
 Other parts of this are implemented on top of the test suite bases to make your life even easier.
+
+## How do I build this?
+
+This project is built with sbt.
 
 ## What are some other options?
 
