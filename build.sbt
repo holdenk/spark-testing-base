@@ -16,17 +16,6 @@ lazy val core = (project in file("core"))
     coreSources,
     coreTestSources,
     addCompilerPlugin(scalafixSemanticdb),
-    crossScalaVersions := {
-      if (sparkVersion.value >= "3.0.0") {
-        Seq("2.12.10")
-      } else if (sparkVersion.value >= "2.4.0") {
-        Seq("2.12.10", "2.11.11")
-      } else if (sparkVersion.value >= "2.3.0") {
-        Seq("2.11.11")
-      } else {
-        Seq("2.10.6", "2.11.11")
-      }
-    },
     libraryDependencies ++= Seq(
       "org.apache.spark" %% "spark-core"        % sparkVersion.value,
       "org.apache.spark" %% "spark-streaming"   % sparkVersion.value,
@@ -46,12 +35,12 @@ lazy val kafka_0_8 = {
       commonSettings,
       kafkaPublishSettings,
       unmanagedSourceDirectories in Compile := {
-        if (sparkVersion.value >= "1.4" && scalaVersion.value < "2.12.0")
+        if (scalaVersion.value < "2.12.0")
           (unmanagedSourceDirectories in Compile).value
         else Seq.empty
       },
       unmanagedSourceDirectories in Test := {
-        if (sparkVersion.value >= "1.4" && scalaVersion.value < "2.12.0")
+        if (scalaVersion.value < "2.12.0")
           (unmanagedSourceDirectories in Test).value
         else Seq.empty
       },
@@ -62,19 +51,7 @@ lazy val kafka_0_8 = {
         scalaVersion.value >= "2.12.0"
       },
       skip in publish := {
-        sparkVersion.value < "1.4" || scalaVersion.value >= "2.12.0"
-      },
-      crossScalaVersions := {
-
-        if (sparkVersion.value >= "3.0.0") {
-          Seq("2.12.10")
-        } else if (sparkVersion.value >= "2.4.0") {
-          Seq("2.12.10", "2.11.11")
-        } else if (sparkVersion.value >= "2.3.0") {
-          Seq("2.11.11")
-        } else {
-          Seq("2.10.6", "2.11.11")
-        }
+        scalaVersion.value >= "2.12.0"
       },
       libraryDependencies ++= {
         excludeJpountz(
@@ -92,30 +69,19 @@ lazy val kafka_0_8 = {
 val commonSettings = Seq(
   organization := "com.holdenkarau",
   publishMavenStyle := true,
-  sparkVersion := System.getProperty("sparkVersion", "3.0.0"),
-  sparkTestingVersion := "0.14.0",
+  sparkVersion := System.getProperty("sparkVersion", "2.4.0"),
+  sparkTestingVersion := "1.0.0",
   version := sparkVersion.value + "_" + sparkTestingVersion.value,
   scalaVersion := {
-    if (sparkVersion.value >= "2.4.0") {
-      "2.12.10"
-    } else if (sparkVersion.value >= "2.0.0") {
-      "2.11.11"
-    } else {
-      "2.10.6"
-    }
+    "2.12.12"
   },
   scalacOptions ++= Seq("-deprecation", "-unchecked", "-Yrangepos", "-Ywarn-unused-import"),
   javacOptions ++= {
-    if (sparkVersion.value >= "2.1.1") {
-      Seq("-source", "1.8", "-target", "1.8")
-    } else {
-      Seq("-source", "1.7", "-target", "1.7")
-    }
+    Seq("-source", "1.8", "-target", "1.8")
   },
-  javaOptions ++= Seq("-Xms4G", "-Xmx4G", "-XX:MaxPermSize=4048M", "-XX:+CMSClassUnloadingEnabled"),
+  javaOptions ++= Seq("-Xms6G", "-Xmx6G", "-XX:MaxPermSize=4048M", "-XX:+CMSClassUnloadingEnabled"),
 
-  // See https://github.com/scala/scala/pull/3799
-  coverageHighlighting := sparkVersion.value >= "2.0.0" && scalaBinaryVersion.value != "2.10",
+  coverageHighlighting := true,
 
   parallelExecution in Test := false,
   fork := true,
@@ -124,15 +90,15 @@ val commonSettings = Seq(
   scalastyleSources in Test ++= {unmanagedSourceDirectories in Test}.value,
 
   resolvers ++= Seq(
-    "JBoss Repository" at "http://repository.jboss.org/nexus/content/repositories/releases/",
+    "JBoss Repository" at "https://repository.jboss.org/nexus/content/repositories/releases/",
     "Cloudera Repository" at "https://repository.cloudera.com/artifactory/cloudera-repos/",
     "Apache HBase" at "https://repository.apache.org/content/repositories/releases",
-    "Twitter Maven Repo" at "http://maven.twttr.com/",
+    "Twitter Maven Repo" at "https://maven.twttr.com/",
     "scala-tools" at "https://oss.sonatype.org/content/groups/scala-tools",
     "sonatype-releases" at "https://oss.sonatype.org/content/repositories/releases/",
-    "Typesafe repository" at "http://repo.typesafe.com/typesafe/releases/",
-    "Second Typesafe repo" at "http://repo.typesafe.com/typesafe/maven-releases/",
-    "Mesosphere Public Repository" at "http://downloads.mesosphere.io/maven",
+    "Typesafe repository" at "https://repo.typesafe.com/typesafe/releases/",
+    "Second Typesafe repo" at "https://repo.typesafe.com/typesafe/maven-releases/",
+    "Mesosphere Public Repository" at "https://downloads.mesosphere.io/maven",
     Resolver.sonatypeRepo("public")
   )
 )
@@ -147,12 +113,9 @@ val coreSources = unmanagedSourceDirectories in Compile  := {
     (sourceDirectory in Compile)(_ / "2.2/scala"),
     (sourceDirectory in Compile)(_ / "2.0/scala"), (sourceDirectory in Compile)(_ / "2.0/java")
   ).join.value
-  else if (sparkVersion.value >= "2.0.0" && scalaVersion.value >= "2.11") Seq(
+  else // if (sparkVersion.value >= "2.0.0" && scalaVersion.value >= "2.11")
+    Seq(
     (sourceDirectory in Compile)(_ / "pre-2.2_2.11/scala"),
-    (sourceDirectory in Compile)(_ / "2.0/scala"), (sourceDirectory in Compile)(_ / "2.0/java")
-  ).join.value
-  else Seq(
-    (sourceDirectory in Compile)(_ / "pre-2.2_2.10/scala"),
     (sourceDirectory in Compile)(_ / "2.0/scala"), (sourceDirectory in Compile)(_ / "2.0/java")
   ).join.value
 }
