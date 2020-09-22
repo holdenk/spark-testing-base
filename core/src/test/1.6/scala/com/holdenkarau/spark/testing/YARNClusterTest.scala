@@ -1,10 +1,11 @@
 package com.holdenkarau.spark.testing
 
 import org.apache.spark.{SparkConf, SparkContext}
-import org.scalatest.{BeforeAndAfterAll, FunSuite}
+import org.scalatest.BeforeAndAfterAll
+import org.scalatest.funsuite.AnyFunSuite
 
 
-class YARNClusterTest extends FunSuite with BeforeAndAfterAll {
+class YARNClusterTest extends AnyFunSuite with BeforeAndAfterAll {
   var yarnCluster: YARNCluster = null
   var sc: SparkContext = null
 

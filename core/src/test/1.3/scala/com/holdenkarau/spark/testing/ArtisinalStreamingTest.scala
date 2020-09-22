@@ -25,8 +25,8 @@ import org.apache.spark._
 import org.apache.spark.rdd.RDD
 import org.apache.spark.SparkContext._
 
-import org.scalatest.FunSuite
 import org.scalatest.exceptions.TestFailedException
+import org.scalatest.funsuite.AnyFunSuite
 
 /**
  * ArtisinalStreamingTest illustrates how to write a streaming test
@@ -36,7 +36,7 @@ import org.scalatest.exceptions.TestFailedException
  * This does not use a manual clock and instead uses the kind of sketchy
  * sleep approach. Instead please look at [[SampleStreamingTest]].
  */
-class ArtisinalStreamingTest extends FunSuite with SharedSparkContext {
+class ArtisinalStreamingTest extends AnyFunSuite with SharedSparkContext {
   // tag::createQueueStream[]
   def makeSimpleQueueStream(ssc: StreamingContext) = {
     val input = List(List("hi"), List("happy pandas", "sad pandas"))

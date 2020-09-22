@@ -17,10 +17,10 @@
 package com.holdenkarau.spark.testing
 
 import org.apache.spark.rdd.RDD
-import org.scalatest.FunSuite
+import org.scalatest.funsuite.AnyFunSuite
 
 
-class SampleMiniClusterTest extends FunSuite with SharedMiniCluster {
+class SampleMiniClusterTest extends AnyFunSuite with SharedMiniCluster {
 
   test("really simple transformation") {
     val input = List("hi", "hi holden", "bye")

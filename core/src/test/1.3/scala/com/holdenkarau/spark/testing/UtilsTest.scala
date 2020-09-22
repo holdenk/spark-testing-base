@@ -19,9 +19,9 @@ package com.holdenkarau.spark.testing
 import java.io._
 import java.nio.file.Files
 
-import org.scalatest.FunSuite
+import org.scalatest.funsuite.AnyFunSuite
 
-class UtilsTest extends FunSuite {
+class UtilsTest extends AnyFunSuite {
   test("test utils cleanup") {
     val tempDir = Utils.createTempDir()
     val tempPath = tempDir.toPath().toAbsolutePath().toString()

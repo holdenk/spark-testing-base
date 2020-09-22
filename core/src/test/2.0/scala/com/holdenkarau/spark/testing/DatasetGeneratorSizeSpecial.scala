@@ -3,10 +3,10 @@ package com.holdenkarau.spark.testing
 import org.apache.spark.sql.{Dataset, SQLContext}
 import org.scalacheck.{Gen, Arbitrary}
 import org.scalacheck.Prop.forAll
-import org.scalatest.FunSuite
-import org.scalatest.prop.Checkers
+import org.scalatestplus.scalacheck.Checkers
+import org.scalatest.funsuite.AnyFunSuite
 
-class DatasetGeneratorSizeSpecial extends FunSuite
+class DatasetGeneratorSizeSpecial extends AnyFunSuite
     with SharedSparkContext with Checkers {
 
   test("test generating sized Datasets[Custom Class]") {

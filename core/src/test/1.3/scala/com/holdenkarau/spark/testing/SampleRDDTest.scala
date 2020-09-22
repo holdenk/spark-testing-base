@@ -19,9 +19,9 @@ package com.holdenkarau.spark.testing
 import scala.util.Random
 
 import org.apache.spark.rdd.RDD
-import org.scalatest.FunSuite
+import org.scalatest.funsuite.AnyFunSuite
 
-class SampleRDDTest extends FunSuite with SharedSparkContext with RDDComparisons {
+class SampleRDDTest extends AnyFunSuite with SharedSparkContext with RDDComparisons {
   test("really simple transformation") {
     val input = List("hi", "hi holden", "bye")
     val expected = List(List("hi"), List("hi", "holden"), List("bye"))

@@ -7,9 +7,9 @@ import com.holdenkarau.spark.testing.{RDDComparisons, SharedSparkContext}
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.fs.{FileSystem, Path}
 import org.apache.spark.rdd.RDD
-import org.scalatest.FunSuite
+import org.scalatest.funsuite.AnyFunSuite
 
-class HDFSClusterTest extends FunSuite with SharedSparkContext with RDDComparisons {
+class HDFSClusterTest extends AnyFunSuite with SharedSparkContext with RDDComparisons {
 
   var hdfsCluster: HDFSCluster = null
 
