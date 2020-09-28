@@ -79,6 +79,9 @@ class SampleDataFrameTest extends FunSuite with DataFrameSuiteBase {
     intercept[org.scalatest.exceptions.TestFailedException] {
       assertDataFrameEquals(input, input2)
     }
+    intercept[org.scalatest.exceptions.TestFailedException] {
+      assertDataFrameNoOrderEquals(input, input2)
+    }
   }
 
   test("unequal dataframe with different order should not equal") {

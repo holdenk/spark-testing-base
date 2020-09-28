@@ -174,24 +174,21 @@ trait DataFrameSuiteBaseLike extends SparkContextProvider
    * Does not compare the schema.
    */
   def assertDataFrameDataEquals(expected: DataFrame, result: DataFrame): Unit = {
-    val expectedCol = "assertDataFrameNoOrderEquals_expected"
-    val actualCol = "assertDataFrameNoOrderEquals_actual"
-    expected.rdd.cache
-    result.rdd.cache
-    assert("Length not Equal", expected.rdd.count, result.rdd.count)
+    expected.persist()
+    result.persist()
+    assert("Length not equal", expected.count(), result.count())
+    val intersection = expected.intersectAll(result)
+    if (intersection.count() != expected.count()) {
+      assertEmpty(computeDataFrameDiffSample(expected, result))
+    }
+  }
 
-    val columns = expected.columns.map(s => col(s))
-    val expectedElementsCount = expected
-      .groupBy(columns: _*)
-      .agg(count(lit(1)).as(expectedCol))
-    val resultElementsCount = result
-      .groupBy(columns: _*)
-      .agg(count(lit(1)).as(actualCol))
-
-    val diff = expectedElementsCount
-      .join(resultElementsCount, expected.columns, "full_outer")
-      .filter(col(expectedCol) =!= col(actualCol))
-    assertEmpty(diff.take(maxUnequalRowsToShow))
+  private def computeDataFrameDiffSample(expected: DataFrame, result: DataFrame): Array[Row] = {
+    val rowsOnlyInExpected = expected.exceptAll(result)
+    val rowsOnlyInActual = result.exceptAll(expected)
+    rowsOnlyInExpected
+      .union(rowsOnlyInActual)
+      .take(maxUnequalRowsToShow)
   }
 
   /**
