@@ -12,10 +12,10 @@ This is not my beautiful code.
 
 ## How?
 
-So you include com.holdenkarau.spark-testing-base [spark_version]_0.14.0 and extend one of the classes and write some simple tests instead.  For example to include this in a project using Spark 3.0.0:
+So you include com.holdenkarau.spark-testing-base [spark_version]_1.0.0 and extend one of the classes and write some simple tests instead.  For example to include this in a project using Spark 3.0.0:
 
 ```scala
-"com.holdenkarau" %% "spark-testing-base" % "3.0.0_0.14.0" % "test"
+"com.holdenkarau" %% "spark-testing-base" % "3.0.0_1.0.0" % "test"
 ```
 
 or
