@@ -17,6 +17,7 @@
 
 """Simple test example"""
 
+import unittest2
 from sparktestingbase.testcase import SparkTestingBaseTestCase
 
 
@@ -29,6 +30,7 @@ class HelloWorldTest(SparkTestingBaseTestCase):
         rdd = self.sc.parallelize(input)
         result = rdd.collect()
         assert result == input
+
 
 if __name__ == "__main__":
     unittest2.main()

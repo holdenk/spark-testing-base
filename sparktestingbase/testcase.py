@@ -1,3 +1,4 @@
+from __future__ import absolute_import, print_function
 #
 # Licensed to the Apache Software Foundation (ASF) under one or more
 # contributor license agreements.  See the NOTICE file distributed with
@@ -17,13 +18,10 @@
 
 """Provides a common test case base for Python Spark tests"""
 
-from utils import quiet_py4j
-from utils import quiet_logs
+from .utils import add_pyspark_path, quiet_py4j
 
 import unittest2
 from pyspark.context import SparkContext
-from pyspark import HiveContext
-
 import os
 
 
@@ -40,7 +38,6 @@ class SparkTestingBaseTestCase(unittest2.TestCase):
     def setUp(self):
         """Setup a basic Spark context for testing"""
         self.sc = SparkContext(self.getMaster())
-        self.sql_context = HiveContext(self.sc)
         quiet_py4j()
 
     def tearDown(self):
@@ -53,9 +50,32 @@ class SparkTestingBaseTestCase(unittest2.TestCase):
         # immediately on shutdown
         self.sc._jvm.System.clearProperty("spark.driver.port")
 
+    def assertRDDEquals(self, expected, result):
+        return self.compareRDD(expected, result) == []
+
+    def compareRDD(self, expected, result):
+        expectedKeyed = expected.map(lambda x: (x, 1))\
+                                .reduceByKey(lambda x, y: x + y)
+        resultKeyed = result.map(lambda x: (x, 1))\
+                            .reduceByKey(lambda x, y: x + y)
+        return expectedKeyed.cogroup(resultKeyed)\
+                            .map(lambda x: tuple(map(list, x[1])))\
+                            .filter(lambda x: x[0] != x[1]).take(1)
+
+    def assertRDDEqualsWithOrder(self, expected, result):
+        return self.compareRDDWithOrder(expected, result) == []
+
+    def compareRDDWithOrder(self, expected, result):
+        def indexRDD(rdd):
+            return rdd.zipWithIndex().map(lambda x: (x[1], x[0]))
+        indexExpected = indexRDD(expected)
+        indexResult = indexRDD(result)
+        return indexExpected.cogroup(indexResult)\
+                            .map(lambda x: tuple(map(list, x[1])))\
+                            .filter(lambda x: x[0] != x[1]).take(1)
+
 
 class SparkTestingBaseReuse(unittest2.TestCase):
-
     """Basic common test case for Spark. Provides a Spark context as sc.
     For non local mode testing you can either override sparkMaster
     or set the enviroment property SPARK_MASTER for non-local mode testing."""
@@ -69,13 +89,6 @@ class SparkTestingBaseReuse(unittest2.TestCase):
         """Setup a basic Spark context for testing"""
         class_name = cls.__name__
         cls.sc = SparkContext(cls.getMaster(), appName=class_name)
-        quiet_logs(cls.sc)
-        _scala_HiveContext =\
-            cls.sc._jvm.org.apache.spark.sql.hive.test.TestHiveContext(
-                cls.sc._jsc.sc()
-            )
-        cls.sql_context = HiveContext(cls.sc, _scala_HiveContext)
-
         quiet_py4j()
 
     @classmethod
@@ -84,8 +97,8 @@ class SparkTestingBaseReuse(unittest2.TestCase):
         Tear down the basic panda spark test case. This stops the running
         context and does a hack to prevent Akka rebinding on the same port.
         """
+        print("stopping class")
         cls.sc.stop()
-        derby_path = os.path.join(os.getcwd(), 'metastore_db')
         # To avoid Akka rebinding to the same port, since it doesn't unbind
         # immediately on shutdown
         cls.sc._jvm.System.clearProperty("spark.driver.port")
