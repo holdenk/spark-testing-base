@@ -31,12 +31,11 @@ import struct
 import shutil
 from functools import reduce
 
-from pyspark.context import SparkConf, SparkContext, RDD
+from pyspark.context import RDD
 from pyspark.streaming.context import StreamingContext
 
 
 class StreamingTestCase(SparkTestingBaseReuse):
-
     """Basic common test case for Spark Streaming tests. Provides a
     Spark Streaming context as well as some helper methods for creating
     streaming input and collecting streaming output.
@@ -49,7 +48,7 @@ class StreamingTestCase(SparkTestingBaseReuse):
     def setUpClass(cls):
         super(StreamingTestCase, cls).setUpClass()
         cls._checkpointDir = tempfile.mkdtemp()
-        cls.sc.setCheckpointDir(cls._checkpointDir)
+        cls.spark.sparkContext.setCheckpointDir(cls._checkpointDir)
 
     @classmethod
     def tearDownClass(cls):
@@ -61,7 +60,7 @@ class StreamingTestCase(SparkTestingBaseReuse):
         return map(lambda x: sorted(x), result)
 
     def setUp(self):
-        self.ssc = StreamingContext(self.sc, self.duration)
+        self.ssc = StreamingContext(self.spark.sparkContext, self.duration)
 
     def tearDown(self):
         self.ssc.stop(False)
@@ -125,10 +124,10 @@ class StreamingTestCase(SparkTestingBaseReuse):
         discard the additional output. TODO: fail when this happens.
         """
         if not isinstance(input[0], RDD):
-            input = [self.sc.parallelize(d, 1) for d in input]
+            input = [self.spark.sparkContext.parallelize(d, 1) for d in input]
         input_stream = self.ssc.queueStream(input)
         if input2 and not isinstance(input2[0], RDD):
-            input2 = [self.sc.parallelize(d, 1) for d in input2]
+            input2 = [self.spark.sparkContext.parallelize(d, 1) for d in input2]
 
         # Apply test function to stream.
         if input2:

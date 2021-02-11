@@ -26,11 +26,11 @@ class ReuseSparkContextTest(SparkTestingBaseReuse):
 
     def test_samecontext_1(self):
         """Set a system property"""
-        self.sc.setLocalProperty("pandas", "123")
+        self.spark.sparkContext.setLocalProperty("pandas", "123")
 
     def test_samecontext_2(self):
         """Test that we have the same context."""
-        assert self.sc.getLocalProperty("pandas") == "123"
+        assert self.spark.sparkContext.getLocalProperty("pandas") == "123"
 
 
 if __name__ == "__main__":

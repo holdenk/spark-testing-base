@@ -27,7 +27,7 @@ class SimpleTest(SparkTestingBaseTestCase):
     def test_basic(self):
         """Test a simple collect."""
         input = ["hello world"]
-        rdd = self.sc.parallelize(input)
+        rdd = self.spark.sparkContext.parallelize(input)
         result = rdd.collect()
         assert result == input
 
@@ -35,46 +35,46 @@ class SimpleTest(SparkTestingBaseTestCase):
         """Test a simple coleect."""
         input_expected = ["hello world"]
         input_result = ["hello world"]
-        rdd_expected = self.sc.parallelize(input_expected)
-        rdd_result = self.sc.parallelize(input_result)
-        assert self.assertRDDEquals(rdd_expected, rdd_result) is True
+        rdd_expected = self.spark.sparkContext.parallelize(input_expected)
+        rdd_result = self.spark.sparkContext.parallelize(input_result)
+        assert self.assert_rdd_equals(rdd_expected, rdd_result) is True
 
     def test_assertRDDEquals_inverse_terms_false(self):
         """Test a simple coleect."""
         input_expected = ["hello world"]
         input_result = ["world hello"]
-        rdd_expected = self.sc.parallelize(input_expected)
-        rdd_result = self.sc.parallelize(input_result)
-        assert self.assertRDDEquals(rdd_expected, rdd_result) is False
+        rdd_expected = self.spark.sparkContext.parallelize(input_expected)
+        rdd_result = self.spark.sparkContext.parallelize(input_result)
+        assert self.assert_rdd_equals(rdd_expected, rdd_result) is False
 
     def test_assertRDDEquals_diff_length_false(self):
         """Test a simple collect."""
         input_expected = [1, 2, 3, 4, 5]
         input_result = [1, 2, 3, 4, 5, 6]
-        rdd_expected = self.sc.parallelize(input_expected)
-        rdd_result = self.sc.parallelize(input_result)
-        assert self.assertRDDEquals(rdd_expected, rdd_result) is False
+        rdd_expected = self.spark.sparkContext.parallelize(input_expected)
+        rdd_result = self.spark.sparkContext.parallelize(input_result)
+        assert self.assert_rdd_equals(rdd_expected, rdd_result) is False
 
     def test_assertRDDEquals_inverse_list_true(self):
         """Test a simple coleect."""
         input_expected = [5, 4, 3, 2, 1]
         input_result = [1, 2, 3, 4, 5]
-        rdd_expected = self.sc.parallelize(input_expected)
-        rdd_result = self.sc.parallelize(input_result)
-        assert self.assertRDDEquals(rdd_expected, rdd_result) is True
+        rdd_expected = self.spark.sparkContext.parallelize(input_expected)
+        rdd_result = self.spark.sparkContext.parallelize(input_result)
+        assert self.assert_rdd_equals(rdd_expected, rdd_result) is True
 
     def test_assertRDDEuqlsWithOrder_true(self):
         input_expected = [1, 2, 3, 4, 5]
         input_result = [1, 2, 3, 4, 5]
-        rdd_expected = self.sc.parallelize(input_expected)
-        rdd_result = self.sc.parallelize(input_result)
+        rdd_expected = self.spark.sparkContext.parallelize(input_expected)
+        rdd_result = self.spark.sparkContext.parallelize(input_result)
         assert self.assertRDDEqualsWithOrder(rdd_expected, rdd_result) is True
 
     def test_assertRDDEuqlsWithOrder_wrong_order_false(self):
         input_expected = [5, 4, 3, 2, 1]
         input_result = [1, 2, 3, 4, 5]
-        rdd_expected = self.sc.parallelize(input_expected)
-        rdd_result = self.sc.parallelize(input_result)
+        rdd_expected = self.spark.sparkContext.parallelize(input_expected)
+        rdd_result = self.spark.sparkContext.parallelize(input_result)
         assert self.assertRDDEqualsWithOrder(rdd_expected, rdd_result) is False
 
 

@@ -1,5 +1,4 @@
 #!/usr/bin/env bash
-export JAVA_HOME=/Library/Java/JavaVirtualMachines/adoptopenjdk-8.jdk/Contents/Home
 
 FWDIR="$(cd "`dirname $0`"; pwd)"
 cd "$FWDIR"

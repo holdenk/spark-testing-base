@@ -27,7 +27,7 @@ class HelloWorldTest(SparkTestingBaseTestCase):
     def test_basic(self):
         """Test a parallelize & collect."""
         input = ["hello world"]
-        rdd = self.sc.parallelize(input)
+        rdd = self.spark.sparkContext.parallelize(input)
         result = rdd.collect()
         assert result == input
 

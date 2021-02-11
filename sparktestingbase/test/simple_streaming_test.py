@@ -49,9 +49,9 @@ class SimpleStreamingTest(StreamingTestCase):
 
     def test_diff_rdd_transformation(self):
         input = [["hi", "pandas"], ["hi holden"], ["bye"]]
-        input_rdd = [self.sc.parallelize(d, 1) for d in input]
+        input_rdd = [self.spark.sparkContext.parallelize(d, 1) for d in input]
         input2 = [["hi"], ["pandas"], ["bye bye"]]
-        input2_rdd = [self.sc.parallelize(d, 1) for d in input2]
+        input2_rdd = [self.spark.sparkContext.parallelize(d, 1) for d in input2]
         expected = [["pandas"], ["hi holden"], ["bye"]]
         self.run_func(input_rdd, SimpleStreamingTest.difference, expected,
                       input2=input2_rdd)
@@ -62,7 +62,7 @@ class SimpleStreamingTest(StreamingTestCase):
 
     def test_noop_rdd_transformation(self):
         input = [["hi"], ["hi holden"], ["bye"]]
-        input_rdd = [self.sc.parallelize(d, 1) for d in input]
+        input_rdd = [self.spark.sparkContext.parallelize(d, 1) for d in input]
         self.run_func(input_rdd, SimpleStreamingTest.noop, input)
 
     def test_noop_transformation_with_sorting(self):
@@ -71,7 +71,7 @@ class SimpleStreamingTest(StreamingTestCase):
 
     def test_noop_take(self):
         input = [["hi"], ["hi holden"], ["bye"]]
-        input = [self.sc.parallelize(d, 1) for d in input]
+        input = [self.spark.sparkContext.parallelize(d, 1) for d in input]
         input_stream = self.ssc.queueStream(input)
         self.assertEqual(["hi"], self._take(input_stream, 1))
 
