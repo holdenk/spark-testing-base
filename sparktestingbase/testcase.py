@@ -31,70 +31,24 @@ class SparkTestingBaseTestCase(unittest2.TestCase):
     For non local mode testing you can either override sparkMaster
     set the environment property SPARK_MASTER."""
 
-    def get_conf(self):
+    @classmethod
+    def get_conf(cls):
         conf = SparkConf()
         conf.set('spark.sql.session.timeZone', 'UTC')
         conf.set('spark.sql.shuffle.partitions', '12')
         return conf
 
-    def create_local_spark_session(self):
-        class_name = self.__class__.__name__
+    @classmethod
+    def create_local_spark_session(cls):
+        class_name = cls.__class__.__name__
         spark = SparkSession \
             .builder \
             .master("local[4]") \
+            .config(conf=cls.get_conf()) \
             .appName(class_name) \
             .enableHiveSupport() \
             .getOrCreate()
-        spark.sparkContext._conf.setAll([("spark.sql.shuffle.partitions", "12"),
-                                         ("spark.sql.session.timeZone", "UTC")])
         return spark
-
-    def setUp(self):
-        """Setup a basic Spark session for testing"""
-        self.spark = self.create_local_spark_session()
-        quiet_py4j()
-
-    def tearDown(self):
-        """
-        Tear down the basic panda spark test case. This stops the running
-        context and does a hack to prevent Akka rebinding on the same port.
-        """
-        self.spark.stop()
-        # To avoid Akka rebinding to the same port, since it doesn't unbind
-        # immediately on shutdown
-        self.spark.sparkContext._jvm.System.clearProperty("spark.driver.port")
-
-    def assert_rdd_equals(self, expected, result):
-        return self.compare_rdd(expected, result) == []
-
-    def compare_rdd(self, expected, result):
-        expected_keyed = expected \
-            .map(lambda x: (x, 1)) \
-            .reduceByKey(lambda x, y: x + y)
-        result_keyed = result \
-            .map(lambda x: (x, 1)) \
-            .reduceByKey(lambda x, y: x + y)
-        return expected_keyed.cogroup(result_keyed) \
-            .map(lambda x: tuple(map(list, x[1]))) \
-            .filter(lambda x: x[0] != x[1]).take(1)
-
-    def assertRDDEqualsWithOrder(self, expected, result):
-        return self.compare_rdd_with_order(expected, result) == []
-
-    def compare_rdd_with_order(self, expected, result):
-        def index_rdd(rdd):
-            return rdd.zipWithIndex().map(lambda x: (x[1], x[0]))
-
-        index_expected = index_rdd(expected)
-        index_result = index_rdd(result)
-        return index_expected.cogroup(index_result) \
-            .map(lambda x: tuple(map(list, x[1]))) \
-            .filter(lambda x: x[0] != x[1]).take(1)
-
-
-class SparkTestingBaseReuse(unittest2.TestCase):
-    """Basic common test case for Spark. Provides a Spark context as sc.
-    For non local mode testing you can set the environment property SPARK_MASTER."""
 
     @classmethod
     def create_local_spark_session(cls):
@@ -103,10 +57,9 @@ class SparkTestingBaseReuse(unittest2.TestCase):
             .builder \
             .master("local[4]") \
             .appName(class_name) \
+            .config(conf=cls.get_conf()) \
             .enableHiveSupport() \
             .getOrCreate()
-        spark.sparkContext._conf.setAll([("spark.sql.shuffle.partitions", "12"),
-                                         ("spark.sql.session.timeZone", "UTC")])
         return spark
 
     @classmethod
@@ -121,11 +74,41 @@ class SparkTestingBaseReuse(unittest2.TestCase):
         Tear down the basic panda spark test case. This stops the running
         context and does a hack to prevent Akka rebinding on the same port.
         """
-        print("stopping class")
         cls.spark.stop()
         # To avoid Akka rebinding to the same port, since it doesn't unbind
         # immediately on shutdown
         cls.spark.sparkContext._jvm.System.clearProperty("spark.driver.port")
+
+    @classmethod
+    def assert_rdd_equals(cls, expected, result):
+        return cls.compare_rdd(expected, result) == []
+
+    @classmethod
+    def compare_rdd(cls, expected, result):
+        expected_keyed = expected \
+            .map(lambda x: (x, 1)) \
+            .reduceByKey(lambda x, y: x + y)
+        result_keyed = result \
+            .map(lambda x: (x, 1)) \
+            .reduceByKey(lambda x, y: x + y)
+        return expected_keyed.cogroup(result_keyed) \
+            .map(lambda x: tuple(map(list, x[1]))) \
+            .filter(lambda x: x[0] != x[1]).take(1)
+
+    @classmethod
+    def assertRDDEqualsWithOrder(cls, expected, result):
+        return cls.compare_rdd_with_order(expected, result) == []
+
+    @classmethod
+    def compare_rdd_with_order(cls, expected, result):
+        def index_rdd(rdd):
+            return rdd.zipWithIndex().map(lambda x: (x[1], x[0]))
+
+        index_expected = index_rdd(expected)
+        index_result = index_rdd(result)
+        return index_expected.cogroup(index_result) \
+            .map(lambda x: tuple(map(list, x[1]))) \
+            .filter(lambda x: x[0] != x[1]).take(1)
 
 
 if __name__ == "__main__":

@@ -19,7 +19,7 @@ from __future__ import absolute_import
 from .utils import add_pyspark_path_if_needed, quiet_py4j
 from .pathmagic import *
 
-from .testcase import SparkTestingBaseReuse
+from .testcase import SparkTestingBaseTestCase
 
 import os
 import sys
@@ -35,7 +35,7 @@ from pyspark.context import RDD
 from pyspark.streaming.context import StreamingContext
 
 
-class StreamingTestCase(SparkTestingBaseReuse):
+class StreamingTestCase(SparkTestingBaseTestCase):
     """Basic common test case for Spark Streaming tests. Provides a
     Spark Streaming context as well as some helper methods for creating
     streaming input and collecting streaming output.
