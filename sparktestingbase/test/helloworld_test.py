@@ -17,6 +17,7 @@
 
 """Simple test example"""
 
+import unittest2
 from sparktestingbase.testcase import SparkTestingBaseTestCase
 
 
@@ -26,9 +27,10 @@ class HelloWorldTest(SparkTestingBaseTestCase):
     def test_basic(self):
         """Test a parallelize & collect."""
         input = ["hello world"]
-        rdd = self.sc.parallelize(input)
+        rdd = self.spark.sparkContext.parallelize(input)
         result = rdd.collect()
         assert result == input
+
 
 if __name__ == "__main__":
     unittest2.main()

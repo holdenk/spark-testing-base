@@ -42,18 +42,8 @@ def add_pyspark_path():
         print("""SPARK_HOME was not set. please set it. e.g.
         SPARK_HOME='/home/...' ./bin/pyspark [program]""")
         exit(-1)
-    except ValueError as e:
-        print(str(e))
-        exit(-1)
 
 
 def quiet_py4j():
     logger = logging.getLogger('py4j')
-    logger.setLevel(logging.INFO)
-
-
-def quiet_logs(sc):
-    logger = sc._jvm.org.apache.log4j
-    logger.LogManager.getRootLogger().setLevel(logger.Level.ERROR)
-    logger.LogManager.getLogger("org").setLevel(logger.Level.ERROR)
-    logger.LogManager.getLogger("akka").setLevel(logger.Level.ERROR)
+    logger.setLevel(logging.WARN)
