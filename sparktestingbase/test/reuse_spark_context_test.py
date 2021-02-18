@@ -17,19 +17,20 @@
 
 """Simple test example"""
 
-from sparktestingbase.testcase import SparkTestingBaseTestCase
+from sparktestingbase.testcase import SparkTestingBaseReuse
 import unittest2
 
 
-class SimpleTest(SparkTestingBaseTestCase):
-    """A simple test."""
+class ReuseSparkContextTest(SparkTestingBaseReuse):
+    """Test that we re-use the spark context when asked to."""
 
-    def test_basic(self):
-        """Test a simple collect."""
-        input = ["hello world"]
-        rdd = self.sc.parallelize(input)
-        result = rdd.collect()
-        assert result == input
+    def test_samecontext_1(self):
+        """Set a system property"""
+        self.sc.setLocalProperty("pandas", "123")
+
+    def test_samecontext_2(self):
+        """Test that we have the same context."""
+        assert self.sc.getLocalProperty("pandas") == "123"
 
 if __name__ == "__main__":
     unittest2.main()
