@@ -1,5 +1,3 @@
-from __future__ import absolute_import
-from .utils import add_pyspark_path_if_needed
 #
 # Licensed to the Apache Software Foundation (ASF) under one or more
 # contributor license agreements.  See the NOTICE file distributed with
@@ -26,4 +24,5 @@ Helpful classes to write Spark tests.
 
 __all__ = ["SparkTestingBaseTestCase"]
 """
+from utils import add_pyspark_path_if_needed
 add_pyspark_path_if_needed()

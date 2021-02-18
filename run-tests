@@ -4,17 +4,9 @@ FWDIR="$(cd "`dirname $0`"; pwd)"
 cd "$FWDIR"
 
 set -x
-# Attempt to find SPARK_HOME
-if [ -z "$SPARK_HOME" ]; then
-  if hash find_spark_home.py 2>/dev/null; then
-    export SPARK_HOME=$(find_spark_home.py)
-  fi
-fi
-# Error if we don't know where it is
 if [ -z "$SPARK_HOME" ]; then
    echo "$(tput setaf 1)Error: SPARK_HOME is not set, may not be able to run tests.$(tput sgr0)"
 fi
-echo "Using SPARK_HOME $SPARK_HOME for tests"
 PYTHON_PATH=./ nosetests \
     --logging-level=INFO \
     --detailed-errors \
