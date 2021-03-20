@@ -20,16 +20,12 @@ package com.holdenkarau.spark.testing
 import java.io.File
 import java.sql.Timestamp
 
-import org.scalatest.Suite
-
-import scala.math.abs
-
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql._
 import org.apache.spark.sql.functions._
-import org.apache.spark.sql.hive._
-import org.apache.hadoop.hive.conf.HiveConf
-import org.apache.hadoop.hive.conf.HiveConf.ConfVars
+import org.scalatest.Suite
+
+import scala.math.abs
 
 /**
  * :: Experimental ::
@@ -176,22 +172,30 @@ trait DataFrameSuiteBaseLike extends SparkContextProvider
   def assertDataFrameDataEquals(expected: DataFrame, result: DataFrame): Unit = {
     val expectedCol = "assertDataFrameNoOrderEquals_expected"
     val actualCol = "assertDataFrameNoOrderEquals_actual"
-    expected.rdd.cache
-    result.rdd.cache
-    assert("Length not Equal", expected.rdd.count, result.rdd.count)
+    try {
+      expected.rdd.cache
+      result.rdd.cache
+      assert("Length not Equal", expected.rdd.count, result.rdd.count)
 
-    val columns = expected.columns.map(s => col(s))
-    val expectedElementsCount = expected
-      .groupBy(columns: _*)
-      .agg(count(lit(1)).as(expectedCol))
-    val resultElementsCount = result
-      .groupBy(columns: _*)
-      .agg(count(lit(1)).as(actualCol))
+      val columns = expected.columns.map(s => col(s))
+      val expectedElementsCount = expected
+        .groupBy(columns: _*)
+        .agg(count(lit(1)).as(expectedCol))
+      val resultElementsCount = result
+        .groupBy(columns: _*)
+        .agg(count(lit(1)).as(actualCol))
 
-    val diff = expectedElementsCount
-      .join(resultElementsCount, expected.columns, "full_outer")
-      .filter(col(expectedCol) =!= col(actualCol))
-    assertEmpty(diff.take(maxUnequalRowsToShow))
+      val joinExprs = expected.columns
+        .map(s => expected.col(s) <=> result.col(s)).reduce(_.and(_))
+      val diff = expectedElementsCount
+        .join(resultElementsCount, joinExprs, "full_outer")
+        .filter(not(col(expectedCol) <=> col(actualCol)))
+
+      assertEmpty(diff.take(maxUnequalRowsToShow))
+    } finally {
+      expected.rdd.unpersist()
+      result.rdd.unpersist()
+    }
   }
 
   /**

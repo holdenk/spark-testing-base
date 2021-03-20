@@ -18,7 +18,7 @@ package com.holdenkarau.spark.testing
 
 import java.sql.Timestamp
 
-import org.apache.spark.sql.Row
+import org.apache.spark.sql.{DataFrame, Row}
 import org.apache.spark.sql.types._
 import org.scalatest.FunSuite
 
@@ -139,7 +139,7 @@ class SampleDataFrameTest extends FunSuite with DataFrameSuiteBase {
     // integer types.
     val intInputs = inputList.map(a => IntMagic(a.name, a.power.toInt, a.byteArray))
     val df = sc.parallelize(intInputs).toDF
-    df.registerTempTable("pandaTemp")
+    df.createOrReplaceTempView("pandaTemp")
     val df2 = sqlContext.sql(
       "select percentile(power, 0.5) from pandaTemp group by name")
     val result = df2.collect()
@@ -169,17 +169,42 @@ class SampleDataFrameTest extends FunSuite with DataFrameSuiteBase {
     intercept[org.scalatest.exceptions.TestFailedException] {
       assertDataFrameApproximateEquals(input, input2, 1E-5)
     }
+    intercept[org.scalatest.exceptions.TestFailedException] {
+      assertDataFrameNoOrderEquals(input, input2)
+    }
+  }
+
+  test("equal dataframes with nulls should be equal") {
+    import sqlContext.implicits._
+    val inputListWithNull = List(Magic(null, 9001.0, byteArray))
+    val input = sc.parallelize(inputListWithNull).toDF
+    assertDataFrameEquals(input, input)
+    assertDataFrameApproximateEquals(input, input, 1E-5)
+    assertDataFrameNoOrderEquals(input, input)
+  }
+
+  test("equal dataframes with different field order should be equal") {
+    val df1 = rowDf(
+      "a" -> (IntegerType, 1),
+      "b" -> (StringType, "a string"))
+    val df2 = rowDf(
+      "b" -> (StringType, "a string"),
+      "a" -> (IntegerType, 1))
+    assertDataFrameDataEquals(df1, df2)
   }
 
   test("equal DF of rows of bytes should be equal (see GH issue #247)") {
-    import sqlContext.implicits._
-    val row1 = Row("bytes".getBytes(), "good")
-    val rdd = sc.parallelize(List(row1))
-    val schema = StructType(
-      List(StructField("a", BinaryType, true),
-        StructField("b", StringType, true)))
-    val df = sqlContext.createDataFrame(rdd, schema)
+    val df = rowDf(
+      "a" -> (BinaryType, "bytes".getBytes()),
+      "b" -> (StringType, "good"))
     assertDataFrameEquals(df, df)
+  }
+
+  def rowDf(fields: (String, (DataType, Any))*): DataFrame = {
+    val row = Row(fields.map(_._2._2): _*)
+    val rdd = sc.parallelize(List(row))
+    val schema = StructType(fields.map(f => StructField(f._1, f._2._1)))
+    sqlContext.createDataFrame(rdd, schema)
   }
 }
 
