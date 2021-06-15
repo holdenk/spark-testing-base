@@ -21,13 +21,13 @@ jobs:
     env:
       SPARK_VERSION: ${{ matrix.spark }}
     steps:
-      - name: Checkout spark-testing-base
-        uses: actions/checkout@v2
-        # In order to fetch changed files
-        with:
-          fetch-depth: 0
-          repository: holdenk/spark-testing-base
-          ref: master
+    - name: Checkout spark-testing-base
+      uses: actions/checkout@v2
+      # In order to fetch changed files
+      with:
+        fetch-depth: 0
+        repository: holdenk/spark-testing-base
+        ref: master
     - name: Sync the current branch with the latest in spark-testing-base
       if: github.repository != 'holdenk/spark-testing-base'
       id: sync-branch
