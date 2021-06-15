@@ -301,6 +301,25 @@ class SampleScalaCheckTest extends FunSuite
     check(property)
   }
 
+  test("decimal generation") {
+    val schema = StructType(List(
+      StructField("small", DecimalType(3, 1)),
+      StructField("medium", DecimalType(15, 8)),
+      StructField("large", DecimalType(38, 38))))
+
+    val sqlContext = new SQLContext(sc)
+    val dataframeGen = DataframeGenerator.arbitraryDataFrame(sqlContext, schema)
+
+    val property =
+      forAll(dataframeGen.arbitrary) {
+        dataframe => {
+          dataframe.schema === schema && dataframe.count >= 0
+        }
+      }
+
+    check(property)
+  }
+
   test("map type generation") {
     val schema = StructType(
       List(StructField("map", MapType(LongType, IntegerType, true))))
@@ -326,12 +345,14 @@ class SampleScalaCheckTest extends FunSuite
     StructField("binaryType", BinaryType) ::
     StructField("booleanType", BooleanType) ::
     StructField("timestampType", TimestampType) ::
+    StructField("decimalType", DecimalType(15, 8)) ::
     StructField("dateType", DateType) ::
     StructField("arrayType", ArrayType(TimestampType)) ::
     StructField("mapType",
       MapType(LongType, TimestampType, valueContainsNull = true)) ::
     StructField("structType",
       StructType(StructField("timestampType", TimestampType) :: Nil)) :: Nil
+
   test("second dataframe's evaluation has the same values as first") {
     implicit val generatorDrivenConfig =
       PropertyCheckConfig(minSize = 1, maxSize = 1)
@@ -353,6 +374,7 @@ class SampleScalaCheckTest extends FunSuite
 
     check(property)
   }
+
   test("nullable fields contain null values as well") {
     implicit val generatorDrivenConfig =
       PropertyCheckConfig(minSize = 1, maxSize = 1)
@@ -362,6 +384,8 @@ class SampleScalaCheckTest extends FunSuite
     val dataframeGen =
       DataframeGenerator.arbitraryDataFrame(sqlContext, StructType(allFields))
 
+    // This property is a little shaky since we could generate something with
+    // a lot of distinct values and no nulls. TODO: think of a better way of testing this.
     val property =
       forAll(Gen.resize(100, dataframeGen.arbitrary)) {
         dataframe => {
@@ -397,4 +421,3 @@ class SampleScalaCheckTest extends FunSuite
 
 case class Human(name: String, age: Int)
 case class MyNode(key:Int, children: List[MyNode])
-
