@@ -15,9 +15,9 @@ jobs:
       fail-fast: false
       matrix:
         spark:
-          - 2.4
-          - 3.0
-          - 3.1
+          - 2.4.7
+          - 3.0.2
+          - 3.1.2
     env:
       SPARK_VERSION: ${{ matrix.spark }}
     steps:
