@@ -1,5 +1,5 @@
-[![buildstatus](https://travis-ci.org/holdenk/spark-testing-base.svg?branch=master)](https://travis-ci.org/holdenk/spark-testing-base)
-[![codecov.io](http://codecov.io/github/holdenk/spark-testing-base/coverage.svg?branch=master)](http://codecov.io/github/holdenk/spark-testing-base?branch=master)
+![build status](https://github.com/github/docs/actions/workflows/github-actions-basic.yml/badge.svg?branch=master)
+
 
 # spark-testing-base
 
@@ -22,10 +22,10 @@ or
 
 ```
 <dependency>
-	<groupId>com.holdenkarau</groupId>
-	<artifactId>spark-testing-base_2.11</artifactId>
-	<version>${spark.version}_0.11.0</version>
-	<scope>test</scope>
+    <groupId>com.holdenkarau</groupId>
+    <artifactId>spark-testing-base_2.11</artifactId>
+    <version>${spark.version}_0.11.0</version>
+    <scope>test</scope>
 </dependency>
 ```
 
@@ -39,10 +39,10 @@ or
 
 ```
 <dependency>
-	<groupId>com.holdenkarau</groupId>
-	<artifactId>spark-testing-kafka-0_8_2.11</artifactId>
-	<version>${spark.version}_0.14.0</version>
-	<scope>test</scope>
+    <groupId>com.holdenkarau</groupId>
+    <artifactId>spark-testing-kafka-0_8_2.11</artifactId>
+    <version>${spark.version}_0.14.0</version>
+    <scope>test</scope>
 </dependency>
 ```
 
