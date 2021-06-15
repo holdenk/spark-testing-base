@@ -1,0 +1,44 @@
+name: Build and test
+
+on:
+  push:
+    branches:
+    - '**'
+    - '!branch-*.*'
+
+jobs:
+  # Build: build spark-testing-base and run the tests for specified modules.
+  build:
+    # Ubuntu 20.04 is the latest LTS. The next LTS is 22.04.
+    runs-on: ubuntu-20.04
+    strategy:
+      fail-fast: false
+      matrix:
+        spark:
+          - 2.4
+          - 3.0
+          - 3.1
+    env:
+      SPARK_VERSION: ${{ matrix.spark }}
+    steps:
+      - name: Checkout spark-testing-base
+        uses: actions/checkout@v2
+        # In order to fetch changed files
+        with:
+          fetch-depth: 0
+          repository: holdenk/spark-testing-base
+          ref: master
+    - name: Sync the current branch with the latest in spark-testing-base
+      if: github.repository != 'holdenk/spark-testing-base'
+      id: sync-branch
+      run: |
+        apache_spark_ref=`git rev-parse HEAD`
+        git fetch https://github.com/$GITHUB_REPOSITORY.git ${GITHUB_REF##*/}
+        git -c user.name='Spark Test Account' -c user.email='sparktestacc@gmail.com' merge --no-commit --progress --squash FETCH_HEAD
+        git -c user.name='Spark Test Account' -c user.email='sparktestacc@gmail.com' commit -m "Merged commit"
+        echo "::set-output name=SPARK_REF::$apache_spark_ref"
+    # Cache local repositories. Note that GitHub Actions cache has a 2G limit.
+    # Run the tests.
+    - name: Run tests
+      run: |
+      ./build/sbt clean compile test
