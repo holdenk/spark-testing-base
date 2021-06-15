@@ -1,4 +1,4 @@
-![build status](https://github.com/github/docs/actions/workflows/github-actions-basic.yml/badge.svg?branch=master)
+![build status](https://github.com/holdenk/spark-testing-base/actions/workflows/github-actions-basic.yml/badge.svg?branch=master)
 
 
 # spark-testing-base
