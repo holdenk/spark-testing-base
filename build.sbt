@@ -24,7 +24,7 @@ lazy val core = (project in file("core"))
       "org.apache.spark" %% "spark-catalyst"    % sparkVersion.value,
       "org.apache.spark" %% "spark-yarn"        % sparkVersion.value,
       "org.apache.spark" %% "spark-mllib"       % sparkVersion.value
-    ) ++ commonDependencies ++ miniClusterDependencies
+    ) ++ commonDependencies
   )
 
 lazy val kafka_0_8 = {
@@ -151,15 +151,6 @@ def excludeJavaxServlet(items: Seq[ModuleID]) =
 
 def excludeJpountz(items: Seq[ModuleID]) =
   excludeFromAll(items, "net.jpountz.lz4", "lz4")
-
-lazy val miniClusterDependencies = excludeJavaxServlet(Seq(
-  "org.apache.hadoop" % "hadoop-hdfs" % "2.8.3" % "compile,test" classifier "" classifier "tests",
-  "org.apache.hadoop" % "hadoop-common" % "2.8.3" % "compile,test" classifier "" classifier "tests" ,
-  "org.apache.hadoop" % "hadoop-client" % "2.8.3" % "compile,test" classifier "" classifier "tests" ,
-  "org.apache.hadoop" % "hadoop-mapreduce-client-jobclient" % "2.8.3" % "compile,test" classifier "" classifier "tests",
-  "org.apache.hadoop" % "hadoop-yarn-server-tests" % "2.8.3" % "compile,test" classifier "" classifier "tests",
-  "org.apache.hadoop" % "hadoop-yarn-server-web-proxy" % "2.8.3" % "compile,test" classifier "" classifier "tests",
-  "org.apache.hadoop" % "hadoop-minicluster" % "2.8.3" % "compile,test"))
 
 lazy val kafkaPublishSettings =
   publishSettings ++ Seq(
