@@ -375,41 +375,6 @@ class SampleScalaCheckTest extends FunSuite
     check(property)
   }
 
-  test("nullable fields contain null values as well") {
-    implicit val generatorDrivenConfig =
-      PropertyCheckConfig(minSize = 1, maxSize = 1)
-    val nullableFields = fields.map(f => f.copy(nullable = true, name = s"${f.name}Nullable"))
-    val sqlContext = new SQLContext(sc)
-    val allFields = fields ::: nullableFields
-    val dataframeGen =
-      DataframeGenerator.arbitraryDataFrame(sqlContext, StructType(allFields))
-
-    // This property is a little shaky since we could generate something with
-    // a lot of distinct values and no nulls. TODO: think of a better way of testing this.
-    val property =
-      forAll(Gen.resize(100, dataframeGen.arbitrary)) {
-        dataframe => {
-          allFields.forall { f =>
-            val colValues = dataframe.select(f.name).collect().map(_.get(0))
-            if (f.nullable)
-              colValues.contains(null) ||
-                // Unfortunately, dataframeGen.arbitrary sometimes generates DataFrames where all
-                // rows have exactly identical values.
-                // In that case, even generating many rows doesn't help to get some nulls...
-                // To work around this we check if we generated at least some distinct values.
-                colValues.distinct.size < 4 ||
-                // This is needed for Array-valued fields where .distinct returns all values, even when
-                // they're identical.
-                colValues.size == colValues.distinct.size
-            else
-              !colValues.contains(null)
-          }
-        }
-      }
-
-    check(property)
-  }
-
   private def filterOne(rdd: RDD[String]): RDD[Int] = {
     rdd.filter(_.length > 2).map(_.length)
   }
