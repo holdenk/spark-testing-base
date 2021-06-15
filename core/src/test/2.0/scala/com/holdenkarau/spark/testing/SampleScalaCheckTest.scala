@@ -265,7 +265,24 @@ class SampleScalaCheckTest extends FunSuite
     check(prop)
   }
 
-  test("test Array Type generator"){
+  test("test simple Array Type generator"){
+    val schema = StructType(List(StructField("name", StringType, true),
+      StructField("pandas", ArrayType(FloatType, false))))
+
+    val sqlContext = SparkSession.builder.getOrCreate().sqlContext
+    val dataframeGen: Arbitrary[DataFrame] =
+      DataframeGenerator.arbitraryDataFrame(sqlContext, schema)
+    val property =
+      forAll(dataframeGen.arbitrary) {
+        dataframe => dataframe.schema === schema &&
+          dataframe.select("pandas").rdd.map(_.getSeq(0)).count() >= 0
+      }
+
+    check(property)
+  }
+
+
+  test("test nested Array Type generator"){
     val schema = StructType(List(StructField("name", StringType, true),
       StructField("pandas", ArrayType(StructType(List(
         StructField("id", LongType, true),

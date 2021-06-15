@@ -108,7 +108,9 @@ object DataframeGenerator {
   }
 
   private def getGenerator(
-    dataType: DataType, generators: Seq[ColumnGenerator] = Seq(), nullable: Boolean = false): Gen[Any] = {
+    dataType: DataType,
+    generators: Seq[ColumnGenerator] = Seq(),
+    nullable: Boolean = false): Gen[Any] = {
     val nonNullGen = dataType match {
       case ByteType => Arbitrary.arbitrary[Byte]
       case ShortType => Arbitrary.arbitrary[Short]
@@ -149,12 +151,17 @@ object DataframeGenerator {
       case _ => throw new UnsupportedOperationException(
         s"Type: $dataType not supported")
     }
-    if (nullable)
-      Gen.oneOf(nonNullGen, Gen.const(null))
-    else
+    if (nullable) {
+      // Spark 3.1+ has difficulty with arrays that are null.
+      dataType match {
+	case arr: ArrayType => nonNullGen
+	case _ =>
+	  Gen.oneOf(nonNullGen, Gen.const(null))
+      }
+    } else {
       nonNullGen
+    }
   }
-
 }
 
 /**
