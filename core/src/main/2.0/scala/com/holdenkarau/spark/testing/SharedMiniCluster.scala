@@ -41,6 +41,7 @@ trait SharedMiniCluster extends BeforeAndAfterAll
 
   override def beforeAll(): Unit = {
     // Try and do setup, and in-case we fail shutdown
+    assume(scala.util.Properties.envOrNone("SPARK_HOME").isDefined, "No Spark home defined")
     try {
       super.startHDFS()
       super.startYARN()
