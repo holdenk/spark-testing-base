@@ -193,6 +193,20 @@ class SampleDataFrameTest extends FunSuite with DataFrameSuiteBase {
     assertDataFrameDataEquals(df1, df2)
   }
 
+  test("assertDataFrameDataEquals fails dataframes with different columns size") {
+    val df1 = rowDf(
+      "a" -> (IntegerType, 1),
+      "b" -> (StringType, "a string"))
+    val df2 = rowDf(
+      "b" -> (StringType, "a string"),
+      "a" -> (IntegerType, 1),
+      "c" -> (IntegerType, 1))
+    val thrown = intercept[Exception] {
+      assertDataFrameDataEquals(df1, df2)
+    }
+    assert(thrown.getMessage contains "Column size not Equal")
+  }
+
   test("equal DF of rows of bytes should be equal (see GH issue #247)") {
     val df = rowDf(
       "a" -> (BinaryType, "bytes".getBytes()),
