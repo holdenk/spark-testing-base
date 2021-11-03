@@ -175,6 +175,7 @@ trait DataFrameSuiteBaseLike extends SparkContextProvider
     try {
       expected.rdd.cache
       result.rdd.cache
+      assert("Column size not Equal", expected.columns.size, result.columns.size)
       assert("Length not Equal", expected.rdd.count, result.rdd.count)
 
       val columns = expected.columns.map(s => col(s))
