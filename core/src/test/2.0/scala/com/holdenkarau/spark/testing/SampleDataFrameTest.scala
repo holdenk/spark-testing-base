@@ -207,6 +207,26 @@ class SampleDataFrameTest extends FunSuite with DataFrameSuiteBase {
     assert(thrown.getMessage contains "Column size not Equal")
   }
 
+
+  test("assertSmallDataFrameDataEquals asserts DFs irrespective of fields order") {
+    import spark.implicits._
+    val df1 = Seq(("col1", 2.1, 3.1), ("col1", 2.2, 3.2)).toDF("a", "b", "c")
+    val df2 = Seq(("col1", 3.2, 2.2), ("col1", 3.1, 2.1)).toDF("a", "c", "b")
+
+    assertSmallDataFrameDataEquals(df1, df2)
+  }
+
+  test("assertSmallDataFrameDataEquals fails DFs with different columns size") {
+    import spark.implicits._
+    val df1 = Seq(("col1", 2.1, 3.1), ("col1", 2.2, 3.2)).toDF("a", "b", "c")
+    val df2 = Seq(("col1", 2.1), ("col1", 2.2)).toDF("a", "c")
+
+    val thrown = intercept[Exception] {
+      assertSmallDataFrameDataEquals(df1, df2)
+    }
+    assert(thrown.getMessage contains "Column size not Equal")
+  }
+
   test("equal DF of rows of bytes should be equal (see GH issue #247)") {
     val df = rowDf(
       "a" -> (BinaryType, "bytes".getBytes()),
