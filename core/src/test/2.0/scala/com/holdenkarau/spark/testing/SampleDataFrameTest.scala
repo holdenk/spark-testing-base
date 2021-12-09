@@ -209,17 +209,41 @@ class SampleDataFrameTest extends FunSuite with DataFrameSuiteBase {
 
 
   test("assertSmallDataFrameDataEquals asserts DFs irrespective of fields order") {
-    import spark.implicits._
-    val df1 = Seq(("col1", 2.1, 3.1), ("col1", 2.2, 3.2)).toDF("a", "b", "c")
-    val df2 = Seq(("col1", 3.2, 2.2), ("col1", 3.1, 2.1)).toDF("a", "c", "b")
-
+    val df1 = rowDf(
+      "a" -> (IntegerType, 1),
+      "b" -> (StringType, "a"),
+      "c" -> (IntegerType, 3))
+    val df2 = rowDf(
+      "b" -> (StringType, "a"),
+      "a" -> (IntegerType, 1),
+      "c" -> (IntegerType, 3))
     assertSmallDataFrameDataEquals(df1, df2)
   }
 
+  test("assertSmallDataFrameDataEquals asserts DFs also validates schema") {
+    val df1 = rowDf(
+      "a" -> (IntegerType, 1),
+      "b" -> (StringType, "a"),
+      "c" -> (IntegerType, 3))
+    val df2 = rowDf(
+      "b" -> (StringType, "a"),
+      "a" -> (IntegerType, 1),
+      "c" -> (StringType, "3"))
+
+    val thrown = intercept[Exception] {
+      assertSmallDataFrameDataEquals(df1, df2)
+    }
+    assert(thrown.getMessage contains "false did not equal true")
+  }
+
   test("assertSmallDataFrameDataEquals fails DFs with different columns size") {
-    import spark.implicits._
-    val df1 = Seq(("col1", 2.1, 3.1), ("col1", 2.2, 3.2)).toDF("a", "b", "c")
-    val df2 = Seq(("col1", 2.1), ("col1", 2.2)).toDF("a", "c")
+    val df1 = rowDf(
+      "a" -> (IntegerType, 1),
+      "b" -> (StringType, "a"),
+      "c" -> (IntegerType, 3))
+    val df2 = rowDf(
+      "b" -> (StringType, "a"),
+      "a" -> (IntegerType, 1))
 
     val thrown = intercept[Exception] {
       assertSmallDataFrameDataEquals(df1, df2)
