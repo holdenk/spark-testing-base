@@ -16,18 +16,15 @@
  */
 package com.holdenkarau.spark.testing
 
-import java.util.{List => JList}
-
-import org.apache.spark.api.java.function.{
-  Function => JFunction, Function2 => JFunction2}
+import org.apache.spark.SparkConf
+import org.apache.spark.api.java.function.{Function => JFunction, Function2 => JFunction2}
 import org.apache.spark.streaming.api.java._
 import org.apache.spark.streaming.dstream.DStream
 import org.junit.Assert._
 
+import java.util.{List => JList}
 import scala.collection.JavaConversions._
-import scala.collection.immutable.{HashBag => Bag}
 import scala.reflect.ClassTag
-import org.apache.spark.SparkConf
 
 /**
  * This is the base trait for Spark Streaming testsuite. This provides basic
@@ -69,10 +66,11 @@ class JavaStreamingSuiteBase extends JavaSuiteBase with StreamingSuiteCommon {
       if (ordered) {
         compareArrays[V](expectedOutput(i).toArray, output(i).toArray)
       } else {
-        implicit val config = Bag.configuration.compact[V]
+
         compareArrays[V](
-          Bag(expectedOutput(i): _*).toArray,
-          Bag(output(i): _*).toArray)
+          expectedOutput(i).toArray,
+          output(i).toArray
+        )
       }
     }
 

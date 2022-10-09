@@ -148,7 +148,6 @@ val coreTestSources = unmanagedSourceDirectories in Test  := {
 lazy val commonDependencies = Seq(
   "org.scalatest" %% "scalatest" % "3.1.1",
   "org.scalatestplus" %% "scalatestplus-scalacheck" % "3.1.0.0-RC2",
-  "io.github.nicolasstucki" %% "multisets" % "0.4",
   "org.scalacheck" %% "scalacheck" % "1.14.0",
   "junit" % "junit" % "4.12",
   "org.eclipse.jetty" % "jetty-util" % "9.3.11.v20160721",
