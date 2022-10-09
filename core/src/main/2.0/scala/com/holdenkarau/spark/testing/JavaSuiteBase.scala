@@ -16,14 +16,19 @@
  */
 package com.holdenkarau.spark.testing
 
+import breeze.linalg.NumericOps.Arrays
 import org.junit.Assert._
+import spire.ClassTag
+
+import java.util
 
 class JavaSuiteBase extends SharedJavaSparkContext {
   /**
    * Utility wrapper around assertArrayEquals that resolves the types
    */
-  def compareArrays[U](i1: Array[U], i2: Array[U]): Unit = {
-    (i1, i2) match {
+  def compareArrays[U: ClassTag](i1: Array[U], i2: Array[U], sorted: Boolean = false): Unit = {
+    val (arr1, arr2) = if(sorted) (copyAndSort(i1), copyAndSort(i2)) else (i1, i2)
+    (arr1, arr2) match {
       case (a1: Array[Long], a2: Array[Long]) => assertArrayEquals(a1, a2)
       case (a1: Array[Int], a2: Array[Int]) => assertArrayEquals(a1, a2)
       case (a1: Array[Short], a2: Array[Short]) => assertArrayEquals(a1, a2)
@@ -31,5 +36,19 @@ class JavaSuiteBase extends SharedJavaSparkContext {
       case (a1: Array[Byte], a2: Array[Byte]) => assertArrayEquals(a1, a2)
       case (a1: Array[Object], a2: Array[Object]) => assertArrayEquals(a1, a2)
     }
+  }
+
+  def copyAndSort[U: ClassTag](array: Array[U]): Array[U] = {
+    val copyArray = Array.ofDim[U](array.length)
+    Array.copy(array, 0, copyArray, 0, array.length)
+    copyArray match {
+      case a: Array[Long] => util.Arrays.sort(a)
+      case a: Array[Int] => util.Arrays.sort(a)
+      case a: Array[Short] => util.Arrays.sort(a)
+      case a: Array[Char] => util.Arrays.sort(a)
+      case a: Array[Byte] => util.Arrays.sort(a)
+      case a: Array[Object] => util.Arrays.sort(a)
+    }
+    copyArray
   }
 }

@@ -69,7 +69,8 @@ class JavaStreamingSuiteBase extends JavaSuiteBase with StreamingSuiteCommon {
 
         compareArrays[V](
           expectedOutput(i).toArray,
-          output(i).toArray
+          output(i).toArray,
+          true
         )
       }
     }

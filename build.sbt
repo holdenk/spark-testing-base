@@ -1,10 +1,6 @@
-lazy val scala212 = "2.12.16"
-lazy val scala213 = "2.13.9"
-lazy val supportedScalaVersions = List(scala212, scala213)
-
 lazy val root = (project in file("."))
   .aggregate(core, kafka_0_8)
-  .settings(noPublishSettings, noCrossVersionSettings, commonSettings)
+  .settings(noPublishSettings, commonSettings)
 
 val sparkVersion = settingKey[String]("Spark version")
 val sparkTestingVersion = settingKey[String]("Spark testing base version without Spark version part")
@@ -73,20 +69,12 @@ lazy val kafka_0_8 = {
 val commonSettings = Seq(
   organization := "com.holdenkarau",
   publishMavenStyle := true,
-  scalaVersion := scala212,
-  skip in compile := {
-    scalaVersion.value >= "2.13.0" && sparkVersion.value <= "3.2.0"
-  },
-  skip in test := {
-    scalaVersion.value >= "2.13.0" && sparkVersion.value <= "3.2.0"
-  },
-  skip in publish := {
-    scalaVersion.value >= "2.13.0" && sparkVersion.value <= "3.2.0"
-  },
-  supportedCrossScalaSettings,
   sparkVersion := System.getProperty("sparkVersion", "2.4.0"),
   sparkTestingVersion := "1.1.2",
   version := sparkVersion.value + "_" + sparkTestingVersion.value,
+  scalaVersion := {
+    "2.12.12"
+  },
   scalacOptions ++= Seq("-deprecation", "-unchecked", "-Yrangepos", "-Ywarn-unused-import"),
   javacOptions ++= {
     Seq("-source", "1.8", "-target", "1.8")
@@ -203,9 +191,3 @@ lazy val publishSettings = Seq(
 
 lazy val noPublishSettings =
   skip in publish := true
-
-lazy val noCrossVersionSettings =
-  crossScalaVersions := Nil
-
-lazy val supportedCrossScalaSettings =
-  crossScalaVersions := supportedScalaVersions
