@@ -25,7 +25,6 @@ import org.apache.spark.streaming.dstream.DStream
 import org.junit.Assert._
 
 import scala.collection.JavaConversions._
-import scala.collection.immutable.{HashBag => Bag}
 import scala.reflect.ClassTag
 import org.apache.spark.SparkConf
 
@@ -65,14 +64,19 @@ class JavaStreamingSuiteBase extends JavaSuiteBase with StreamingSuiteCommon {
 
     // Match the output with the expected output
     assertEquals("Number of outputs do not match", expectedOutput.size, output.size)
-    for (i <- output.indices) {
-      if (ordered) {
+    if (ordered) {
+      for (i <- output.indices) {
         compareArrays[V](expectedOutput(i).toArray, output(i).toArray)
-      } else {
-        implicit val config = Bag.configuration.compact[V]
-        compareArrays[V](
-          Bag(expectedOutput(i): _*).toArray,
-          Bag(output(i): _*).toArray)
+      }
+    } else {
+      // Order does not matter which makes our life harder.
+      // If we sort by hash code, if we have a hash collision we might get a false negative
+      // So instead we convert this to a map and do a comparison
+      for (i <- output.indices) {
+      assertEquals(
+        expectedOutput(i).groupBy(x => x).mapValues(_.size),
+        output(i).groupBy(x => x).mapValues(_.size)
+      )
       }
     }
 
