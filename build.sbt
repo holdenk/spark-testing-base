@@ -73,7 +73,14 @@ val commonSettings = Seq(
   sparkTestingVersion := "1.1.2",
   version := sparkVersion.value + "_" + sparkTestingVersion.value,
   scalaVersion := {
-    "2.12.12"
+    "2.12.15"
+  },
+  crossScalaVersions := {
+    if (sparkVersion.value >= "3.0.0") {
+      Seq("2.12.15", "2.13.10")
+    } else {
+      Seq("2.12.15", "2.11.12")
+    }
   },
   scalacOptions ++= Seq("-deprecation", "-unchecked", "-Yrangepos", "-Ywarn-unused-import"),
   javacOptions ++= {
@@ -109,24 +116,20 @@ val coreSources = unmanagedSourceDirectories in Compile  := {
     (sourceDirectory in Compile)(_ / "2.2/scala"),
     (sourceDirectory in Compile)(_ / "2.0/scala"), (sourceDirectory in Compile)(_ / "2.0/java")
   ).join.value
-  else if (sparkVersion.value >= "2.2.0") Seq(
+  else Seq( // For scala 2.11 only bother building scala support, skip java bridge.
     (sourceDirectory in Compile)(_ / "2.2/scala"),
-    (sourceDirectory in Compile)(_ / "2.0/scala"), (sourceDirectory in Compile)(_ / "2.0/java")
-  ).join.value
-  else // if (sparkVersion.value >= "2.0.0" && scalaVersion.value >= "2.11")
-    Seq(
-    (sourceDirectory in Compile)(_ / "pre-2.2_2.11/scala"),
-    (sourceDirectory in Compile)(_ / "2.0/scala"), (sourceDirectory in Compile)(_ / "2.0/java")
+    (sourceDirectory in Compile)(_ / "2.0/scala")
   ).join.value
 }
 
 val coreTestSources = unmanagedSourceDirectories in Test  := {
-  if (sparkVersion.value >= "2.2.0") Seq(
+  if (sparkVersion.value >= "2.2.0" && scalaVersion.value >= "2.12.0") Seq(
     (sourceDirectory in Test)(_ / "2.2/scala"),
     (sourceDirectory in Test)(_ / "2.0/scala"), (sourceDirectory in Test)(_ / "2.0/java")
   ).join.value
   else Seq(
-    (sourceDirectory in Test)(_ / "2.0/scala"), (sourceDirectory in Test)(_ / "2.0/java")
+    (sourceDirectory in Test)(_ / "2.2/scala"),
+    (sourceDirectory in Test)(_ / "2.0/scala")
   ).join.value
 }
 
