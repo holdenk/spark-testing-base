@@ -22,16 +22,42 @@ import java.sql.Timestamp
 
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql._
+import org.apache.spark.sql.catalyst.expressions.CodegenObjectFactoryMode
 import org.apache.spark.sql.functions._
+import org.apache.spark.sql.internal.SQLConf
+import org.scalactic.source
 import org.scalatest.Suite
+import org.scalatest.Tag
+import org.scalatest.funsuite.AnyFunSuite
 
 import scala.math.abs
+
+/**
+ * Base trait for testing Spark DataFrames in Scala.
+ */
+trait ScalaDataFrameSuiteBase extends AnyFunSuite with DataFrameSuiteBase {
+  /*
+   * If you need test your function with both codegen and non-codegen paths. This should be relatively
+   * rare unless you are writing your own Spark expressions (w/ custom codegen).
+   * This is taken from the "test" function inside of the PlanTest trait in SparkSQL.
+   */
+  def testCodegen(
+      testName: String,
+      testTags: Tag*)(testFun: => Any)(implicit pos: source.Position): Unit = {
+    val codegenMode = CodegenObjectFactoryMode.CODEGEN_ONLY.toString
+    val interpretedMode = CodegenObjectFactoryMode.NO_CODEGEN.toString
+
+    test(testName + " (codegen path)", testTags: _*)(
+      withSQLConf(SQLConf.CODEGEN_FACTORY_MODE.key -> codegenMode) { testFun })(pos)
+    test(testName + " (interpreted path)", testTags: _*)(
+      withSQLConf(SQLConf.CODEGEN_FACTORY_MODE.key -> interpretedMode) { testFun })(pos)
+  }
+}
 
 /**
  * :: Experimental ::
  * Base class for testing Spark DataFrames.
  */
-
 trait DataFrameSuiteBase extends TestSuite
     with SharedSparkContext with DataFrameSuiteBaseLike { self: Suite =>
   override def beforeAll(): Unit = {
@@ -43,6 +69,32 @@ trait DataFrameSuiteBase extends TestSuite
     super.afterAll()
     if (!reuseContextIfPossible) {
       SparkSessionProvider._sparkSession = null
+    }
+  }
+
+  /**
+   * Sets all SQL configurations specified in `pairs`, calls `f`, and then restores all SQL
+   * configurations.
+   * Taken from Spark SQLHelper.
+   */
+  protected def withSQLConf(pairs: (String, String)*)(f: => Unit): Unit = {
+    val conf = SQLConf.get
+    val (keys, values) = pairs.unzip
+    val currentValues = keys.map { key =>
+      if (conf.contains(key)) {
+        Some(conf.getConfString(key))
+      } else {
+        None
+      }
+    }
+    (keys, values).zipped.foreach { (k, v) =>
+      conf.setConfString(k, v)
+    }
+    try f finally {
+      keys.zip(currentValues).foreach {
+        case (key, Some(value)) => conf.setConfString(key, value)
+        case (key, None) => conf.unsetConf(key)
+      }
     }
   }
 }
