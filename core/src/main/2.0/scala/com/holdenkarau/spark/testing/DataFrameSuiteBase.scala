@@ -41,16 +41,37 @@ trait ScalaDataFrameSuiteBase extends AnyFunSuite with DataFrameSuiteBase {
    * rare unless you are writing your own Spark expressions (w/ custom codegen).
    * This is taken from the "test" function inside of the PlanTest trait in SparkSQL.
    */
-  def testCodegen(
+  def testCombined(
       testName: String,
       testTags: Tag*)(testFun: => Any)(implicit pos: source.Position): Unit = {
+    System.setProperty("SPARK_TESTING", "yes") // codegen modes are not always respected
     val codegenMode = CodegenObjectFactoryMode.CODEGEN_ONLY.toString
     val interpretedMode = CodegenObjectFactoryMode.NO_CODEGEN.toString
 
     test(testName + " (codegen path)", testTags: _*)(
       withSQLConf(SQLConf.CODEGEN_FACTORY_MODE.key -> codegenMode) { testFun })(pos)
     test(testName + " (interpreted path)", testTags: _*)(
-      withSQLConf(SQLConf.CODEGEN_FACTORY_MODE.key -> interpretedMode) { testFun })(pos)
+      withSQLConf(SQLConf.CODEGEN_FACTORY_MODE.key -> interpretedMode,
+        SQLConf.WHOLESTAGE_CODEGEN_ENABLED.key -> "false") { testFun })(pos)
+  }
+  def testCodegenOnly(
+      testName: String,
+      testTags: Tag*)(testFun: => Any)(implicit pos: source.Position): Unit = {
+    System.setProperty("SPARK_TESTING", "yes") // codegen modes are not always respected
+    val codegenMode = CodegenObjectFactoryMode.CODEGEN_ONLY.toString
+
+    test(testName + " (codegen path)", testTags: _*)(
+      withSQLConf(SQLConf.CODEGEN_FACTORY_MODE.key -> codegenMode) { testFun })(pos)
+  }
+  def testNonCodegen(
+      testName: String,
+      testTags: Tag*)(testFun: => Any)(implicit pos: source.Position): Unit = {
+    System.setProperty("SPARK_TESTING", "yes") // codegen modes are not always respected
+    val interpretedMode = CodegenObjectFactoryMode.NO_CODEGEN.toString
+
+    test(testName + " (interpreted path)", testTags: _*)(
+      withSQLConf(SQLConf.CODEGEN_FACTORY_MODE.key -> interpretedMode,
+        SQLConf.WHOLESTAGE_CODEGEN_ENABLED.key -> "false") { testFun })(pos)
   }
 }
 
@@ -87,7 +108,8 @@ trait DataFrameSuiteBase extends TestSuite
         None
       }
     }
-    (keys, values).zipped.foreach { (k, v) =>
+    (keys, values).zipped.foreach { (k: String, v: String) =>
+      println(f"Setting ${k} ${v}")
       conf.setConfString(k, v)
     }
     try f finally {

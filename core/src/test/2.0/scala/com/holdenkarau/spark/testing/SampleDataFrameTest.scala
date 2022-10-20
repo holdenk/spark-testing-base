@@ -20,9 +20,8 @@ import java.sql.Timestamp
 
 import org.apache.spark.sql.{DataFrame, Row}
 import org.apache.spark.sql.types._
-import org.scalatest.funsuite.AnyFunSuite
 
-class SampleDataFrameTest extends AnyFunSuite with DataFrameSuiteBase {
+class SampleDataFrameTest extends ScalaDataFrameSuiteBase {
   val byteArray = new Array[Byte](1)
   val diffByteArray = Array[Byte](192.toByte)
   val inputList = List(
@@ -207,7 +206,8 @@ class SampleDataFrameTest extends AnyFunSuite with DataFrameSuiteBase {
     assert(thrown.getMessage contains "Column size not Equal")
   }
 
-  test("equal DF of rows of bytes should be equal (see GH issue #247)") {
+  // test with and without codegen.
+  testCombined("equal DF of rows of bytes should be equal (see GH issue #247)") {
     val df = rowDf(
       "a" -> (BinaryType, "bytes".getBytes()),
       "b" -> (StringType, "good"))

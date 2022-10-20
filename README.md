@@ -22,10 +22,10 @@ or
 
 ```
 <dependency>
-    <groupId>com.holdenkarau</groupId>
-    <artifactId>spark-testing-base_2.11</artifactId>
-    <version>${spark.version}_0.11.0</version>
-    <scope>test</scope>
+	<groupId>com.holdenkarau</groupId>
+	<artifactId>spark-testing-base_2.11</artifactId>
+	<version>${spark.version}_0.11.0</version>
+	<scope>test</scope>
 </dependency>
 ```
 
@@ -39,10 +39,10 @@ or
 
 ```
 <dependency>
-    <groupId>com.holdenkarau</groupId>
-    <artifactId>spark-testing-kafka-0_8_2.11</artifactId>
-    <version>${spark.version}_0.14.0</version>
-    <scope>test</scope>
+	<groupId>com.holdenkarau</groupId>
+	<artifactId>spark-testing-kafka-0_8_2.11</artifactId>
+	<version>${spark.version}_0.14.0</version>
+	<scope>test</scope>
 </dependency>
 ```
 
@@ -84,6 +84,8 @@ parallelExecution in Test := false
 ```
 
 In surefire make sure that forkCount is set to 1 and reuseForks is true.
+
+If your testing Spark SQL CodeGen make sure to set SPARK_TESTING=true
 
 ## Where is this from?
 
