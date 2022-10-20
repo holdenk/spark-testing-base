@@ -225,7 +225,7 @@ object Utils extends Logging {
    * collision when binding.
    */
   def isBindCollision(exception: Throwable): Boolean = {
-    import scala.collection.JavaConversions._
+    import scala.collection.JavaConverters._
 
     exception match {
      case e: BindException =>
@@ -233,7 +233,7 @@ object Utils extends Logging {
          return true
        }
        isBindCollision(e.getCause)
-     case e: MultiException => e.getThrowables.exists(isBindCollision)
+     case e: MultiException => e.getThrowables.asScala.exists(isBindCollision)
      case e: Exception => isBindCollision(e.getCause)
      case _ => false
    }

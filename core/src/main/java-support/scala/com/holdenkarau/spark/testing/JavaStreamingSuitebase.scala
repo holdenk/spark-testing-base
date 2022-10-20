@@ -24,7 +24,7 @@ import org.apache.spark.streaming.api.java._
 import org.apache.spark.streaming.dstream.DStream
 import org.junit.Assert._
 
-import scala.collection.JavaConversions._
+import scala.collection.JavaConverters._
 import scala.reflect.ClassTag
 import org.apache.spark.SparkConf
 
@@ -185,7 +185,7 @@ class JavaStreamingSuiteBase extends JavaSuiteBase with StreamingSuiteCommon {
       ordered: Boolean): Unit = {
 
     assertEquals("Length of the input lists are not equal",
-      input1.length, input2.length)
+      input1.size, input2.size)
     val numBatches = input1.size
 
     implicit val ctagU = Utils.fakeClassTag[U]
@@ -210,5 +210,5 @@ class JavaStreamingSuiteBase extends JavaSuiteBase with StreamingSuiteCommon {
     }
   }
 
-  private def toSeq[U](input: JList[JList[U]]) = input.map(_.toSeq).toSeq
+  private def toSeq[U](input: JList[JList[U]]) = input.asScala.map(_.asScala.toSeq).toSeq
 }

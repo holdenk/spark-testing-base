@@ -27,8 +27,9 @@ import org.scalatest.concurrent.Eventually.timeout
 import org.scalatest.concurrent.PatienceConfiguration
 import org.scalatest.time.{Seconds => ScalaTestSeconds, Span}
 
-import scala.collection.mutable.{ArrayBuffer, SynchronizedBuffer}
+import java.util.concurrent.ConcurrentLinkedQueue
 import scala.reflect.ClassTag
+import scala.collection.JavaConverters._
 
 /**
  * This is a output stream just for testing.
@@ -37,11 +38,11 @@ import scala.reflect.ClassTag
  */
 // tag::collectResults[]
 class TestOutputStream[T: ClassTag](parent: DStream[T],
-  val output: ArrayBuffer[Seq[T]] = ArrayBuffer[Seq[T]]()) extends Serializable {
+  val output: ConcurrentLinkedQueue[Seq[T]] = new ConcurrentLinkedQueue[Seq[T]]()) extends Serializable {
 
   parent.foreachRDD{(rdd: RDD[T], time) =>
     val collected = rdd.collect()
-    output += collected
+    output.add(collected)
   }
 
 }
@@ -150,8 +151,7 @@ private[holdenkarau] trait StreamingSuiteCommon extends Logging
     // Setup the stream computation
     val inputStream = createTestInputStream(sc, ssc, input)
     val operatedStream = operation(inputStream)
-    val outputStream = new TestOutputStream[V](operatedStream,
-      new ArrayBuffer[Seq[V]] with SynchronizedBuffer[Seq[V]])
+    val outputStream = new TestOutputStream[V](operatedStream)
     (outputStream, ssc)
   }
 
@@ -174,8 +174,7 @@ private[holdenkarau] trait StreamingSuiteCommon extends Logging
     val inputStream1 = createTestInputStream(sc, ssc, input1)
     val inputStream2 = createTestInputStream(sc, ssc, input2)
     val operatedStream = operation(inputStream1, inputStream2)
-    val outputStream = new TestOutputStream[W](operatedStream,
-      new ArrayBuffer[Seq[W]] with SynchronizedBuffer[Seq[W]])
+    val outputStream = new TestOutputStream[W](operatedStream)
     (outputStream, ssc)
   }
 
@@ -198,8 +197,7 @@ private[holdenkarau] trait StreamingSuiteCommon extends Logging
     val inputStream1 = createTestInputStream(sc, ssc, input1)
     val inputRDD2 = sc.parallelize(input2)
     val operatedStream = operation(inputStream1, inputRDD2)
-    val outputStream = new TestOutputStream[W](operatedStream,
-      new ArrayBuffer[Seq[W]] with SynchronizedBuffer[Seq[W]])
+    val outputStream = new TestOutputStream[W](operatedStream)
     (outputStream, ssc)
   }
 
@@ -248,12 +246,13 @@ private[holdenkarau] trait StreamingSuiteCommon extends Logging
     }
     val timeTaken = System.currentTimeMillis() - startTime
     logInfo(s"Output generated in ${timeTaken} milliseconds")
-    output.foreach(x => logInfo("[" + x.mkString(",") + "]"))
+    val outputArray =
+    output.asScala.toSeq.foreach(x => logInfo("[" + x.mkString(",") + "]"))
     assert(timeTaken < maxWaitTimeMillis,
       s"Operation timed out after ${timeTaken} ms")
     Thread.sleep(200) // Give some time for the forgetting old RDDs to complete
 
-    output.toSeq
+    output.asScala.toSeq
   }
 
   private[holdenkarau] def setupClock() = {

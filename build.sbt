@@ -82,7 +82,7 @@ val commonSettings = Seq(
       Seq("2.12.15", "2.11.12")
     }
   },
-  scalacOptions ++= Seq("-deprecation", "-unchecked", "-Yrangepos", "-Ywarn-unused-import"),
+  scalacOptions ++= Seq("-deprecation", "-unchecked", "-Yrangepos"),
   javacOptions ++= {
     Seq("-source", "1.8", "-target", "1.8")
   },
