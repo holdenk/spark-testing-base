@@ -73,10 +73,10 @@ class JavaStreamingSuiteBase extends JavaSuiteBase with StreamingSuiteCommon {
       // If we sort by hash code, if we have a hash collision we might get a false negative
       // So instead we convert this to a map and do a comparison
       for (i <- output.indices) {
-      assertEquals(
-        expectedOutput(i).groupBy(x => x).mapValues(_.size),
-        output(i).groupBy(x => x).mapValues(_.size)
-      )
+        assertEquals(
+          expectedOutput(i).groupBy(x => x).mapValues(_.size).toMap.asJava,
+          output(i).groupBy(x => x).mapValues(_.size).toMap.asJava
+        )
       }
     }
 
