@@ -5,6 +5,10 @@ lazy val root = (project in file("."))
 val sparkVersion = settingKey[String]("Spark version")
 val sparkTestingVersion = settingKey[String]("Spark testing base version without Spark version part")
 
+ThisBuild / libraryDependencySchemes ++= Seq(
+  "org.scala-lang.modules" %% "scala-xml" % VersionScheme.Always
+)
+
 scalafixDependencies in ThisBuild +=
   "com.holdenkarau" %% "spark-scalafix-rules" % "0.1.0-SNAPSHOT"
 
@@ -16,7 +20,7 @@ lazy val core = (project in file("core"))
     coreSources,
     coreTestSources,
     addCompilerPlugin(scalafixSemanticdb),
-    libraryDependencies ++= Seq(
+     libraryDependencies ++= Seq(
       "org.apache.spark" %% "spark-core"        % sparkVersion.value,
       "org.apache.spark" %% "spark-streaming"   % sparkVersion.value,
       "org.apache.spark" %% "spark-sql"         % sparkVersion.value,
@@ -129,12 +133,11 @@ val commonSettings = Seq(
 val coreSources = unmanagedSourceDirectories in Compile  := {
   if (sparkVersion.value >= "3.0.0" && scalaVersion.value >= "2.12.0") Seq(
     (sourceDirectory in Compile)(_ / "2.2/scala"),
-    (sourceDirectory in Compile)(_ / "java-support/scala"),
+    (sourceDirectory in Compile)(_ / "3.0/scala"),
     (sourceDirectory in Compile)(_ / "2.0/scala"), (sourceDirectory in Compile)(_ / "2.0/java")
   ).join.value
   else if (sparkVersion.value >= "2.4.0" && scalaVersion.value >= "2.12.0") Seq(
     (sourceDirectory in Compile)(_ / "2.2/scala"),
-    (sourceDirectory in Compile)(_ / "java-support/scala"),
     (sourceDirectory in Compile)(_ / "2.0/scala"), (sourceDirectory in Compile)(_ / "2.0/java")
   ).join.value
   else Seq( // For scala 2.11 only bother building scala support, skip java bridge.
@@ -146,8 +149,10 @@ val coreSources = unmanagedSourceDirectories in Compile  := {
 val coreTestSources = unmanagedSourceDirectories in Test  := {
   if (sparkVersion.value >= "3.0.0" && scalaVersion.value >= "2.12.0") Seq(
     (sourceDirectory in Test)(_ / "3.0/scala"),
+    (sourceDirectory in Test)(_ / "3.0/java"),
     (sourceDirectory in Test)(_ / "2.2/scala"),
-    (sourceDirectory in Test)(_ / "2.0/scala"), (sourceDirectory in Test)(_ / "2.0/java")
+    (sourceDirectory in Test)(_ / "2.0/scala"),
+    (sourceDirectory in Test)(_ / "2.0/java")
   ).join.value
   else if (sparkVersion.value >= "2.2.0" && scalaVersion.value >= "2.12.0") Seq(
     (sourceDirectory in Test)(_ / "2.2/scala"),
@@ -163,8 +168,7 @@ val coreTestSources = unmanagedSourceDirectories in Test  := {
 
 // additional libraries
 lazy val commonDependencies = Seq(
-  // Above 3.2.10 we need a newer scala-xml which _might_ break stuff.
-  "org.scalatest" %% "scalatest" % "3.2.10",
+  "org.scalatest" %% "scalatest" % "3.2.14",
   "org.scalatestplus" %% "scalacheck-1-15" % "3.2.3.0",
   "org.scalatestplus" %% "junit-4-12" % "3.2.2.0",
   "org.scalacheck" %% "scalacheck" % "1.15.2",
