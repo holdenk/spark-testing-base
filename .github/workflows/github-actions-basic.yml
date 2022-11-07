@@ -29,6 +29,21 @@ jobs:
         fetch-depth: 0
         repository: holdenk/spark-testing-base
         ref: master
+    - name: Cache maven modules
+      id: cache-maven
+      uses: actions/cache@v3
+      env:
+        cache-name: cache-node-modules
+      with:
+        # maven cache files are stored in `~/.m2` & `~/.ivy2` on Linux/macOS
+        path:
+          - ~/.m2
+          - ~/.ivy2/cache
+        key: ${{ runner.os }}-${{ spark }}-build-${{ env.cache-name }}-${{ hashFiles('build.sbt') }}
+        restore-keys: |
+          ${{ runner.os }}-${{ spark }}-build-${{ env.cache-name }}-
+          ${{ runner.os }}-${{ spark }}-build-
+          ${{ runner.os }}-${{ spark }}-
     - name: Sync the current branch with the latest in spark-testing-base
       if: github.repository != 'holdenk/spark-testing-base'
       id: sync-branch
