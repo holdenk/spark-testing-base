@@ -41,4 +41,4 @@ jobs:
     # Cache local repositories. Note that GitHub Actions cache has a 2G limit.
     # Run the tests.
     - name: Run tests
-      run: SPARK_TESTING=yes ./build/sbt clean compile test -DsparkVersion=$SPARK_VERSION
+      run: SPARK_TESTING=yes ./build/sbt clean +compile +test -DsparkVersion=$SPARK_VERSION

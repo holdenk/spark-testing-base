@@ -24,7 +24,16 @@ lazy val core = (project in file("core"))
       "org.apache.spark" %% "spark-catalyst"    % sparkVersion.value,
       "org.apache.spark" %% "spark-yarn"        % sparkVersion.value,
       "org.apache.spark" %% "spark-mllib"       % sparkVersion.value
-    ) ++ commonDependencies
+    ) ++ commonDependencies ++
+    {if (sparkVersion.value > "3.0.0") {
+      Seq(
+        "io.netty" % "netty-all" % "4.1.77.Final",
+        "io.netty" % "netty-tcnative-classes" % "2.0.52.Final"
+      )
+    } else {
+        Seq()
+    }}
+
   )
 
 lazy val kafka_0_8 = {
@@ -148,11 +157,11 @@ val coreTestSources = unmanagedSourceDirectories in Test  := {
 
 // additional libraries
 lazy val commonDependencies = Seq(
-  "org.scalatest" %% "scalatest" % "3.1.1",
+  "org.scalatest" %% "scalatest" % "3.1.4",
   "org.scalatestplus" %% "scalatestplus-scalacheck" % "3.1.0.0-RC2",
-  "org.scalacheck" %% "scalacheck" % "1.14.0",
+  "org.scalacheck" %% "scalacheck" % "1.14.3",
   "junit" % "junit" % "4.12",
-  "org.eclipse.jetty" % "jetty-util" % "9.3.11.v20160721",
+  "org.eclipse.jetty" % "jetty-util" % "9.4.49.v20220914",
   "com.novocode" % "junit-interface" % "0.11" % "test->default")
 
 // Based on Hadoop Mini Cluster tests from Alpine's PluginSDK (Apache licensed)
