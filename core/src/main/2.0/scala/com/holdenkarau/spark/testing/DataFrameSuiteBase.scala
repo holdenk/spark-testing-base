@@ -76,7 +76,7 @@ trait ScalaDataFrameSuiteBase extends AnyFunSuite with DataFrameSuiteBase {
       withSQLConf(SQLConf.CODEGEN_FACTORY_MODE.key -> interpretedMode,
         SQLConf.WHOLESTAGE_CODEGEN_ENABLED.key -> "false",
         SQLConf.WHOLESTAGE_MAX_NUM_FIELDS.key -> "1",
-        SQLConf.WHOLESTAGE_HUGE_METHOD_LIMIT.key -> "1",
+        SQLConf.WHOLESTAGE_HUGE_METHOD_LIMIT.key -> "1"
       ) { testFun })(pos)
   }
 }
