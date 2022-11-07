@@ -23,7 +23,6 @@ import org.apache.spark.streaming.dstream.DStream
 import org.junit.Assert._
 
 import java.util.{List => JList}
-import scala.collection.JavaConversions._
 import scala.reflect.ClassTag
 
 /**

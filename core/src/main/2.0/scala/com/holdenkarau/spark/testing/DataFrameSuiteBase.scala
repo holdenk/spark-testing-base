@@ -320,8 +320,8 @@ trait DataFrameSuiteBaseLike extends SparkContextProvider
 
     val cols = expected.columns
     assert("Column size not Equal", cols.size, result.columns.size)
-    assertTrue(expected.collect.deep.toSet ==
-      result.select(cols.head, cols.tail: _*).collect.deep.toSet)
+    assertTrue(expected.collect.toSet ==
+      result.select(cols.head, cols.tail: _*).collect.toSet)
   }
 
   /**
