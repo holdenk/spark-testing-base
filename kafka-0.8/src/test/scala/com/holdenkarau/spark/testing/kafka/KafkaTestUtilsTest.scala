@@ -23,7 +23,7 @@ import scala.collection.JavaConversions._
 import kafka.consumer.ConsumerConfig
 import org.apache.spark.streaming.kafka.KafkaTestUtils
 import org.junit.runner.RunWith
-import org.scalatest.junit.JUnitRunner
+import org.scalatestplus.junit.JUnitRunner
 import org.scalatest.{BeforeAndAfterAll, FunSuite}
 
 @RunWith(classOf[JUnitRunner])

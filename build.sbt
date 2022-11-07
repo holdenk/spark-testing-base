@@ -34,7 +34,9 @@ lazy val core = (project in file("core"))
         } else {
           // need a more recent version of xbean for Spark 2.4 so we support JDK11
           Seq(
-            "org.apache.xbean" % "xbean-asm6-shaded" % "4.10"
+            "org.apache.xbean" % "xbean-asm6-shaded" % "4.10",
+            // In Spark 2.4.8 we need a newer json4s so we can use a current scala-xml
+            "org.json4s" %% "json4s-core" % "3.6.12"
           )
         }}
 
@@ -101,7 +103,7 @@ val commonSettings = Seq(
   javacOptions ++= {
     Seq("-source", "1.8", "-target", "1.8")
   },
-  javaOptions ++= Seq("-Xms6G", "-Xmx6G", "-XX:MaxPermSize=4048M", "-XX:+CMSClassUnloadingEnabled"),
+  javaOptions ++= Seq("-Xms8G", "-Xmx8G"),
 
   coverageHighlighting := true,
 
@@ -163,9 +165,10 @@ val coreTestSources = unmanagedSourceDirectories in Test  := {
 
 // additional libraries
 lazy val commonDependencies = Seq(
-  "org.scalatest" %% "scalatest" % "3.1.4",
-  "org.scalatestplus" %% "scalatestplus-scalacheck" % "3.1.0.0-RC2",
-  "org.scalacheck" %% "scalacheck" % "1.14.3",
+  "org.scalatest" %% "scalatest" % "3.2.14",
+  "org.scalatestplus" %% "scalacheck-1-15" % "3.2.3.0",
+  "org.scalatestplus" %% "junit-4-12" % "3.2.2.0",
+  "org.scalacheck" %% "scalacheck" % "1.15.2",
   "junit" % "junit" % "4.12",
   "org.eclipse.jetty" % "jetty-util" % "9.4.49.v20220914",
   "com.novocode" % "junit-interface" % "0.11" % "test->default")
