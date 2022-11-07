@@ -112,7 +112,12 @@ val commonSettings = Seq(
 
 // Allow kafka (and other) utils to have version specific files
 val coreSources = unmanagedSourceDirectories in Compile  := {
-  if (sparkVersion.value >= "2.4.0" && scalaVersion.value >= "2.12.0") Seq(
+  if (sparkVersion.value >= "3.0.0" && scalaVersion.value >= "2.12.0") Seq(
+    (sourceDirectory in Compile)(_ / "2.2/scala"),
+    (sourceDirectory in Compile)(_ / "java-support/scala"),
+    (sourceDirectory in Compile)(_ / "2.0/scala"), (sourceDirectory in Compile)(_ / "2.0/java")
+  ).join.value
+  else if (sparkVersion.value >= "2.4.0" && scalaVersion.value >= "2.12.0") Seq(
     (sourceDirectory in Compile)(_ / "2.2/scala"),
     (sourceDirectory in Compile)(_ / "java-support/scala"),
     (sourceDirectory in Compile)(_ / "2.0/scala"), (sourceDirectory in Compile)(_ / "2.0/java")
@@ -124,7 +129,12 @@ val coreSources = unmanagedSourceDirectories in Compile  := {
 }
 
 val coreTestSources = unmanagedSourceDirectories in Test  := {
-  if (sparkVersion.value >= "2.2.0" && scalaVersion.value >= "2.12.0") Seq(
+  if (sparkVersion.value >= "3.0.0" && scalaVersion.value >= "2.12.0") Seq(
+    (sourceDirectory in Test)(_ / "3.0/scala"),
+    (sourceDirectory in Test)(_ / "2.2/scala"),
+    (sourceDirectory in Test)(_ / "2.0/scala"), (sourceDirectory in Test)(_ / "2.0/java")
+  ).join.value
+  else if (sparkVersion.value >= "2.2.0" && scalaVersion.value >= "2.12.0") Seq(
     (sourceDirectory in Test)(_ / "2.2/scala"),
     (sourceDirectory in Test)(_ / "2.0/scala"), (sourceDirectory in Test)(_ / "2.0/java")
   ).join.value
