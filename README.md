@@ -15,17 +15,17 @@ This is not my beautiful code.
 So you include com.holdenkarau.spark-testing-base [spark_version]_1.0.0 and extend one of the classes and write some simple tests instead.  For example to include this in a project using Spark 3.0.0:
 
 ```scala
-"com.holdenkarau" %% "spark-testing-base" % "3.0.0_1.0.0" % "test"
+"com.holdenkarau" %% "spark-testing-base" % "3.0.0_1.3.0" % "test"
 ```
 
 or
 
 ```
 <dependency>
-    <groupId>com.holdenkarau</groupId>
-    <artifactId>spark-testing-base_2.11</artifactId>
-    <version>${spark.version}_0.11.0</version>
-    <scope>test</scope>
+	<groupId>com.holdenkarau</groupId>
+	<artifactId>spark-testing-base_2.11</artifactId>
+	<version>${spark.version}_0.11.0</version>
+	<scope>test</scope>
 </dependency>
 ```
 
@@ -39,10 +39,10 @@ or
 
 ```
 <dependency>
-    <groupId>com.holdenkarau</groupId>
-    <artifactId>spark-testing-kafka-0_8_2.11</artifactId>
-    <version>${spark.version}_0.14.0</version>
-    <scope>test</scope>
+	<groupId>com.holdenkarau</groupId>
+	<artifactId>spark-testing-kafka-0_8_2.11</artifactId>
+	<version>${spark.version}_0.14.0</version>
+	<scope>test</scope>
 </dependency>
 ```
 
@@ -62,7 +62,14 @@ The default SBT testing java options are too small to support running many of th
 
 ```scala
 fork in Test := true
-javaOptions ++= Seq("-Xms512M", "-Xmx2048M", "-XX:MaxPermSize=2048M", "-XX:+CMSClassUnloadingEnabled")
+javaOptions ++= Seq("-Xms8G", "-Xmx8G", "-XX:MaxPermSize=4048M", "-XX:+CMSClassUnloadingEnabled")
+```
+
+Note: if your running in JDK17+ PermSize and ClassnloadingEnabled have been removed so it becomes:
+
+```scala
+fork in Test := true
+javaOptions ++= Seq("-Xms8G", "-Xmx8G"),
 ```
 
 If using surefire you can add:
@@ -84,6 +91,8 @@ parallelExecution in Test := false
 ```
 
 In surefire make sure that forkCount is set to 1 and reuseForks is true.
+
+If your testing Spark SQL CodeGen make sure to set SPARK_TESTING=true
 
 ## Where is this from?
 

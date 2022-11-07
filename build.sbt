@@ -24,7 +24,22 @@ lazy val core = (project in file("core"))
       "org.apache.spark" %% "spark-catalyst"    % sparkVersion.value,
       "org.apache.spark" %% "spark-yarn"        % sparkVersion.value,
       "org.apache.spark" %% "spark-mllib"       % sparkVersion.value
-    ) ++ commonDependencies
+    ) ++ commonDependencies ++
+      {
+        if (sparkVersion.value > "3.0.0") {
+          Seq(
+            "io.netty" % "netty-all" % "4.1.77.Final",
+            "io.netty" % "netty-tcnative-classes" % "2.0.52.Final"
+          )
+        } else {
+          // need a more recent version of xbean for Spark 2.4 so we support JDK11
+          Seq(
+            "org.apache.xbean" % "xbean-asm6-shaded" % "4.10",
+            // In Spark 2.4.8 we need a newer json4s so we can use a current scala-xml
+            "org.json4s" %% "json4s-core" % "3.6.12"
+          )
+        }}
+
   )
 
 lazy val kafka_0_8 = {
@@ -69,17 +84,26 @@ lazy val kafka_0_8 = {
 val commonSettings = Seq(
   organization := "com.holdenkarau",
   publishMavenStyle := true,
-  sparkVersion := System.getProperty("sparkVersion", "2.4.0"),
-  sparkTestingVersion := "1.1.1",
+  sparkVersion := System.getProperty("sparkVersion", "2.4.8"),
+  sparkTestingVersion := "1.3.0",
   version := sparkVersion.value + "_" + sparkTestingVersion.value,
   scalaVersion := {
-    "2.12.12"
+    "2.12.15"
   },
-  scalacOptions ++= Seq("-deprecation", "-unchecked", "-Yrangepos", "-Ywarn-unused-import"),
+  crossScalaVersions := {
+    if (sparkVersion.value >= "3.2.0") {
+      Seq("2.12.15", "2.13.10")
+    } else if (sparkVersion.value >= "3.0.0") {
+      Seq("2.12.15")
+    } else {
+      Seq("2.12.15", "2.11.12")
+    }
+  },
+  scalacOptions ++= Seq("-deprecation", "-unchecked", "-Yrangepos"),
   javacOptions ++= {
     Seq("-source", "1.8", "-target", "1.8")
   },
-  javaOptions ++= Seq("-Xms6G", "-Xmx6G", "-XX:MaxPermSize=4048M", "-XX:+CMSClassUnloadingEnabled"),
+  javaOptions ++= Seq("-Xms8G", "-Xmx8G"),
 
   coverageHighlighting := true,
 
@@ -105,28 +129,35 @@ val commonSettings = Seq(
 
 // Allow kafka (and other) utils to have version specific files
 val coreSources = unmanagedSourceDirectories in Compile  := {
-  if (sparkVersion.value >= "2.4.0" && scalaVersion.value >= "2.12.0") Seq(
+  if (sparkVersion.value >= "3.0.0" && scalaVersion.value >= "2.12.0") Seq(
     (sourceDirectory in Compile)(_ / "2.2/scala"),
+    (sourceDirectory in Compile)(_ / "java-support/scala"),
     (sourceDirectory in Compile)(_ / "2.0/scala"), (sourceDirectory in Compile)(_ / "2.0/java")
   ).join.value
-  else if (sparkVersion.value >= "2.2.0") Seq(
+  else if (sparkVersion.value >= "2.4.0" && scalaVersion.value >= "2.12.0") Seq(
     (sourceDirectory in Compile)(_ / "2.2/scala"),
+    (sourceDirectory in Compile)(_ / "java-support/scala"),
     (sourceDirectory in Compile)(_ / "2.0/scala"), (sourceDirectory in Compile)(_ / "2.0/java")
   ).join.value
-  else // if (sparkVersion.value >= "2.0.0" && scalaVersion.value >= "2.11")
-    Seq(
-    (sourceDirectory in Compile)(_ / "pre-2.2_2.11/scala"),
-    (sourceDirectory in Compile)(_ / "2.0/scala"), (sourceDirectory in Compile)(_ / "2.0/java")
+  else Seq( // For scala 2.11 only bother building scala support, skip java bridge.
+    (sourceDirectory in Compile)(_ / "2.2/scala"),
+    (sourceDirectory in Compile)(_ / "2.0/scala")
   ).join.value
 }
 
 val coreTestSources = unmanagedSourceDirectories in Test  := {
-  if (sparkVersion.value >= "2.2.0") Seq(
+  if (sparkVersion.value >= "3.0.0" && scalaVersion.value >= "2.12.0") Seq(
+    (sourceDirectory in Test)(_ / "3.0/scala"),
+    (sourceDirectory in Test)(_ / "2.2/scala"),
+    (sourceDirectory in Test)(_ / "2.0/scala"), (sourceDirectory in Test)(_ / "2.0/java")
+  ).join.value
+  else if (sparkVersion.value >= "2.2.0" && scalaVersion.value >= "2.12.0") Seq(
     (sourceDirectory in Test)(_ / "2.2/scala"),
     (sourceDirectory in Test)(_ / "2.0/scala"), (sourceDirectory in Test)(_ / "2.0/java")
   ).join.value
   else Seq(
-    (sourceDirectory in Test)(_ / "2.0/scala"), (sourceDirectory in Test)(_ / "2.0/java")
+    (sourceDirectory in Test)(_ / "2.2/scala"),
+    (sourceDirectory in Test)(_ / "2.0/scala")
   ).join.value
 }
 
@@ -134,11 +165,12 @@ val coreTestSources = unmanagedSourceDirectories in Test  := {
 
 // additional libraries
 lazy val commonDependencies = Seq(
-  "org.scalatest" %% "scalatest" % "3.0.5",
-  "io.github.nicolasstucki" %% "multisets" % "0.4",
-  "org.scalacheck" %% "scalacheck" % "1.14.0",
+  "org.scalatest" %% "scalatest" % "3.2.14",
+  "org.scalatestplus" %% "scalacheck-1-15" % "3.2.3.0",
+  "org.scalatestplus" %% "junit-4-12" % "3.2.2.0",
+  "org.scalacheck" %% "scalacheck" % "1.15.2",
   "junit" % "junit" % "4.12",
-  "org.eclipse.jetty" % "jetty-util" % "9.3.11.v20160721",
+  "org.eclipse.jetty" % "jetty-util" % "9.4.49.v20220914",
   "com.novocode" % "junit-interface" % "0.11" % "test->default")
 
 // Based on Hadoop Mini Cluster tests from Alpine's PluginSDK (Apache licensed)

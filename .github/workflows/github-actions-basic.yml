@@ -9,15 +9,16 @@ on:
 jobs:
   # Build: build spark-testing-base and run the tests for specified modules.
   build:
-    # Ubuntu 20.04 is the latest LTS. The next LTS is 22.04.
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     strategy:
       fail-fast: false
       matrix:
         spark:
-          - 2.4.7
+          - 2.4.8
           - 3.0.2
           - 3.1.2
+          - 3.2.2
+          - 3.3.1
     env:
       SPARK_VERSION: ${{ matrix.spark }}
     steps:
@@ -40,4 +41,4 @@ jobs:
     # Cache local repositories. Note that GitHub Actions cache has a 2G limit.
     # Run the tests.
     - name: Run tests
-      run: ./build/sbt clean compile test -DsparkVersion=$SPARK_VERSION
+      run: SPARK_TESTING=yes ./build/sbt clean +compile +test -DsparkVersion=$SPARK_VERSION

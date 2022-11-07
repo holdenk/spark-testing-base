@@ -20,9 +20,8 @@ import java.sql.Timestamp
 
 import org.apache.spark.sql.{DataFrame, Row}
 import org.apache.spark.sql.types._
-import org.scalatest.FunSuite
 
-class SampleDataFrameTest extends FunSuite with DataFrameSuiteBase {
+class SampleDataFrameTest extends ScalaDataFrameSuiteBase {
   val byteArray = new Array[Byte](1)
   val diffByteArray = Array[Byte](192.toByte)
   val inputList = List(
@@ -207,7 +206,6 @@ class SampleDataFrameTest extends FunSuite with DataFrameSuiteBase {
     assert(thrown.getMessage contains "Column size not Equal")
   }
 
-
   test("assertSmallDataFrameDataEquals asserts DFs irrespective of fields order") {
     val df1 = rowDf(
       "a" -> (IntegerType, 1),
@@ -251,7 +249,7 @@ class SampleDataFrameTest extends FunSuite with DataFrameSuiteBase {
     assert(thrown.getMessage contains "Column size not Equal")
   }
 
-  test("equal DF of rows of bytes should be equal (see GH issue #247)") {
+  testCombined("equal DF of rows of bytes should be equal (see GH issue #247)") {
     val df = rowDf(
       "a" -> (BinaryType, "bytes".getBytes()),
       "b" -> (StringType, "good"))

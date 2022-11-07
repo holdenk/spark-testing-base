@@ -1,6 +1,6 @@
 package com.holdenkarau.spark.testing
 
-import java.math.{BigDecimal => JavaBigDecimal, RoundingMode}
+import java.math.{RoundingMode}
 import java.sql.{Date, Timestamp}
 
 import org.apache.spark.sql.types._
@@ -154,9 +154,9 @@ object DataframeGenerator {
     if (nullable) {
       // Spark 3.1+ has difficulty with arrays that are null.
       dataType match {
-	case arr: ArrayType => nonNullGen
-	case _ =>
-	  Gen.oneOf(nonNullGen, Gen.const(null))
+        case arr: ArrayType => nonNullGen
+        case _ =>
+          Gen.oneOf(nonNullGen, Gen.const(null))
       }
     } else {
       nonNullGen

@@ -16,18 +16,15 @@
  */
 package com.holdenkarau.spark.testing
 
-import java.util.{List => JList}
-
-import org.apache.spark.api.java.function.{
-  Function => JFunction, Function2 => JFunction2}
+import org.apache.spark.SparkConf
+import org.apache.spark.api.java.function.{Function => JFunction, Function2 => JFunction2}
 import org.apache.spark.streaming.api.java._
 import org.apache.spark.streaming.dstream.DStream
 import org.junit.Assert._
 
+import java.util.{List => JList}
 import scala.collection.JavaConversions._
-import scala.collection.immutable.{HashBag => Bag}
 import scala.reflect.ClassTag
-import org.apache.spark.SparkConf
 
 /**
  * This is the base trait for Spark Streaming testsuite. This provides basic
@@ -65,14 +62,19 @@ class JavaStreamingSuiteBase extends JavaSuiteBase with StreamingSuiteCommon {
 
     // Match the output with the expected output
     assertEquals("Number of outputs do not match", expectedOutput.size, output.size)
-    for (i <- output.indices) {
-      if (ordered) {
+    if (ordered) {
+      for (i <- output.indices) {
         compareArrays[V](expectedOutput(i).toArray, output(i).toArray)
-      } else {
-        implicit val config = Bag.configuration.compact[V]
-        compareArrays[V](
-          Bag(expectedOutput(i): _*).toArray,
-          Bag(output(i): _*).toArray)
+      }
+    } else {
+      // Order does not matter which makes our life harder.
+      // If we sort by hash code, if we have a hash collision we might get a false negative
+      // So instead we convert this to a map and do a comparison
+      for (i <- output.indices) {
+        assertEquals(
+          expectedOutput(i).groupBy(x => x).mapValues(_.size).toMap.asJava,
+          output(i).groupBy(x => x).mapValues(_.size).toMap.asJava
+        )
       }
     }
 
@@ -181,7 +183,7 @@ class JavaStreamingSuiteBase extends JavaSuiteBase with StreamingSuiteCommon {
       ordered: Boolean): Unit = {
 
     assertEquals("Length of the input lists are not equal",
-      input1.length, input2.length)
+      input1.size, input2.size)
     val numBatches = input1.size
 
     implicit val ctagU = Utils.fakeClassTag[U]
@@ -206,5 +208,5 @@ class JavaStreamingSuiteBase extends JavaSuiteBase with StreamingSuiteCommon {
     }
   }
 
-  private def toSeq[U](input: JList[JList[U]]) = input.map(_.toSeq).toSeq
+  private def toSeq[U](input: JList[JList[U]]) = input.asScala.map(_.asScala.toSeq).toSeq
 }

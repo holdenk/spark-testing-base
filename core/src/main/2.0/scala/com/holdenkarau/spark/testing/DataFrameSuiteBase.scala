@@ -22,16 +22,69 @@ import java.sql.Timestamp
 
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql._
+import org.apache.spark.sql.catalyst.expressions.CodegenObjectFactoryMode
 import org.apache.spark.sql.functions._
+import org.apache.spark.sql.internal.SQLConf
+import org.scalactic.source
 import org.scalatest.Suite
+import org.scalatest.Tag
+import org.scalatest.funsuite.AnyFunSuite
 
 import scala.math.abs
+
+/**
+ * Base trait for testing Spark DataFrames in Scala.
+ */
+trait ScalaDataFrameSuiteBase extends AnyFunSuite with DataFrameSuiteBase {
+  /*
+   * If you need test your function with both codegen and non-codegen paths. This should be relatively
+   * rare unless you are writing your own Spark expressions (w/ custom codegen).
+   * This is taken from the "test" function inside of the PlanTest trait in SparkSQL.
+   */
+  def testCombined(
+      testName: String,
+      testTags: Tag*)(testFun: => Any)(implicit pos: source.Position): Unit = {
+    System.setProperty("SPARK_TESTING", "yes") // codegen modes are not always respected
+    val codegenMode = CodegenObjectFactoryMode.CODEGEN_ONLY.toString
+    val interpretedMode = CodegenObjectFactoryMode.NO_CODEGEN.toString
+
+    test(testName + " (codegen path)", testTags: _*)(
+      withSQLConf(SQLConf.CODEGEN_FACTORY_MODE.key -> codegenMode) { testFun })(pos)
+    test(testName + " (interpreted path)", testTags: _*)(
+      withSQLConf(SQLConf.CODEGEN_FACTORY_MODE.key -> interpretedMode,
+        SQLConf.WHOLESTAGE_CODEGEN_ENABLED.key -> "false",
+        SQLConf.WHOLESTAGE_MAX_NUM_FIELDS.key -> "0",
+        SQLConf.WHOLESTAGE_HUGE_METHOD_LIMIT.key -> "0"
+      ) { testFun })(pos)
+  }
+  def testCodegenOnly(
+      testName: String,
+      testTags: Tag*)(testFun: => Any)(implicit pos: source.Position): Unit = {
+    System.setProperty("SPARK_TESTING", "yes") // codegen modes are not always respected
+    val codegenMode = CodegenObjectFactoryMode.CODEGEN_ONLY.toString
+
+    test(testName + " (codegen path)", testTags: _*)(
+      withSQLConf(SQLConf.CODEGEN_FACTORY_MODE.key -> codegenMode) { testFun })(pos)
+  }
+  def testNonCodegen(
+      testName: String,
+      testTags: Tag*)(testFun: => Any)(implicit pos: source.Position): Unit = {
+    System.setProperty("SPARK_TESTING", "yes") // codegen modes are not always respected
+    val interpretedMode = CodegenObjectFactoryMode.NO_CODEGEN.toString
+
+    test(testName + " (interpreted path)", testTags: _*)(
+      withSQLConf(SQLConf.CODEGEN_FACTORY_MODE.key -> interpretedMode,
+        SQLConf.WHOLESTAGE_CODEGEN_ENABLED.key -> "false",
+        SQLConf.WHOLESTAGE_MAX_NUM_FIELDS.key -> "1",
+        SQLConf.WHOLESTAGE_HUGE_METHOD_LIMIT.key -> "1"
+      ) { testFun })(pos)
+  }
+}
 
 /**
  * :: Experimental ::
  * Base class for testing Spark DataFrames.
  */
-
 trait DataFrameSuiteBase extends TestSuite
     with SharedSparkContext with DataFrameSuiteBaseLike { self: Suite =>
   override def beforeAll(): Unit = {
@@ -42,7 +95,39 @@ trait DataFrameSuiteBase extends TestSuite
   override def afterAll(): Unit = {
     super.afterAll()
     if (!reuseContextIfPossible) {
+      if (spark != null) {
+        spark.stop()
+      }
+      if (sc != null) {
+        sc.stop()
+      }
       SparkSessionProvider._sparkSession = null
+    }
+  }
+
+  /**
+   * Sets all SQL configurations specified in `pairs`, calls `f`, and then restores all SQL
+   * configurations.
+   * Taken from Spark SQLHelper.
+   */
+  protected def withSQLConf(pairs: (String, String)*)(f: => Unit): Unit = {
+    val currentConf = spark.sessionState.conf
+    val (keys, values) = pairs.unzip
+    val currentValues = keys.map { key =>
+      if (currentConf.contains(key)) {
+        Some(currentConf.getConfString(key))
+      } else {
+        None
+      }
+    }
+    (keys, values).zipped.foreach { (k: String, v: String) =>
+      spark.sessionState.conf.setConfString(k, v)
+    }
+    try f finally {
+      keys.zip(currentValues).foreach {
+        case (key, Some(value)) => spark.sessionState.conf.setConfString(key, value)
+        case (key, None) => spark.sessionState.conf.unsetConf(key)
+      }
     }
   }
 }
