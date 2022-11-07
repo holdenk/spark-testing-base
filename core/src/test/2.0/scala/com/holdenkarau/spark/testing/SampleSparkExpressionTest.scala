@@ -32,8 +32,6 @@ class SampleSparkExpressionTest extends ScalaDataFrameSuiteBase {
   testNonCodegen("non-codegen paths!") {
     val session = SparkSession.builder().getOrCreate()
     import session.implicits._
-    println(session.conf.get("spark.sql.codegen.factoryMode"))
-    println(SQLConf.get.getConf(SQLConf.CODEGEN_FACTORY_MODE))
     val input = sc.parallelize(inputList).toDF
     val result_working = input.select(WorkingCodegenExpression.work(input("name")) + 1)
     val result_failing = input.select(FailingCodegenExpression.fail(input("name")) + 1)

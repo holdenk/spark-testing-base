@@ -52,7 +52,10 @@ trait ScalaDataFrameSuiteBase extends AnyFunSuite with DataFrameSuiteBase {
       withSQLConf(SQLConf.CODEGEN_FACTORY_MODE.key -> codegenMode) { testFun })(pos)
     test(testName + " (interpreted path)", testTags: _*)(
       withSQLConf(SQLConf.CODEGEN_FACTORY_MODE.key -> interpretedMode,
-        SQLConf.WHOLESTAGE_CODEGEN_ENABLED.key -> "false") { testFun })(pos)
+        SQLConf.WHOLESTAGE_CODEGEN_ENABLED.key -> "false",
+        SQLConf.WHOLESTAGE_MAX_NUM_FIELDS.key -> "0",
+        SQLConf.WHOLESTAGE_HUGE_METHOD_LIMIT.key -> "0"
+      ) { testFun })(pos)
   }
   def testCodegenOnly(
       testName: String,
@@ -71,7 +74,10 @@ trait ScalaDataFrameSuiteBase extends AnyFunSuite with DataFrameSuiteBase {
 
     test(testName + " (interpreted path)", testTags: _*)(
       withSQLConf(SQLConf.CODEGEN_FACTORY_MODE.key -> interpretedMode,
-        SQLConf.WHOLESTAGE_CODEGEN_ENABLED.key -> "false") { testFun })(pos)
+        SQLConf.WHOLESTAGE_CODEGEN_ENABLED.key -> "false",
+        SQLConf.WHOLESTAGE_MAX_NUM_FIELDS.key -> "1",
+        SQLConf.WHOLESTAGE_HUGE_METHOD_LIMIT.key -> "1",
+      ) { testFun })(pos)
   }
 }
 
@@ -89,6 +95,12 @@ trait DataFrameSuiteBase extends TestSuite
   override def afterAll(): Unit = {
     super.afterAll()
     if (!reuseContextIfPossible) {
+      if (spark != null) {
+        spark.stop()
+      }
+      if (sc != null) {
+        sc.stop()
+      }
       SparkSessionProvider._sparkSession = null
     }
   }
@@ -99,23 +111,22 @@ trait DataFrameSuiteBase extends TestSuite
    * Taken from Spark SQLHelper.
    */
   protected def withSQLConf(pairs: (String, String)*)(f: => Unit): Unit = {
-    val conf = SQLConf.get
+    val currentConf = spark.sessionState.conf
     val (keys, values) = pairs.unzip
     val currentValues = keys.map { key =>
-      if (conf.contains(key)) {
-        Some(conf.getConfString(key))
+      if (currentConf.contains(key)) {
+        Some(currentConf.getConfString(key))
       } else {
         None
       }
     }
     (keys, values).zipped.foreach { (k: String, v: String) =>
-      println(f"Setting ${k} ${v}")
-      conf.setConfString(k, v)
+      spark.sessionState.conf.setConfString(k, v)
     }
     try f finally {
       keys.zip(currentValues).foreach {
-        case (key, Some(value)) => conf.setConfString(key, value)
-        case (key, None) => conf.unsetConf(key)
+        case (key, Some(value)) => spark.sessionState.conf.setConfString(key, value)
+        case (key, None) => spark.sessionState.conf.unsetConf(key)
       }
     }
   }
