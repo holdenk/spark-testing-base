@@ -9,8 +9,7 @@ on:
 jobs:
   # Build: build spark-testing-base and run the tests for specified modules.
   build:
-    # Ubuntu 20.04 is the latest LTS. The next LTS is 22.04.
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     strategy:
       fail-fast: false
       matrix:
