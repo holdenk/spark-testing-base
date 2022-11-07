@@ -16,17 +16,15 @@
  */
 package com.holdenkarau.spark.testing
 
-import java.util.{List => JList}
-
-import org.apache.spark.api.java.function.{
-  Function => JFunction, Function2 => JFunction2}
+import org.apache.spark.SparkConf
+import org.apache.spark.api.java.function.{Function => JFunction, Function2 => JFunction2}
 import org.apache.spark.streaming.api.java._
 import org.apache.spark.streaming.dstream.DStream
 import org.junit.Assert._
 
-import scala.collection.JavaConverters._
+import java.util.{List => JList}
+import scala.collection.JavaConversions._
 import scala.reflect.ClassTag
-import org.apache.spark.SparkConf
 
 /**
  * This is the base trait for Spark Streaming testsuite. This provides basic
