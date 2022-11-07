@@ -37,6 +37,8 @@ import scala.reflect.ClassTag
  */
 class JavaStreamingSuiteBase extends JavaSuiteBase with StreamingSuiteCommon {
 
+  import scala.jdk.CollectionConverters._
+
   override def conf: SparkConf = super.conf
     .set("spark.streaming.clock", "org.apache.spark.streaming.util.TestManualClock")
 
