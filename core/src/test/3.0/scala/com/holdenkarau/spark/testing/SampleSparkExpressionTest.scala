@@ -24,6 +24,9 @@ import org.apache.spark.sql.catalyst.expressions.codegen.Block._
 import org.apache.spark.sql.types._
 import org.scalatest.Suite
 
+/**
+ * To run this test yous must set SPARK_TESTING=yes (or other non-null value).
+ */
 class SampleSparkExpressionTest extends ScalaDataFrameSuiteBase {
   val inputList = List(
     FakeMagic("panda"),
