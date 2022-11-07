@@ -6,9 +6,15 @@ import org.scalacheck.Prop.forAll
 import org.scalatestplus.scalacheck.Checkers
 import org.apache.spark.sql.SparkSession
 import org.scalatest.funsuite.AnyFunSuite
+import org.scalacheck.Prop._
+
 
 class DatasetGeneratorSizeSpecial extends AnyFunSuite
     with SharedSparkContext with Checkers {
+
+  // Make the test finish faster. ScalaCheck has a default of 100.
+  implicit override val generatorDrivenConfig =
+    PropertyCheckConfiguration(minSuccessful = 10)
 
   test("test generating sized Datasets[Custom Class]") {
     val sqlContext = SparkSession.builder.getOrCreate().sqlContext
