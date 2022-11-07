@@ -206,7 +206,49 @@ class SampleDataFrameTest extends ScalaDataFrameSuiteBase {
     assert(thrown.getMessage contains "Column size not Equal")
   }
 
-  // test with and without codegen.
+  test("assertSmallDataFrameDataEquals asserts DFs irrespective of fields order") {
+    val df1 = rowDf(
+      "a" -> (IntegerType, 1),
+      "b" -> (StringType, "a"),
+      "c" -> (IntegerType, 3))
+    val df2 = rowDf(
+      "b" -> (StringType, "a"),
+      "a" -> (IntegerType, 1),
+      "c" -> (IntegerType, 3))
+    assertSmallDataFrameDataEquals(df1, df2)
+  }
+
+  test("assertSmallDataFrameDataEquals asserts DFs also validates schema") {
+    val df1 = rowDf(
+      "a" -> (IntegerType, 1),
+      "b" -> (StringType, "a"),
+      "c" -> (IntegerType, 3))
+    val df2 = rowDf(
+      "b" -> (StringType, "a"),
+      "a" -> (IntegerType, 1),
+      "c" -> (StringType, "3"))
+
+    val thrown = intercept[Exception] {
+      assertSmallDataFrameDataEquals(df1, df2)
+    }
+    assert(thrown.getMessage contains "false did not equal true")
+  }
+
+  test("assertSmallDataFrameDataEquals fails DFs with different columns size") {
+    val df1 = rowDf(
+      "a" -> (IntegerType, 1),
+      "b" -> (StringType, "a"),
+      "c" -> (IntegerType, 3))
+    val df2 = rowDf(
+      "b" -> (StringType, "a"),
+      "a" -> (IntegerType, 1))
+
+    val thrown = intercept[Exception] {
+      assertSmallDataFrameDataEquals(df1, df2)
+    }
+    assert(thrown.getMessage contains "Column size not Equal")
+  }
+
   testCombined("equal DF of rows of bytes should be equal (see GH issue #247)") {
     val df = rowDf(
       "a" -> (BinaryType, "bytes".getBytes()),

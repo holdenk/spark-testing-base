@@ -308,6 +308,22 @@ trait DataFrameSuiteBaseLike extends SparkContextProvider
     }
   }
 
+
+  /**
+   * Compares if two [[DataFrame]]s are equal without caring about order of rows, by
+   * finding elements in one DataFrame that is not in the other.
+   * Similar to the function assertDataFrameDataEquals but for small [[DataFrame]]
+   * that can be collected in memory for the comparison.
+   */
+  def assertSmallDataFrameDataEquals(
+    expected: DataFrame, result: DataFrame): Unit = {
+
+    val cols = expected.columns
+    assert("Column size not Equal", cols.size, result.columns.size)
+    assertTrue(expected.collect.deep.toSet ==
+      result.select(cols.head, cols.tail: _*).collect.deep.toSet)
+  }
+
   /**
    * Zip RDD's with precise indexes. This is used so we can join two DataFrame's
    * Rows together regardless of if the source is different but still compare
