@@ -25,14 +25,18 @@ lazy val core = (project in file("core"))
       "org.apache.spark" %% "spark-yarn"        % sparkVersion.value,
       "org.apache.spark" %% "spark-mllib"       % sparkVersion.value
     ) ++ commonDependencies ++
-    {if (sparkVersion.value > "3.0.0") {
-      Seq(
-        "io.netty" % "netty-all" % "4.1.77.Final",
-        "io.netty" % "netty-tcnative-classes" % "2.0.52.Final"
-      )
-    } else {
-        Seq()
-    }}
+      {
+        if (sparkVersion.value > "3.0.0") {
+          Seq(
+            "io.netty" % "netty-all" % "4.1.77.Final",
+            "io.netty" % "netty-tcnative-classes" % "2.0.52.Final"
+          )
+        } else {
+          // need a more recent version of xbean for Spark 2.4 so we support JDK11
+          Seq(
+            "org.apache.xbean" % "xbean-asm6-shaded" % "4.10"
+          )
+        }}
 
   )
 
