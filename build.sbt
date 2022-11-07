@@ -105,7 +105,7 @@ val commonSettings = Seq(
   javacOptions ++= {
     Seq("-source", "1.8", "-target", "1.8")
   },
-  javaOptions ++= Seq("-Xms8G", "-Xmx8G"),
+  javaOptions ++= Seq("-Xms5G", "-Xmx5G"),
 
   coverageHighlighting := true,
 
