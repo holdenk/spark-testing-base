@@ -33,12 +33,12 @@ jobs:
       id: cache-maven
       uses: actions/cache@v3
       env:
-        cache-name: cache-node-modules
+        cache-name: cache-maven
       with:
         # maven cache files are stored in `~/.m2` & `~/.ivy2` on Linux/macOS
-        path:
-          - ~/.m2
-          - ~/.ivy2/cache
+        path: |
+          ~/.m2
+          ~/.ivy2/cache
         key: ${{ runner.os }}-${{ spark }}-build-${{ env.cache-name }}-${{ hashFiles('build.sbt') }}
         restore-keys: |
           ${{ runner.os }}-${{ spark }}-build-${{ env.cache-name }}-
