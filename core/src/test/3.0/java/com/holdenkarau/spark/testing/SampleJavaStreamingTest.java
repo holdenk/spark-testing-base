@@ -30,7 +30,7 @@ public class SampleJavaStreamingTest extends JavaStreamingSuiteBase implements S
   @Test
   public void verifyFilterTest() {
     List<List<Integer>> input = Arrays.asList(Arrays.asList(1, 2, 4, 8, 15, 22), Arrays.asList(3, 4, 5));
-    List<List<Integer>> expectedOutput = Arrays.asList(Arrays.asList(4, 2, 8, 22), Arrays.asList(4));
+    List<List<Integer>> expectedOutput = Arrays.asList(Arrays.asList(2, 4, 8, 22), Arrays.asList(4));
 
     testOperation(input, filterOddOperation, expectedOutput);
     testOperation(input, filterOddOperation, expectedOutput, true);
