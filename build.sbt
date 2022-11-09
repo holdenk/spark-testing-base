@@ -174,7 +174,7 @@ lazy val commonDependencies = Seq(
   "org.scalacheck" %% "scalacheck" % "1.15.2",
   "junit" % "junit" % "4.13.2",
   "org.eclipse.jetty" % "jetty-util" % "9.4.49.v20220914",
-  "com.novocode" % "junit-interface" % "0.11" % "test->default")
+  "com.github.sbt" % "junit-interface" % "0.13.3" % "test->default")
 
 // Based on Hadoop Mini Cluster tests from Alpine's PluginSDK (Apache licensed)
 // javax.servlet signing issues can be tricky, we can just exclude the dep
