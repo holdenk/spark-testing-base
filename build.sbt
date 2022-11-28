@@ -10,7 +10,7 @@ ThisBuild / libraryDependencySchemes ++= Seq(
 )
 
 scalafixDependencies in ThisBuild +=
-  "com.holdenkarau" %% "spark-scalafix-rules" % "0.1.0-SNAPSHOT"
+  "com.holdenkarau" %% "spark-scalafix-rules" % "0.1.1-2.4.8"
 
 lazy val core = (project in file("core"))
   .settings(
