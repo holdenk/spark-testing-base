@@ -87,7 +87,7 @@ val commonSettings = Seq(
   organization := "com.holdenkarau",
   publishMavenStyle := true,
   sparkVersion := System.getProperty("sparkVersion", "2.4.8"),
-  sparkTestingVersion := "1.3.4-SNAPSHOT",
+  sparkTestingVersion := "1.3.4",
   version := sparkVersion.value + "_" + sparkTestingVersion.value,
   scalaVersion := {
     "2.12.15"
