@@ -87,7 +87,7 @@ val commonSettings = Seq(
   organization := "com.holdenkarau",
   publishMavenStyle := true,
   sparkVersion := System.getProperty("sparkVersion", "2.4.8"),
-  sparkTestingVersion := "1.3.4",
+  sparkTestingVersion := "1.4.0",
   version := sparkVersion.value + "_" + sparkTestingVersion.value,
   scalaVersion := {
     "2.12.15"
@@ -170,7 +170,7 @@ val coreTestSources = unmanagedSourceDirectories in Test  := {
 lazy val commonDependencies = Seq(
   "org.scalatest" %% "scalatest" % "3.2.15",
   "org.scalatestplus" %% "scalacheck-1-15" % "3.2.3.0",
-  "org.scalatestplus" %% "junit-4-12" % "3.2.2.0",
+  "org.scalatestplus" %% "junit-4-13" % "3.2.15.0",
   "org.scalacheck" %% "scalacheck" % "1.15.2",
   "junit" % "junit" % "4.13.2",
   "org.eclipse.jetty" % "jetty-util" % "9.4.50.v20221201",
