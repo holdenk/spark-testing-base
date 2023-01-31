@@ -39,7 +39,8 @@ class UtilsTest extends AnyFunSuite {
     pw.close()
     Files.createSymbolicLink(new File(s"${tempPath}/murh2").toPath, f.toPath)
     Utils.shutDownCleanUp()
-    Thread.sleep(1)
+    // Give it some time to execute the cleanup.
+    Thread.sleep(10)
     assert(!(new File(tempPath).exists()))
     assert(!(new File(f.toPath().toAbsolutePath().toString()).exists()))
   }
