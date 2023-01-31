@@ -1,3 +1,10 @@
+# 1.4.0
+- Minimum supported version is now 2.4.8
+- We have Scala 2.11,2.12, and 2.13 support
+- Fix dependency that had CVE-2020-15250 (older versions you can work around by pinning junit forward)
+- Add better Iceberg support
+- Add better support for custom per-test SQL properties
+- Simplify testing codegen & non-codegen expressions :D
 # 1.0.0
 - Minimum supported version of Spark is now 2.4
 - Add support for Spark 3.0 & 3.0.1
