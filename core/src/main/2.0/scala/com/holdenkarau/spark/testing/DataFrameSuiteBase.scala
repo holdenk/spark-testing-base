@@ -189,12 +189,11 @@ trait DataFrameSuiteBaseLike extends SparkContextProvider
       // Exception is thrown in Spark if hive is not present
       case e: IllegalArgumentException =>
     }
-    // THIS DOES NOT CURRENTLY WORK in SBT see https://github.com/sbt/sbt/issues/7137
     if (enableIcebergSupport) {
       builder.config("spark.sql.extensions",
         "org.apache.iceberg.spark.extensions.IcebergSparkSessionExtensions")
       builder.config("spark.sql.catalog.spark_catalog",
-        "org.apache.iceberg.spark.SparkSessionCatalog ")
+        "org.apache.iceberg.spark.SparkSessionCatalog")
       builder.config("spark.sql.catalog.spark_catalog.type",
         "hive")
       builder.config("spark.sql.catalog.local",

@@ -87,7 +87,7 @@ val commonSettings = Seq(
   organization := "com.holdenkarau",
   publishMavenStyle := true,
   sparkVersion := System.getProperty("sparkVersion", "2.4.8"),
-  sparkTestingVersion := "1.3.1-SNAPSHOT",
+  sparkTestingVersion := "1.3.4-SNAPSHOT",
   version := sparkVersion.value + "_" + sparkTestingVersion.value,
   scalaVersion := {
     "2.12.15"
@@ -220,7 +220,7 @@ lazy val publishSettings = Seq(
   credentials ++= Seq(Credentials(Path.userHome / ".ivy2" / ".sbtcredentials"), Credentials(Path.userHome / ".ivy2" / ".sparkcredentials")),
   useGpg := true,
   artifactName := { (sv: ScalaVersion, module: ModuleID, artifact: Artifact) =>
-    artifact.name + "-" + sparkVersion.value +  module.revision + "." + artifact.extension
+    Artifact.artifactName(sv, module, artifact).replaceAll(s"-${module.revision}", s"-${sparkVersion.value}${module.revision}")
   }
 )
 
