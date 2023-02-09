@@ -28,7 +28,7 @@ jobs:
       with:
         fetch-depth: 0
         repository: holdenk/spark-testing-base
-        ref: master
+        ref: main
     - name: Cache maven modules
       id: cache-maven
       uses: actions/cache@v3
