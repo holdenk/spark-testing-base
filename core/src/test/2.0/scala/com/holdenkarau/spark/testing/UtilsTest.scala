@@ -26,7 +26,13 @@ class UtilsTest extends AnyFunSuite {
     val tempDir = Utils.createTempDir()
     val tempPath = tempDir.toPath().toAbsolutePath().toString()
     Utils.shutDownCleanUp()
-    Thread.sleep(10)
+    // Avoid race condition but also finish early if possible.
+    var x = 0
+    while (x < 30 &&
+      (new File(tempPath).exists())) {
+      Thread.sleep(1)
+      x = x + 1
+    }
     assert(!(new File(tempPath).exists()))
   }
 
@@ -39,8 +45,14 @@ class UtilsTest extends AnyFunSuite {
     pw.close()
     Files.createSymbolicLink(new File(s"${tempPath}/murh2").toPath, f.toPath)
     Utils.shutDownCleanUp()
-    // Give it some time to execute the cleanup.
-    Thread.sleep(10)
+    // Avoid race condition but also finish early if possible.
+    var x = 0
+    while (x < 30 &&
+      (new File(tempPath).exists()) &&
+      (new File(f.toPath().toAbsolutePath().toString()).exists())) {
+      Thread.sleep(1)
+      x = x + 1
+    }
     assert(!(new File(tempPath).exists()))
     assert(!(new File(f.toPath().toAbsolutePath().toString()).exists()))
   }
