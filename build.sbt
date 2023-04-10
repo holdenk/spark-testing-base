@@ -10,7 +10,7 @@ ThisBuild / libraryDependencySchemes ++= Seq(
 )
 
 scalafixDependencies in ThisBuild +=
-  "com.holdenkarau" %% "spark-scalafix-rules" % "0.1.0-SNAPSHOT"
+  "com.holdenkarau" %% "spark-scalafix-rules" % "0.1.1-2.4.8"
 
 lazy val core = (project in file("core"))
   .settings(
@@ -87,7 +87,7 @@ val commonSettings = Seq(
   organization := "com.holdenkarau",
   publishMavenStyle := true,
   sparkVersion := System.getProperty("sparkVersion", "2.4.8"),
-  sparkTestingVersion := "1.3.0",
+  sparkTestingVersion := "1.4.0",
   version := sparkVersion.value + "_" + sparkTestingVersion.value,
   scalaVersion := {
     "2.12.15"
@@ -105,7 +105,7 @@ val commonSettings = Seq(
   javacOptions ++= {
     Seq("-source", "1.8", "-target", "1.8")
   },
-  javaOptions ++= Seq("-Xms8G", "-Xmx8G"),
+  javaOptions ++= Seq("-Xms5G", "-Xmx5G"),
 
   coverageHighlighting := true,
 
@@ -168,13 +168,13 @@ val coreTestSources = unmanagedSourceDirectories in Test  := {
 
 // additional libraries
 lazy val commonDependencies = Seq(
-  "org.scalatest" %% "scalatest" % "3.2.14",
+  "org.scalatest" %% "scalatest" % "3.2.15",
   "org.scalatestplus" %% "scalacheck-1-15" % "3.2.3.0",
-  "org.scalatestplus" %% "junit-4-12" % "3.2.2.0",
+  "org.scalatestplus" %% "junit-4-13" % "3.2.15.0",
   "org.scalacheck" %% "scalacheck" % "1.15.2",
-  "junit" % "junit" % "4.12",
-  "org.eclipse.jetty" % "jetty-util" % "9.4.49.v20220914",
-  "com.novocode" % "junit-interface" % "0.11" % "test->default")
+  "junit" % "junit" % "4.13.2",
+  "org.eclipse.jetty" % "jetty-util" % "9.4.51.v20230217",
+  "com.github.sbt" % "junit-interface" % "0.13.3" % "test->default")
 
 // Based on Hadoop Mini Cluster tests from Alpine's PluginSDK (Apache licensed)
 // javax.servlet signing issues can be tricky, we can just exclude the dep
@@ -220,7 +220,7 @@ lazy val publishSettings = Seq(
   credentials ++= Seq(Credentials(Path.userHome / ".ivy2" / ".sbtcredentials"), Credentials(Path.userHome / ".ivy2" / ".sparkcredentials")),
   useGpg := true,
   artifactName := { (sv: ScalaVersion, module: ModuleID, artifact: Artifact) =>
-    artifact.name + "-" + sparkVersion.value +  module.revision + "." + artifact.extension
+    Artifact.artifactName(sv, module, artifact).replaceAll(s"-${module.revision}", s"-${sparkVersion.value}${module.revision}")
   }
 )
 

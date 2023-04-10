@@ -141,59 +141,76 @@ trait DataFrameSuiteBaseLike extends SparkContextProvider
 
   protected implicit def impSqlContext: SQLContext = sqlContext
 
-  protected implicit def enableHiveSupport: Boolean = true
+  protected def enableHiveSupport: Boolean = true
+  protected def enableIcebergSupport: Boolean = false
+
+  lazy val tempDir = Utils.createTempDir()
+  lazy val localMetastorePath = new File(tempDir, "metastore").getCanonicalPath
+  lazy val localWarehousePath = new File(tempDir, "warehouse").getCanonicalPath
+  val icebergWarehouse = new File(tempDir, "iceberg-warehouse").getCanonicalPath
+
+  /**
+   * Constructs a configuration for hive or iceberg, where the metastore is located in a
+   * temp directory.
+   */
+  def builder(): org.apache.spark.sql.SparkSession.Builder = {
+    // Yes this is using a lot of mutation on the builder.
+    val builder = SparkSession.builder()
+    // Long story with lz4 issues in 2.3+
+    builder.config("spark.io.compression.codec", "snappy")
+    // We have to mask all properties in hive-site.xml that relates to metastore
+    // data source as we used a local metastore here.
+    if (enableHiveSupport) {
+      import org.apache.hadoop.hive.conf.HiveConf
+      val hiveConfVars = HiveConf.ConfVars.values()
+      val accessiableHiveConfVars = hiveConfVars.map(WrappedConfVar(_))
+      accessiableHiveConfVars.foreach { confvar =>
+        if (confvar.varname.contains("datanucleus") ||
+          confvar.varname.contains("jdo")) {
+          builder.config(confvar.varname, confvar.getDefaultExpr())
+        }
+      }
+      builder.config(HiveConf.ConfVars.METASTOREURIS.varname, "")
+      builder.config("javax.jdo.option.ConnectionURL",
+        s"jdbc:derby:;databaseName=$localMetastorePath;create=true")
+      builder.config("datanucleus.rdbms.datastoreAdapterClassName",
+        "org.datanucleus.store.rdbms.adapter.DerbyAdapter")
+    }
+    builder.config("spark.sql.streaming.checkpointLocation",
+      Utils.createTempDir().toPath().toString)
+    builder.config("spark.sql.warehouse.dir",
+      localWarehousePath)
+    // Enable hive support if available
+    try {
+      if (enableHiveSupport) {
+        builder.enableHiveSupport()
+      }
+    } catch {
+      // Exception is thrown in Spark if hive is not present
+      case e: IllegalArgumentException =>
+    }
+    if (enableIcebergSupport) {
+      builder.config("spark.sql.extensions",
+        "org.apache.iceberg.spark.extensions.IcebergSparkSessionExtensions")
+      builder.config("spark.sql.catalog.spark_catalog",
+        "org.apache.iceberg.spark.SparkSessionCatalog")
+      builder.config("spark.sql.catalog.spark_catalog.type",
+        "hive")
+      builder.config("spark.sql.catalog.local",
+        "org.apache.iceberg.spark.SparkCatalog")
+      builder.config("spark.sql.catalog.local.type",
+        "hadoop")
+      builder.config("spark.sql.catalog.local.warehouse",
+        icebergWarehouse)
+    }
+    builder
+  }
 
   def sqlBeforeAllTestCases(): Unit = {
     if ((SparkSessionProvider._sparkSession ne null) &&
       !SparkSessionProvider._sparkSession.sparkContext.isStopped) {
       // Use existing session if its around and running.
     } else {
-      /**
-       * Constructs a configuration for hive, where the metastore is located in a
-       * temp directory.
-       */
-      val tempDir = Utils.createTempDir()
-      val localMetastorePath = new File(tempDir, "metastore").getCanonicalPath
-      val localWarehousePath = new File(tempDir, "warehouse").getCanonicalPath
-      def newBuilder() = {
-        val builder = SparkSession.builder()
-        // Long story with lz4 issues in 2.3+
-        builder.config("spark.io.compression.codec", "snappy")
-        // We have to mask all properties in hive-site.xml that relates to metastore
-        // data source as we used a local metastore here.
-        if (enableHiveSupport) {
-          import org.apache.hadoop.hive.conf.HiveConf
-          val hiveConfVars = HiveConf.ConfVars.values()
-          val accessiableHiveConfVars = hiveConfVars.map(WrappedConfVar(_))
-          accessiableHiveConfVars.foreach { confvar =>
-            if (confvar.varname.contains("datanucleus") ||
-              confvar.varname.contains("jdo")) {
-              builder.config(confvar.varname, confvar.getDefaultExpr())
-            }
-          }
-          builder.config(HiveConf.ConfVars.METASTOREURIS.varname, "")
-        }
-        builder.config("javax.jdo.option.ConnectionURL",
-          s"jdbc:derby:;databaseName=$localMetastorePath;create=true")
-        builder.config("datanucleus.rdbms.datastoreAdapterClassName",
-          "org.datanucleus.store.rdbms.adapter.DerbyAdapter")
-        builder.config("spark.sql.streaming.checkpointLocation",
-          Utils.createTempDir().toPath().toString)
-        builder.config("spark.sql.warehouse.dir",
-          localWarehousePath)
-        // Enable hive support if available
-        try {
-          if (enableHiveSupport) {
-            builder.enableHiveSupport()
-          }
-        } catch {
-          // Exception is thrown in Spark if hive is not present
-          case e: IllegalArgumentException =>
-        }
-        builder
-      }
-
-      val builder = newBuilder()
 
       SparkSessionProvider._sparkSession = builder.getOrCreate()
     }
@@ -320,8 +337,8 @@ trait DataFrameSuiteBaseLike extends SparkContextProvider
 
     val cols = expected.columns
     assert("Column size not Equal", cols.size, result.columns.size)
-    assertTrue(expected.collect.deep.toSet ==
-      result.select(cols.head, cols.tail: _*).collect.deep.toSet)
+    assertTrue(expected.collect.toSet ==
+      result.select(cols.head, cols.tail: _*).collect.toSet)
   }
 
   /**
