@@ -99,4 +99,6 @@ While we hope you choose our library, https://github.com/juanrh/sscheck , https:
 
 ## Security Disclosure e-mails
 
-Have you found a security concern? Please let us know! The folks @ Tidelift ic
+Have you found a security concern? Please let us know
+
+See https://github.com/holdenk/spark-testing-base/blob/main/SECURITY.md
