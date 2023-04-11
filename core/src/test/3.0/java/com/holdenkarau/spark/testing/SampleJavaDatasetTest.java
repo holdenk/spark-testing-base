@@ -16,8 +16,8 @@ public class SampleJavaDatasetTest extends JavaDatasetSuiteBase implements Seria
     @Test
     public void equalEmptyDataset() {
         OuterScopes.addOuterScope(this);
-        List<Person> list = new ArrayList<>();
-        Dataset<Person> dataset = sqlContext().createDataset(list, Encoders.bean(Person.class));
+        List<JavaTestPerson> list = new ArrayList<>();
+        Dataset<JavaTestPerson> dataset = sqlContext().createDataset(list, Encoders.bean(JavaTestPerson.class));
 
         assertDatasetEquals(dataset, dataset);
     }
@@ -26,9 +26,9 @@ public class SampleJavaDatasetTest extends JavaDatasetSuiteBase implements Seria
     public void datasetEqualItself() {
         OuterScopes.addOuterScope(this);
 
-        Person person = createPerson("Hanafy", 23, 80.0);
-        List<Person> list = Arrays.asList(person);
-        Dataset<Person> dataset = sqlContext().createDataset(list, Encoders.bean(Person.class));
+        JavaTestPerson person = createPerson("Hanafy", 23, 80.0);
+        List<JavaTestPerson> list = Arrays.asList(person);
+        Dataset<JavaTestPerson> dataset = sqlContext().createDataset(list, Encoders.bean(JavaTestPerson.class));
 
         assertDatasetEquals(dataset, dataset);
     }
@@ -37,13 +37,13 @@ public class SampleJavaDatasetTest extends JavaDatasetSuiteBase implements Seria
     public void notEqualDataset() {
         OuterScopes.addOuterScope(this);
 
-        Person person1 = createPerson("Hanafy", 23, 80.0);
-        List<Person> list1 = Arrays.asList(person1);
-        Dataset<Person> dataset1 = sqlContext().createDataset(list1, Encoders.bean(Person.class));
+        JavaTestPerson person1 = createPerson("Hanafy", 23, 80.0);
+        List<JavaTestPerson> list1 = Arrays.asList(person1);
+        Dataset<JavaTestPerson> dataset1 = sqlContext().createDataset(list1, Encoders.bean(JavaTestPerson.class));
 
-        Person person2 = createPerson("Hanofy", 23, 80.0);
-        List<Person> list2 = Arrays.asList(person2);
-        Dataset<Person> dataset2 = sqlContext().createDataset(list2, Encoders.bean(Person.class));
+        JavaTestPerson person2 = createPerson("Hanofy", 23, 80.0);
+        List<JavaTestPerson> list2 = Arrays.asList(person2);
+        Dataset<JavaTestPerson> dataset2 = sqlContext().createDataset(list2, Encoders.bean(JavaTestPerson.class));
 
         assertDatasetEquals(dataset1, dataset2);
     }
@@ -51,8 +51,8 @@ public class SampleJavaDatasetTest extends JavaDatasetSuiteBase implements Seria
     @Test
     public void approximateEqualEmptyDataset() {
         OuterScopes.addOuterScope(this);
-        List<Person> list = new ArrayList<>();
-        Dataset<Person> dataset = sqlContext().createDataset(list, Encoders.bean(Person.class));
+        List<JavaTestPerson> list = new ArrayList<>();
+        Dataset<JavaTestPerson> dataset = sqlContext().createDataset(list, Encoders.bean(JavaTestPerson.class));
 
         assertDatasetApproximateEquals(dataset, dataset, 0.0);
     }
@@ -61,9 +61,9 @@ public class SampleJavaDatasetTest extends JavaDatasetSuiteBase implements Seria
     public void approximateEqualDatasetItself() {
         OuterScopes.addOuterScope(this);
 
-        Person person = createPerson("Hanafy", 23, 80.0);
-        List<Person> list = Arrays.asList(person);
-        Dataset<Person> dataset = sqlContext().createDataset(list, Encoders.bean(Person.class));
+        JavaTestPerson person = createPerson("Hanafy", 23, 80.0);
+        List<JavaTestPerson> list = Arrays.asList(person);
+        Dataset<JavaTestPerson> dataset = sqlContext().createDataset(list, Encoders.bean(JavaTestPerson.class));
 
         assertDatasetApproximateEquals(dataset, dataset, 0.0);
     }
@@ -72,13 +72,13 @@ public class SampleJavaDatasetTest extends JavaDatasetSuiteBase implements Seria
     public void approximateEqualAcceptableTolerance() {
         OuterScopes.addOuterScope(this);
 
-        Person person1 = createPerson("Hanafy", 23, 80.0);
-        List<Person> list1 = Arrays.asList(person1);
-        Dataset<Person> dataset1 = sqlContext().createDataset(list1, Encoders.bean(Person.class));
+        JavaTestPerson person1 = createPerson("Hanafy", 23, 80.0);
+        List<JavaTestPerson> list1 = Arrays.asList(person1);
+        Dataset<JavaTestPerson> dataset1 = sqlContext().createDataset(list1, Encoders.bean(JavaTestPerson.class));
 
-        Person person2 = createPerson("Hanafy", 23, 80.2);
-        List<Person> list2 = Arrays.asList(person2);
-        Dataset<Person> dataset2 = sqlContext().createDataset(list2, Encoders.bean(Person.class));
+        JavaTestPerson person2 = createPerson("Hanafy", 23, 80.2);
+        List<JavaTestPerson> list2 = Arrays.asList(person2);
+        Dataset<JavaTestPerson> dataset2 = sqlContext().createDataset(list2, Encoders.bean(Person.class));
 
         assertDatasetApproximateEquals(dataset1, dataset2, 0.201);
     }
@@ -87,13 +87,13 @@ public class SampleJavaDatasetTest extends JavaDatasetSuiteBase implements Seria
     public void approximateEqualLowTolerance() {
         OuterScopes.addOuterScope(this);
 
-        Person person1 = createPerson("Hanafy", 23, 80.0);
-        List<Person> list1 = Arrays.asList(person1);
-        Dataset<Person> dataset1 = sqlContext().createDataset(list1, Encoders.bean(Person.class));
+        JavaTestPerson person1 = createPerson("Hanafy", 23, 80.0);
+        List<JavaTestPerson> list1 = Arrays.asList(person1);
+        Dataset<JavaTestPerson> dataset1 = sqlContext().createDataset(list1, Encoders.bean(JavaTestPerson.class));
 
-        Person person2 = createPerson("Hanafy", 23, 80.5);
-        List<Person> list2 = Arrays.asList(person2);
-        Dataset<Person> dataset2 = sqlContext().createDataset(list2, Encoders.bean(Person.class));
+        JavaTestPerson person2 = createPerson("Hanafy", 23, 80.5);
+        List<JavaTestPerson> list2 = Arrays.asList(person2);
+        Dataset<JavaTestPerson> dataset2 = sqlContext().createDataset(list2, Encoders.bean(JavaTestPerson.class));
 
         assertDatasetApproximateEquals(dataset1, dataset2, 0.2);
     }
@@ -143,8 +143,8 @@ public class SampleJavaDatasetTest extends JavaDatasetSuiteBase implements Seria
         assertDatasetApproximateEquals(dataset1, dataset2, 60000);
     }
 
-    private Person createPerson(String name, int age, double weight) {
-        Person person = new Person();
+    private JavaTestPerson createPerson(String name, int age, double weight) {
+        JavaTestPerson person = new JavaTestPerson();
         person.setName(name);
         person.setAge(age);
         person.setWeight(weight);
@@ -152,92 +152,11 @@ public class SampleJavaDatasetTest extends JavaDatasetSuiteBase implements Seria
         return person;
     }
 
-    private Time createTime(String name, Timestamp time) {
-        Time t = new Time();
+    private JavaTestTime createTime(String name, Timestamp time) {
+        JavaTestTime t = new JavaTestTime();
         t.setName(name);
         t.setTime(time);
 
         return t;
-    }
-
-    public class Person implements Serializable {
-        private String name;
-        private int age;
-        private double weight;
-
-        public String getName() {
-            return name;
-        }
-
-        public void setName(String name) {
-            this.name = name;
-        }
-
-        public double getWeight() {
-            return weight;
-        }
-
-        public void setWeight(double weight) {
-            this.weight = weight;
-        }
-
-        public int getAge() {
-            return age;
-        }
-
-        public void setAge(int age) {
-            this.age = age;
-        }
-
-        @Override
-        public boolean equals(Object obj) {
-            if (obj instanceof Person) {
-                Person person = (Person) obj;
-                return name.equals(person.name) && age == person.age && weight == person.weight;
-            }
-
-            return false;
-        }
-
-        @Override
-        public int hashCode() {
-            return name.hashCode() + age + (int)(weight);
-        }
-    }
-
-    public class Time implements Serializable {
-        private String name;
-        private Timestamp time;
-
-        public String getName() {
-            return name;
-        }
-
-        public void setName(String name) {
-            this.name = name;
-        }
-
-        public Timestamp getTime() {
-            return time;
-        }
-
-        public void setTime(Timestamp time) {
-            this.time = time;
-        }
-
-        @Override
-        public boolean equals(Object obj) {
-            if (obj instanceof Time) {
-                Time objTime = (Time) obj;
-                return objTime.getName().equals(this.name) && objTime.getTime().equals(this.time);
-            }
-
-            return false;
-        }
-
-        @Override
-        public int hashCode() {
-            return name.hashCode() + time.hashCode();
-        }
     }
 }
