@@ -25,8 +25,8 @@ public class JavaTestTime implements Serializable {
 
   @Override
   public boolean equals(Object obj) {
-    if (obj instanceof Time) {
-      Time objTime = (Time) obj;
+    if (obj instanceof JavaTestTime) {
+      JavaTestTime objTime = (JavaTestTime) obj;
       return objTime.getName().equals(this.name) && objTime.getTime().equals(this.time);
     }
 

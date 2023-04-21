@@ -33,9 +33,11 @@ public class JavaTestPerson implements Serializable {
 
     @Override
     public boolean equals(Object obj) {
-        if (obj instanceof Person) {
-            Person person = (Person) obj;
-            return name.equals(person.name) && age == person.age && weight == person.weight;
+        if (obj instanceof JavaTestPerson) {
+            JavaTestPerson person = (JavaTestPerson) obj;
+            return (name.equals(person.getName())
+                    && age == person.getAge()
+                    && weight == person.getWeight());
         }
 
         return false;
