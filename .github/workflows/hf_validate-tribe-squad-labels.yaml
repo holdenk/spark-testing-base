@@ -1,0 +1,32 @@
+# This workflow is centrally managed in
+# https://github.com/hellofresh/github-automation/blob/master/modules/repository/required-workflows/validate-tribe-squad-labels.yaml
+---
+name: "PR: Validate Tribe and Squad Labels" 
+
+on:
+  pull_request:
+    types:
+      # Default triggers https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows#pull_request
+      - opened
+      - reopened
+      - synchronize
+      # label changes should trigger the validation, too
+      - labeled
+      - unlabeled
+
+    branches:
+      - master
+
+jobs:
+  validate:
+    name: Validate
+    runs-on: [ self-hosted, default ]
+    timeout-minutes: 2
+    permissions:
+      # Allow action to comment within the PR
+      pull-requests: write
+    steps:
+      - name: Validate Labels
+        uses: docker://489198589229.dkr.ecr.eu-west-1.amazonaws.com/action-validate-comply-labels:latest
+        env: 
+          GITHUB_TOKEN: ${{ github.token }}
