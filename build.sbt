@@ -168,7 +168,7 @@ val coreTestSources = unmanagedSourceDirectories in Test  := {
 
 // additional libraries
 lazy val commonDependencies = Seq(
-  "org.scalatest" %% "scalatest" % "3.2.15",
+  "org.scalatest" %% "scalatest" % "3.2.17",
   "org.scalatestplus" %% "scalacheck-1-15" % "3.2.3.0",
   "org.scalatestplus" %% "junit-4-13" % "3.2.15.0",
   "org.scalacheck" %% "scalacheck" % "1.15.2",
