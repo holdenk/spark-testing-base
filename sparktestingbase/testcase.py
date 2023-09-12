@@ -21,8 +21,8 @@ from utils import quiet_py4j
 from utils import quiet_logs
 
 import unittest2
-from pyspark.context import SparkContext
 from pyspark import HiveContext
+from pyspark.sql import SparkSession
 
 import os
 
@@ -39,8 +39,12 @@ class SparkTestingBaseTestCase(unittest2.TestCase):
 
     def setUp(self):
         """Setup a basic Spark context for testing"""
-        self.sc = SparkContext(self.getMaster())
-        self.sql_context = HiveContext(self.sc)
+        self.sc = (SparkSession.builder
+                   .appName(self.getMaster())
+                   .enableHiveSupport()
+                   .getOrCreate()
+        )
+        self.sql_context = HiveContext(self.sc.sparkContext)
         quiet_py4j()
 
     def tearDown(self):
