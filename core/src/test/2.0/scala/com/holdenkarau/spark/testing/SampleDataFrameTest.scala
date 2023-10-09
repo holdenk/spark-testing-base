@@ -21,6 +21,8 @@ import java.sql.Timestamp
 import org.apache.spark.sql.{DataFrame, Row}
 import org.apache.spark.sql.types._
 
+case class Pandas(name: String, zip: String, pandaSize: Integer, age: Integer)
+
 class SampleDataFrameTest extends ScalaDataFrameSuiteBase {
   val byteArray = new Array[Byte](1)
   val diffByteArray = Array[Byte](192.toByte)
@@ -261,6 +263,34 @@ class SampleDataFrameTest extends ScalaDataFrameSuiteBase {
     val rdd = sc.parallelize(List(row))
     val schema = StructType(fields.map(f => StructField(f._1, f._2._1)))
     sqlContext.createDataFrame(rdd, schema)
+  }
+
+  private def createDF(list: List[Row], fields: (String, DataType)*) =
+    sqlContext.createDataFrame(sc.parallelize(list), structType2(fields))
+
+  private def structType2(fields: Seq[(String, DataType)]) =
+    StructType(fields.map(f => StructField(f._1, f._2)).toList)
+
+  test("ignore magic schema fields") {
+    val pandasList = List(Pandas("bata", "10010", 10, 2),
+      Pandas("wiza", "10010", 20, 4),
+      Pandas("dabdob", "11000", 8, 2),
+      Pandas("hanafy", "11000", 15, 7),
+      Pandas("hamdi", "11111", 20, 10))
+
+    val inputDF = sqlContext.createDataFrame(pandasList)
+    val resultDF = inputDF.groupBy(inputDF("zip")).agg(Map("pandaSize" -> "min", "age" -> "max"))
+
+    val expectedRows = List(
+      Row(pandasList(1).zip, pandasList(0).pandaSize, pandasList(1).age),
+      Row(pandasList(3).zip, pandasList(2).pandaSize, pandasList(3).age),
+      Row(pandasList(4).zip, pandasList(4).pandaSize, pandasList(4).age))
+
+    val expectedDF = createDF(expectedRows, ("zip", StringType),
+                                            ("min(pandaSize)", IntegerType),
+                                            ("max(age)", IntegerType))
+
+    assertDataFrameEquals(expectedDF.orderBy("zip"), resultDF.orderBy("zip"))
   }
 }
 
