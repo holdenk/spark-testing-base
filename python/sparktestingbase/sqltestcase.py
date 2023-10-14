@@ -62,11 +62,11 @@ class SQLTestCase(SparkTestingBaseReuse):
         """Assert that two DataFrames contain the same data.
         When comparing inexact fields uses tol.
         """
-        self.assertEqual(expected.schema, result.schema)
+        assert expected.schema == result.schema
         try:
             expectedRDD = expected.rdd.cache()
             resultRDD = result.rdd.cache()
-            self.assertEqual(expectedRDD.count(), resultRDD.count())
+            assert expectedRDD.count() == resultRDD.count()
 
             def zipWithIndex(rdd):
                 """Zip with index (idx, data)"""
@@ -94,7 +94,7 @@ class SQLTestCase(SparkTestingBaseReuse):
             unequalRDD = joinedRDD.filter(
                 lambda x: not equal(x[1][0], x[1][1]))
             differentRows = unequalRDD.take(10)
-            self.assertEqual([], differentRows)
+            assert [] == differentRows
         finally:
             expectedRDD.unpersist()
             resultRDD.unpersist()
