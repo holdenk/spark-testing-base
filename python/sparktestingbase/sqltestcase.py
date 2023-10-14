@@ -48,15 +48,12 @@ class SQLTestCase(SparkTestingBaseReuse):
 
     def getConf(self):
         """Override this to specify any custom configuration."""
-        return {}
+        return {"spark.not.real": "42"}
 
     def setUp(self):
-        try:
-            from pyspark.sql import Session
-            self.session = Session.Builder.config(self.getConf())
-            self.sqlCtx = self.session._wrapped
-        except Exception:
-            self.sqlCtx = SQLContext(self.sc)
+        from pyspark.sql.session import SparkSession
+        self.session = SparkSession.builder.config(map=self.getConf()).getOrCreate()
+        self.sqlCtx = SQLContext(self.sc, sparkSession=self.session)
 
     def assertDataFrameEqual(self, expected, result, tol=0):
         """Assert that two DataFrames contain the same data.
