@@ -20,12 +20,12 @@ from __future__ import absolute_import, print_function
 
 from .utils import add_pyspark_path, quiet_py4j
 
-import unittest2
+import unittest
 from pyspark.context import SparkContext
 import os
 
 
-class SparkTestingBaseTestCase(unittest2.TestCase):
+class SparkTestingBaseTestCase(unittest.TestCase):
 
     """Basic common test case for Spark. Provides a Spark context as sc.
     For non local mode testing you can either override sparkMaster
@@ -75,7 +75,7 @@ class SparkTestingBaseTestCase(unittest2.TestCase):
                             .filter(lambda x: x[0] != x[1]).take(1)
 
 
-class SparkTestingBaseReuse(unittest2.TestCase):
+class SparkTestingBaseReuse(unittest.TestCase):
     """Basic common test case for Spark. Provides a Spark context as sc.
     For non local mode testing you can either override sparkMaster
     or set the enviroment property SPARK_MASTER for non-local mode testing."""
@@ -105,4 +105,4 @@ class SparkTestingBaseReuse(unittest2.TestCase):
 
 
 if __name__ == "__main__":
-    unittest2.main()
+    unittest.main()

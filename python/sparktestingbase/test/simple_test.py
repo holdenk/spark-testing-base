@@ -18,7 +18,6 @@
 """Simple test example"""
 
 from sparktestingbase.testcase import SparkTestingBaseTestCase
-import unittest2
 
 
 class SimpleTest(SparkTestingBaseTestCase):
@@ -79,4 +78,4 @@ class SimpleTest(SparkTestingBaseTestCase):
 
 
 if __name__ == "__main__":
-    unittest2.main()
+    unittest.main()

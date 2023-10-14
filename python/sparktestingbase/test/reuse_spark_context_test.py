@@ -18,7 +18,7 @@
 """Simple test example"""
 
 from sparktestingbase.testcase import SparkTestingBaseReuse
-import unittest2
+import unittest
 
 
 class ReuseSparkContextTest(SparkTestingBaseReuse):
@@ -34,4 +34,4 @@ class ReuseSparkContextTest(SparkTestingBaseReuse):
 
 
 if __name__ == "__main__":
-    unittest2.main()
+    unittest.main()
