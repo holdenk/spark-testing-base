@@ -255,11 +255,16 @@ trait DataFrameSuiteBaseLike extends SparkContextProvider
     * Compares if two [[DataFrame]]s are equal, checks that the schemas are the same.
     * When comparing inexact fields uses tol.
     *
-    * @param tol max acceptable tolerance, should be less than 1.
+    * @param tol          max acceptable decimal tolerance, should be less than 1.
+    * @param tolTimestamp max acceptable timestamp tolerance.
+    * @param customShow   unit function to customize the '''show''' method
+    *                     when dataframes are not equal. IE: '''df.show(false)''' or
+    *                     '''df.toJSON.show(false)'''.
     */
   def assertDataFrameApproximateEquals(
     expected: DataFrame, result: DataFrame,
-    tol: Double, tolTimestamp: Duration = Duration.ZERO) {
+    tol: Double, tolTimestamp: Duration = Duration.ZERO,
+    customShow: DataFrame => Unit = _.show()) {
     import scala.collection.JavaConverters._
 
     assertSchemasEqual(expected.schema, result.schema)
@@ -286,12 +291,15 @@ trait DataFrameSuiteBaseLike extends SparkContextProvider
           StructField("source_dataframe", StringType) ::
             expected.schema.fields.toList)
 
-        spark.createDataFrame(
+        val df = spark.createDataFrame(
           unEqualRows
             .flatMap(un =>
                        Seq(tagRow(un._2._1, "expected", unequalSchema),
                            tagRow(un._2._2, "result", unequalSchema)))
-            .toList.asJava, unequalSchema).show()
+            .toList.asJava, unequalSchema
+        )
+
+        customShow(df)
         fail("There are some unequal rows")
       }
     } finally {

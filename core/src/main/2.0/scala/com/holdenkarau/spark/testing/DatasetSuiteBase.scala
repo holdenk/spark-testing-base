@@ -7,7 +7,7 @@ import scala.reflect.ClassTag
 
 import java.time.Duration
 
-import org.apache.spark.sql.Dataset
+import org.apache.spark.sql.{DataFrame, Dataset}
 
 trait DatasetSuiteBase extends DataFrameSuiteBase
     with DatasetSuiteBaseLike { self: Suite =>
@@ -45,9 +45,13 @@ trait DatasetSuiteBaseLike extends DataFrameSuiteBaseLike {
     *
     * @param tol          max acceptable decimal tolerance, should be less than 1.
     * @param tolTimestamp max acceptable timestamp tolerance.
+    * @param customShow   unit function to customize the '''show''' method
+    *                     when dataframes are not equal. IE: '''df.show(false)''' or
+    *                     '''df.toJSON.show(false)'''.
     */
   def assertDatasetApproximateEquals[U]
-    (expected: Dataset[U], result: Dataset[U], tol: Double, tolTimestamp: Duration)
+    (expected: Dataset[U], result: Dataset[U], tol: Double, tolTimestamp: Duration,
+     customShow: DataFrame => Unit = _.show())
     (implicit UCT: ClassTag[U]): Unit = {
 
     assertDataFrameApproximateEquals(expected.toDF, result.toDF, tol, tolTimestamp)
