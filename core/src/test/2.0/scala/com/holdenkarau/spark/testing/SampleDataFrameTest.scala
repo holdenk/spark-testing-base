@@ -125,6 +125,10 @@ class SampleDataFrameTest extends ScalaDataFrameSuiteBase {
     val row12a = Row(new java.math.BigDecimal(1.0 + 1.0E-6))
     val row13 = Row(scala.math.BigDecimal(1.0))
     val row13a = Row(scala.math.BigDecimal(1.0 + 1.0E-6))
+    val row14 =
+      Row("abc", 1.1, Row("any", Row(Timestamp.valueOf("2018-01-12 20:23:13"))))
+    val row14a =
+      Row("abc", 1.2, Row("any", Row(Timestamp.valueOf("2018-01-12 20:23:15"))))
     assert(false === approxEquals(row, row2, 1E-7, Duration.ZERO))
     assert(true === approxEquals(row, row2, 1E-5, Duration.ZERO))
     assert(true === approxEquals(row3, row3, 1E-5, Duration.ZERO))
@@ -142,6 +146,7 @@ class SampleDataFrameTest extends ScalaDataFrameSuiteBase {
     assert(true === approxEquals(row11, row11a, 0.1, Duration.ofSeconds(5)))
     assert(true === approxEquals(row12, row12a, 1.0E-6, Duration.ZERO))
     assert(true === approxEquals(row13, row13a, 1.0E-6, Duration.ZERO))
+    assert(true === approxEquals(row14, row14a, 0.1, Duration.ofSeconds(5)))
   }
 
   test("verify hive function support") {

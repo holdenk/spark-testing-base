@@ -450,6 +450,9 @@ object DataFrameSuiteBase {
                 return false
               }
 
+            case r1: Row =>
+              return approxEquals(r1, o2.asInstanceOf[Row], tol, tolTimestamp)
+
             case _ =>
               if (o1 != o2) return false
           }
