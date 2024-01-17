@@ -1,6 +1,7 @@
 package com.holdenkarau.spark.testing
 
 import java.sql.Timestamp
+import java.time.Duration
 
 import org.scalatest.funsuite.AnyFunSuite
 
@@ -103,7 +104,7 @@ class SampleDatasetTest extends AnyFunSuite with DatasetSuiteBase {
 
     val emptyDS = sc.parallelize(List[Person]()).toDS
 
-    assertDatasetApproximateEquals(emptyDS, emptyDS, 0.1)
+    assertDatasetApproximateEquals(emptyDS, emptyDS, 0.1, Duration.ZERO)
   }
 
   test("approximate equal same dataset") {
@@ -112,7 +113,7 @@ class SampleDatasetTest extends AnyFunSuite with DatasetSuiteBase {
     val list = List(Person("Holden", 2000, 60.0), Person("Hanafy", 23, 80.0))
     val persons = sc.parallelize(list).toDS
 
-    assertDatasetApproximateEquals(persons, persons, 0.0)
+    assertDatasetApproximateEquals(persons, persons, 0.0, Duration.ZERO)
   }
 
   test("approximate equal with acceptable tolerance") {
@@ -124,7 +125,7 @@ class SampleDatasetTest extends AnyFunSuite with DatasetSuiteBase {
     val persons1 = sc.parallelize(list1).toDS
     val persons2 = sc.parallelize(list2).toDS
 
-    assertDatasetApproximateEquals(persons1, persons2, 0.21)
+    assertDatasetApproximateEquals(persons1, persons2, 0.21, Duration.ZERO)
   }
 
   test("approximate not equal with low tolerance") {
@@ -137,7 +138,7 @@ class SampleDatasetTest extends AnyFunSuite with DatasetSuiteBase {
     val persons2 = sc.parallelize(list2).toDS
 
     intercept[org.scalatest.exceptions.TestFailedException] {
-      assertDatasetApproximateEquals(persons1, persons2, 0.2)
+      assertDatasetApproximateEquals(persons1, persons2, 0.2, Duration.ZERO)
     }
   }
 
@@ -152,7 +153,7 @@ class SampleDatasetTest extends AnyFunSuite with DatasetSuiteBase {
     val time1 = sc.parallelize(list1).toDS
     val time2 = sc.parallelize(list2).toDS
 
-    assertDatasetApproximateEquals(time1, time2, 0)
+    assertDatasetApproximateEquals(time1, time2, 0, Duration.ZERO)
   }
 
   test("approximate time not equal acceptable tolerance") {
@@ -166,7 +167,7 @@ class SampleDatasetTest extends AnyFunSuite with DatasetSuiteBase {
     val time1 = sc.parallelize(list1).toDS
     val time2 = sc.parallelize(list2).toDS
 
-    assertDatasetApproximateEquals(time1, time2, 17000)
+    assertDatasetApproximateEquals(time1, time2, 0, Duration.ofSeconds(17))
   }
 
   test("approximate time not equal low tolerance") {
@@ -181,7 +182,7 @@ class SampleDatasetTest extends AnyFunSuite with DatasetSuiteBase {
     val time2 = sc.parallelize(list2).toDS
 
     intercept[org.scalatest.exceptions.TestFailedException] {
-      assertDatasetApproximateEquals(time1, time2, 2000)
+      assertDatasetApproximateEquals(time1, time2, 0, Duration.ofSeconds(2))
     }
   }
 

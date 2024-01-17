@@ -17,6 +17,7 @@
 package com.holdenkarau.spark.testing
 
 import java.sql.Timestamp
+import java.time.Duration
 
 import org.apache.spark.sql.{DataFrame, Row}
 import org.apache.spark.sql.types._
@@ -118,20 +119,23 @@ class SampleDataFrameTest extends ScalaDataFrameSuiteBase {
     val row8 = Row(Timestamp.valueOf("2018-01-12 20:22:13"))
     val row9 = Row(Timestamp.valueOf("2018-01-12 20:22:18"))
     val row10 = Row(Timestamp.valueOf("2018-01-12 20:23:13"))
-    assert(false === approxEquals(row, row2, 1E-7))
-    assert(true === approxEquals(row, row2, 1E-5))
-    assert(true === approxEquals(row3, row3, 1E-5))
-    assert(false === approxEquals(row, row3, 1E-5))
-    assert(false === approxEquals(row4, row5, 1E-5))
-    assert(true === approxEquals(row5, row5, 1E-5))
-    assert(false === approxEquals(row4, row6, 1E-5))
-    assert(false === approxEquals(row6, row4, 1E-5))
-    assert(false === approxEquals(row6, row7, 1E-5))
-    assert(false === approxEquals(row6, row6a, 1E-5))
-    assert(true === approxEquals(row8, row9, 5000))
-    assert(false === approxEquals(row9, row8, 3000))
-    assert(true === approxEquals(row9, row10, 60000))
-    assert(false === approxEquals(row9, row10, 53000))
+    val row11 = Row("abc", 1.1, Timestamp.valueOf("2018-01-12 20:23:13"))
+    val row11a = Row("abc", 1.2, Timestamp.valueOf("2018-01-12 20:23:15"))
+    assert(false === approxEquals(row, row2, 1E-7, Duration.ZERO))
+    assert(true === approxEquals(row, row2, 1E-5, Duration.ZERO))
+    assert(true === approxEquals(row3, row3, 1E-5, Duration.ZERO))
+    assert(false === approxEquals(row, row3, 1E-5, Duration.ZERO))
+    assert(false === approxEquals(row4, row5, 1E-5, Duration.ZERO))
+    assert(true === approxEquals(row5, row5, 1E-5, Duration.ZERO))
+    assert(false === approxEquals(row4, row6, 1E-5, Duration.ZERO))
+    assert(false === approxEquals(row6, row4, 1E-5, Duration.ZERO))
+    assert(false === approxEquals(row6, row7, 1E-5, Duration.ZERO))
+    assert(false === approxEquals(row6, row6a, 1E-5, Duration.ZERO))
+    assert(true === approxEquals(row8, row9, 0, Duration.ofSeconds(5)))
+    assert(false === approxEquals(row9, row8, 0, Duration.ofSeconds(3)))
+    assert(true === approxEquals(row9, row10, 0, Duration.ofSeconds(60)))
+    assert(false === approxEquals(row9, row10, 0, Duration.ofSeconds(53)))
+    assert(true === approxEquals(row11, row11a, 0.1, Duration.ofSeconds(5)))
   }
 
   test("verify hive function support") {

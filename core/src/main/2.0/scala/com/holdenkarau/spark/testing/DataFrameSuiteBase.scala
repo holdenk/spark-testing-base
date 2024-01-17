@@ -19,6 +19,7 @@ package com.holdenkarau.spark.testing
 
 import java.io.File
 import java.sql.Timestamp
+import java.time.Duration
 
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql._
@@ -257,7 +258,8 @@ trait DataFrameSuiteBaseLike extends SparkContextProvider
     * @param tol max acceptable tolerance, should be less than 1.
     */
   def assertDataFrameApproximateEquals(
-    expected: DataFrame, result: DataFrame, tol: Double) {
+    expected: DataFrame, result: DataFrame,
+    tol: Double, tolTimestamp: Duration = Duration.ZERO) {
     import scala.collection.JavaConverters._
 
     assertSchemasEqual(expected.schema, result.schema)
@@ -271,8 +273,12 @@ trait DataFrameSuiteBaseLike extends SparkContextProvider
       val resultIndexValue = zipWithIndex(result.rdd)
 
       val unequalRDD = expectedIndexValue.join(resultIndexValue).
-        filter{case (idx, (r1, r2)) =>
-          !(r1.equals(r2) || DataFrameSuiteBase.approxEquals(r1, r2, tol))}
+        filter { case (_, (r1, r2)) =>
+          val approxEquals = DataFrameSuiteBase
+            .approxEquals(r1, r2, tol, tolTimestamp)
+
+          !(r1.equals(r2) || approxEquals)
+        }
 
       val unEqualRows = unequalRDD.take(maxUnequalRowsToShow)
       if (unEqualRows.nonEmpty) {
@@ -376,15 +382,17 @@ trait DataFrameSuiteBaseLike extends SparkContextProvider
     rdd.zipWithIndex().map{ case (row, idx) => (idx, row) }
   }
 
-  def approxEquals(r1: Row, r2: Row, tol: Double): Boolean = {
-    DataFrameSuiteBase.approxEquals(r1, r2, tol)
+  def approxEquals(r1: Row, r2: Row, tol: Double,
+                   tolTimestamp: Duration): Boolean = {
+    DataFrameSuiteBase.approxEquals(r1, r2, tol, tolTimestamp)
   }
 }
 
 object DataFrameSuiteBase {
 
   /** Approximate equality, based on equals from [[Row]] */
-  def approxEquals(r1: Row, r2: Row, tol: Double): Boolean = {
+  def approxEquals(r1: Row, r2: Row, tol: Double,
+                   tolTimestamp: Duration): Boolean = {
     if (r1.length != r2.length) {
       return false
     } else {
@@ -428,7 +436,9 @@ object DataFrameSuiteBase {
               }
 
             case t1: Timestamp =>
-              if (abs(t1.getTime - o2.asInstanceOf[Timestamp].getTime) > tol) {
+              val t1Instant = t1.toInstant
+              val t2Instant = o2.asInstanceOf[Timestamp].toInstant
+              if (Duration.between(t1Instant, t2Instant).abs.compareTo(tolTimestamp) > 0) {
                 return false
               }
 
