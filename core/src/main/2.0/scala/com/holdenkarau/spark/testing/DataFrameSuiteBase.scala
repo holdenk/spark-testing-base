@@ -390,6 +390,14 @@ trait DataFrameSuiteBaseLike extends SparkContextProvider
     rdd.zipWithIndex().map{ case (row, idx) => (idx, row) }
   }
 
+  def approxEquals(r1: Row, r2: Row, tol: Double): Boolean = {
+    DataFrameSuiteBase.approxEquals(r1, r2, tol, Duration.ofNanos((tol*1000).toLong))
+  }
+
+  def approxEquals(r1: Row, r2: Row, tolTimestamp: Duration): Boolean = {
+    DataFrameSuiteBase.approxEquals(r1, r2, tolTimestamp)
+  }
+
   def approxEquals(r1: Row, r2: Row, tol: Double,
                    tolTimestamp: Duration): Boolean = {
     DataFrameSuiteBase.approxEquals(r1, r2, tol, tolTimestamp)
@@ -397,6 +405,14 @@ trait DataFrameSuiteBaseLike extends SparkContextProvider
 }
 
 object DataFrameSuiteBase {
+
+  /** Approximate equality, based on equals from [[Row]] */
+  def approxEquals(r1: Row, r2: Row, tol: Double): Boolean =
+    approxEquals(r1, r2, tol, Duration.ofNanos((tol*1000).toLong))
+
+  /** Approximate equality, based on equals from [[Row]] */
+  def approxEquals(r1: Row, r2: Row, tolTimestamp: Duration): Boolean =
+    approxEquals(r1, r2, 0, tolTimestamp)
 
   /** Approximate equality, based on equals from [[Row]] */
   def approxEquals(r1: Row, r2: Row, tol: Double,

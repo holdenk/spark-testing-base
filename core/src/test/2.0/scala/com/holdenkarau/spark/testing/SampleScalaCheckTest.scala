@@ -16,8 +16,6 @@
  */
 package com.holdenkarau.spark.testing
 
-import java.time.Duration
-
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.{DataFrame, Row, SQLContext}
 import org.apache.spark.sql.types._
@@ -389,7 +387,7 @@ class SampleScalaCheckTest extends AnyFunSuite
           val zipped = firstEvaluation.zip(secondEvaluation)
           zipped.forall {
             case (r1, r2) =>
-              DataFrameSuiteBase.approxEquals(r1, r2, 0.0, Duration.ZERO)
+              DataFrameSuiteBase.approxEquals(r1, r2, 0.0)
           }
         }
       }

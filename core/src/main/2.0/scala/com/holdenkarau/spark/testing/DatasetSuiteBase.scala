@@ -50,7 +50,8 @@ trait DatasetSuiteBaseLike extends DataFrameSuiteBaseLike {
     *                     '''df.toJSON.show(false)'''.
     */
   def assertDatasetApproximateEquals[U]
-    (expected: Dataset[U], result: Dataset[U], tol: Double, tolTimestamp: Duration,
+    (expected: Dataset[U], result: Dataset[U], tol: Double,
+     tolTimestamp: Duration = Duration.ZERO,
      customShow: DataFrame => Unit = _.show())
     (implicit UCT: ClassTag[U]): Unit = {
 
