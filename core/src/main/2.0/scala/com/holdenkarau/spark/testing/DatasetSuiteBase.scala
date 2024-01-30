@@ -43,7 +43,30 @@ trait DatasetSuiteBaseLike extends DataFrameSuiteBaseLike {
     * Compares if two Datasets are equal, Datasets should have the same type.
     * When comparing inexact fields uses tol.
     *
-    * @param tol          max acceptable decimal tolerance, should be less than 1.
+    * @param tol        max acceptable tolerance for numeric (between(0, 1)) &
+    *                   timestamp (millis).
+    * @param customShow unit function to customize the '''show''' method
+    *                   when dataframes are not equal. IE: '''df.show(false)''' or
+    *                   '''df.toJSON.show(false)'''.
+    */
+  @deprecated(
+    "Use `assertDatasetApproximateEquals` with timestamp tolerance",
+    since = "1.5.0"
+  )
+  def assertDatasetApproximateEquals[U]
+    (expected: Dataset[U], result: Dataset[U], tol: Double,
+     customShow: DataFrame => Unit = _.show())
+    (implicit UCT: ClassTag[U]): Unit = {
+
+    assertDataFrameApproximateEquals(expected.toDF, result.toDF, tol,
+      Duration.ofNanos((tol * 1000).toLong), customShow)
+  }
+
+  /**
+    * Compares if two Datasets are equal, Datasets should have the same type.
+    * When comparing inexact fields uses tol & tolTimestamp.
+    *
+    * @param tol          max acceptable tolerance for numeric (between(0, 1))
     * @param tolTimestamp max acceptable timestamp tolerance.
     * @param customShow   unit function to customize the '''show''' method
     *                     when dataframes are not equal. IE: '''df.show(false)''' or
@@ -51,11 +74,12 @@ trait DatasetSuiteBaseLike extends DataFrameSuiteBaseLike {
     */
   def assertDatasetApproximateEquals[U]
     (expected: Dataset[U], result: Dataset[U], tol: Double,
-     tolTimestamp: Duration = Duration.ZERO,
+     tolTimestamp: Duration,
      customShow: DataFrame => Unit = _.show())
     (implicit UCT: ClassTag[U]): Unit = {
 
-    assertDataFrameApproximateEquals(expected.toDF, result.toDF, tol, tolTimestamp)
+    assertDataFrameApproximateEquals(expected.toDF, result.toDF, tol,
+      tolTimestamp, customShow)
   }
 
 }

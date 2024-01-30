@@ -246,16 +246,42 @@ trait DataFrameSuiteBaseLike extends SparkContextProvider
   /**
    * Compares if two [[DataFrame]]s are equal, checks the schema and then if that
    * matches checks if the rows are equal.
+    *
+    * @param customShow unit function to customize the '''show''' method
+    *                   when dataframes are not equal. IE: '''df.show(false)''' or
+    *                   '''df.toJSON.show(false)'''.
    */
-  def assertDataFrameEquals(expected: DataFrame, result: DataFrame): Unit = {
-    assertDataFrameApproximateEquals(expected, result, 0.0)
+  def assertDataFrameEquals(expected: DataFrame, result: DataFrame,
+                            customShow: DataFrame => Unit = _.show()): Unit = {
+    assertDataFrameApproximateEquals(expected, result, 0.0,
+      Duration.ZERO, customShow)
   }
 
   /**
     * Compares if two [[DataFrame]]s are equal, checks that the schemas are the same.
     * When comparing inexact fields uses tol.
     *
-    * @param tol          max acceptable decimal tolerance, should be less than 1.
+    * @param tol          max acceptable tolerance for numeric (between(0, 1)) &
+    *                     timestamp (millis).
+    * @param customShow   unit function to customize the '''show''' method
+    *                     when dataframes are not equal. IE: '''df.show(false)''' or
+    *                     '''df.toJSON.show(false)'''.
+    */
+  @deprecated(
+    "Use `assertDataFrameApproximateEquals` with timestamp tolerance",
+    since = "1.5.0"
+  )
+  def assertDataFrameApproximateEquals(
+    expected: DataFrame, result: DataFrame,
+    tol: Double, customShow: DataFrame => Unit = _.show()): Unit =
+    assertDataFrameApproximateEquals(expected, result, tol,
+      Duration.ofNanos((tol * 1000).toLong), customShow)
+
+  /**
+    * Compares if two [[DataFrame]]s are equal, checks that the schemas are the same.
+    * When comparing inexact fields uses tol & tolTimestamp.
+    *
+    * @param tol          max acceptable numeric tolerance, should be less than 1.
     * @param tolTimestamp max acceptable timestamp tolerance.
     * @param customShow   unit function to customize the '''show''' method
     *                     when dataframes are not equal. IE: '''df.show(false)''' or
@@ -263,8 +289,8 @@ trait DataFrameSuiteBaseLike extends SparkContextProvider
     */
   def assertDataFrameApproximateEquals(
     expected: DataFrame, result: DataFrame,
-    tol: Double, tolTimestamp: Duration = Duration.ZERO,
-    customShow: DataFrame => Unit = _.show()) {
+    tol: Double, tolTimestamp: Duration,
+    customShow: DataFrame => Unit = _.show()): Unit = {
     import scala.collection.JavaConverters._
 
     assertSchemasEqual(expected.schema, result.schema)
