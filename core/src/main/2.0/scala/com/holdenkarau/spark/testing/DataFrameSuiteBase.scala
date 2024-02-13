@@ -19,6 +19,7 @@ package com.holdenkarau.spark.testing
 
 import java.io.File
 import java.sql.Timestamp
+import java.time.Duration
 
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql._
@@ -245,19 +246,51 @@ trait DataFrameSuiteBaseLike extends SparkContextProvider
   /**
    * Compares if two [[DataFrame]]s are equal, checks the schema and then if that
    * matches checks if the rows are equal.
+    *
+    * @param customShow unit function to customize the '''show''' method
+    *                   when dataframes are not equal. IE: '''df.show(false)''' or
+    *                   '''df.toJSON.show(false)'''.
    */
-  def assertDataFrameEquals(expected: DataFrame, result: DataFrame): Unit = {
-    assertDataFrameApproximateEquals(expected, result, 0.0)
+  def assertDataFrameEquals(expected: DataFrame, result: DataFrame,
+                            customShow: DataFrame => Unit = _.show()): Unit = {
+    assertDataFrameApproximateEquals(expected, result, 0.0,
+      Duration.ZERO, customShow)
   }
 
   /**
     * Compares if two [[DataFrame]]s are equal, checks that the schemas are the same.
     * When comparing inexact fields uses tol.
     *
-    * @param tol max acceptable tolerance, should be less than 1.
+    * @param tol          max acceptable tolerance for numeric (between(0, 1)) &
+    *                     timestamp (millis).
+    * @param customShow   unit function to customize the '''show''' method
+    *                     when dataframes are not equal. IE: '''df.show(false)''' or
+    *                     '''df.toJSON.show(false)'''.
+    */
+  @deprecated(
+    "Use `assertDataFrameApproximateEquals` with timestamp tolerance",
+    since = "1.5.0"
+  )
+  def assertDataFrameApproximateEquals(
+    expected: DataFrame, result: DataFrame,
+    tol: Double, customShow: DataFrame => Unit = _.show()): Unit =
+    assertDataFrameApproximateEquals(expected, result, tol,
+      Duration.ofNanos((tol * 1000).toLong), customShow)
+
+  /**
+    * Compares if two [[DataFrame]]s are equal, checks that the schemas are the same.
+    * When comparing inexact fields uses tol & tolTimestamp.
+    *
+    * @param tol          max acceptable numeric tolerance, should be less than 1.
+    * @param tolTimestamp max acceptable timestamp tolerance.
+    * @param customShow   unit function to customize the '''show''' method
+    *                     when dataframes are not equal. IE: '''df.show(false)''' or
+    *                     '''df.toJSON.show(false)'''.
     */
   def assertDataFrameApproximateEquals(
-    expected: DataFrame, result: DataFrame, tol: Double) {
+    expected: DataFrame, result: DataFrame,
+    tol: Double, tolTimestamp: Duration,
+    customShow: DataFrame => Unit = _.show()): Unit = {
     import scala.collection.JavaConverters._
 
     assertSchemasEqual(expected.schema, result.schema)
@@ -271,8 +304,12 @@ trait DataFrameSuiteBaseLike extends SparkContextProvider
       val resultIndexValue = zipWithIndex(result.rdd)
 
       val unequalRDD = expectedIndexValue.join(resultIndexValue).
-        filter{case (idx, (r1, r2)) =>
-          !(r1.equals(r2) || DataFrameSuiteBase.approxEquals(r1, r2, tol))}
+        filter { case (_, (r1, r2)) =>
+          val approxEquals = DataFrameSuiteBase
+            .approxEquals(r1, r2, tol, tolTimestamp)
+
+          !(r1.equals(r2) || approxEquals)
+        }
 
       val unEqualRows = unequalRDD.take(maxUnequalRowsToShow)
       if (unEqualRows.nonEmpty) {
@@ -280,12 +317,15 @@ trait DataFrameSuiteBaseLike extends SparkContextProvider
           StructField("source_dataframe", StringType) ::
             expected.schema.fields.toList)
 
-        spark.createDataFrame(
+        val df = spark.createDataFrame(
           unEqualRows
             .flatMap(un =>
                        Seq(tagRow(un._2._1, "expected", unequalSchema),
                            tagRow(un._2._2, "result", unequalSchema)))
-            .toList.asJava, unequalSchema).show()
+            .toList.asJava, unequalSchema
+        )
+
+        customShow(df)
         fail("There are some unequal rows")
       }
     } finally {
@@ -377,14 +417,32 @@ trait DataFrameSuiteBaseLike extends SparkContextProvider
   }
 
   def approxEquals(r1: Row, r2: Row, tol: Double): Boolean = {
-    DataFrameSuiteBase.approxEquals(r1, r2, tol)
+    DataFrameSuiteBase.approxEquals(r1, r2, tol, Duration.ofNanos((tol*1000).toLong))
+  }
+
+  def approxEquals(r1: Row, r2: Row, tolTimestamp: Duration): Boolean = {
+    DataFrameSuiteBase.approxEquals(r1, r2, tolTimestamp)
+  }
+
+  def approxEquals(r1: Row, r2: Row, tol: Double,
+                   tolTimestamp: Duration): Boolean = {
+    DataFrameSuiteBase.approxEquals(r1, r2, tol, tolTimestamp)
   }
 }
 
 object DataFrameSuiteBase {
 
   /** Approximate equality, based on equals from [[Row]] */
-  def approxEquals(r1: Row, r2: Row, tol: Double): Boolean = {
+  def approxEquals(r1: Row, r2: Row, tol: Double): Boolean =
+    approxEquals(r1, r2, tol, Duration.ofNanos((tol*1000).toLong))
+
+  /** Approximate equality, based on equals from [[Row]] */
+  def approxEquals(r1: Row, r2: Row, tolTimestamp: Duration): Boolean =
+    approxEquals(r1, r2, 0, tolTimestamp)
+
+  /** Approximate equality, based on equals from [[Row]] */
+  def approxEquals(r1: Row, r2: Row, tol: Double,
+                   tolTimestamp: Duration): Boolean = {
     if (r1.length != r2.length) {
       return false
     } else {
@@ -424,13 +482,26 @@ object DataFrameSuiteBase {
 
             case d1: java.math.BigDecimal =>
               if (d1.compareTo(o2.asInstanceOf[java.math.BigDecimal]) != 0) {
+                if (d1.subtract(o2.asInstanceOf[java.math.BigDecimal]).abs
+                  .compareTo(new java.math.BigDecimal(tol)) > 0) {
+                  return false
+                }
+              }
+
+            case d1: scala.math.BigDecimal =>
+              if ((d1 - o2.asInstanceOf[scala.math.BigDecimal]).abs > tol) {
                 return false
               }
 
             case t1: Timestamp =>
-              if (abs(t1.getTime - o2.asInstanceOf[Timestamp].getTime) > tol) {
+              val t1Instant = t1.toInstant
+              val t2Instant = o2.asInstanceOf[Timestamp].toInstant
+              if (Duration.between(t1Instant, t2Instant).abs.compareTo(tolTimestamp) > 0) {
                 return false
               }
+
+            case r1: Row =>
+              return approxEquals(r1, o2.asInstanceOf[Row], tol, tolTimestamp)
 
             case _ =>
               if (o1 != o2) return false

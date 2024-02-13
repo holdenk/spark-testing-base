@@ -1,6 +1,7 @@
 package com.holdenkarau.spark.testing
 
 import java.sql.Timestamp
+import java.time.Duration
 
 import org.scalatest.funsuite.AnyFunSuite
 
@@ -167,6 +168,7 @@ class SampleDatasetTest extends AnyFunSuite with DatasetSuiteBase {
     val time2 = sc.parallelize(list2).toDS
 
     assertDatasetApproximateEquals(time1, time2, 17000)
+    assertDatasetApproximateEquals(time1, time2, 0, Duration.ofSeconds(17))
   }
 
   test("approximate time not equal low tolerance") {
@@ -182,6 +184,10 @@ class SampleDatasetTest extends AnyFunSuite with DatasetSuiteBase {
 
     intercept[org.scalatest.exceptions.TestFailedException] {
       assertDatasetApproximateEquals(time1, time2, 2000)
+    }
+
+    intercept[org.scalatest.exceptions.TestFailedException] {
+      assertDatasetApproximateEquals(time1, time2, 0, Duration.ofSeconds(2))
     }
   }
 

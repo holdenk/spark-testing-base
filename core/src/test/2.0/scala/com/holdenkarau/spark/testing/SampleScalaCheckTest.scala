@@ -23,6 +23,7 @@ import org.scalacheck.{Arbitrary, Gen}
 import org.scalacheck.Prop.forAll
 import org.scalatest.funsuite.AnyFunSuite
 import org.scalatestplus.scalacheck.Checkers
+
 import org.apache.spark.sql.SparkSession
 
 class SampleScalaCheckTest extends AnyFunSuite
@@ -385,7 +386,9 @@ class SampleScalaCheckTest extends AnyFunSuite
           val secondEvaluation = dataframe.collect()
           val zipped = firstEvaluation.zip(secondEvaluation)
           zipped.forall {
-            case (r1, r2) => DataFrameSuiteBase.approxEquals(r1, r2, 0.0) }
+            case (r1, r2) =>
+              DataFrameSuiteBase.approxEquals(r1, r2, 0.0)
+          }
         }
       }
 
