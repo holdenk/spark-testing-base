@@ -261,21 +261,17 @@ trait DataFrameSuiteBaseLike extends SparkContextProvider
     * Compares if two [[DataFrame]]s are equal, checks that the schemas are the same.
     * When comparing inexact fields uses tol.
     *
-    * @param tol          max acceptable tolerance for numeric (between(0, 1)) &
-    *                     timestamp (millis).
-    * @param customShow   unit function to customize the '''show''' method
-    *                     when dataframes are not equal. IE: '''df.show(false)''' or
-    *                     '''df.toJSON.show(false)'''.
+    * @param tol max acceptable tolerance for numeric (between(0, 1)) &
+    *            timestamp (millis).
     */
   @deprecated(
     "Use `assertDataFrameApproximateEquals` with timestamp tolerance",
     since = "1.5.0"
   )
-  def assertDataFrameApproximateEquals(
-    expected: DataFrame, result: DataFrame,
-    tol: Double, customShow: DataFrame => Unit = _.show()): Unit =
+  def assertDataFrameApproximateEquals(expected: DataFrame, result: DataFrame,
+                                       tol: Double): Unit =
     assertDataFrameApproximateEquals(expected, result, tol,
-      Duration.ofNanos((tol * 1000).toLong), customShow)
+      Duration.ofMillis(tol.toLong), _.show())
 
   /**
     * Compares if two [[DataFrame]]s are equal, checks that the schemas are the same.
@@ -417,7 +413,7 @@ trait DataFrameSuiteBaseLike extends SparkContextProvider
   }
 
   def approxEquals(r1: Row, r2: Row, tol: Double): Boolean = {
-    DataFrameSuiteBase.approxEquals(r1, r2, tol, Duration.ofNanos((tol*1000).toLong))
+    DataFrameSuiteBase.approxEquals(r1, r2, tol, Duration.ofMillis(tol.toLong))
   }
 
   def approxEquals(r1: Row, r2: Row, tolTimestamp: Duration): Boolean = {

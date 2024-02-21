@@ -45,21 +45,16 @@ trait DatasetSuiteBaseLike extends DataFrameSuiteBaseLike {
     *
     * @param tol        max acceptable tolerance for numeric (between(0, 1)) &
     *                   timestamp (millis).
-    * @param customShow unit function to customize the '''show''' method
-    *                   when dataframes are not equal. IE: '''df.show(false)''' or
-    *                   '''df.toJSON.show(false)'''.
     */
   @deprecated(
     "Use `assertDatasetApproximateEquals` with timestamp tolerance",
     since = "1.5.0"
   )
-  def assertDatasetApproximateEquals[U]
-    (expected: Dataset[U], result: Dataset[U], tol: Double,
-     customShow: DataFrame => Unit = _.show())
+  def assertDatasetApproximateEquals[U](expected: Dataset[U], result: Dataset[U],
+                                        tol: Double)
     (implicit UCT: ClassTag[U]): Unit = {
-
     assertDataFrameApproximateEquals(expected.toDF, result.toDF, tol,
-      Duration.ofNanos((tol * 1000).toLong), customShow)
+      Duration.ofMillis(tol.toLong), _.show())
   }
 
   /**

@@ -29,15 +29,15 @@ jobs:
       SPARK_VERSION: ${{ matrix.spark }}
     steps:
     - name: Checkout spark-testing-base
-      uses: actions/checkout@v2
+      uses: actions/checkout@v4.1.1
       # In order to fetch changed files
-      with:
-        fetch-depth: 0
-        repository: holdenk/spark-testing-base
-        ref: main
+#      with:
+#        fetch-depth: 0
+#        repository: holdenk/spark-testing-base
+#        ref: main
     - name: Cache maven modules
       id: cache-maven
-      uses: actions/cache@v3
+      uses: actions/cache@v4.0.0
       env:
         cache-name: cache-maven
       with:
@@ -51,15 +51,15 @@ jobs:
           ${{ runner.os }}-${{ matrix.spark }}-build-
           ${{ runner.os }}-${{ matrix.spark }}-
           ${{ runner.os }}
-    - name: Sync the current branch with the latest in spark-testing-base
-      if: github.repository != 'holdenk/spark-testing-base'
-      id: sync-branch
-      run: |
-        apache_spark_ref=`git rev-parse HEAD`
-        git fetch https://github.com/$GITHUB_REPOSITORY.git ${GITHUB_REF##*/}
-        git -c user.name='Spark Test Account' -c user.email='sparktestacc@gmail.com' merge --no-commit --progress --squash FETCH_HEAD
-        git -c user.name='Spark Test Account' -c user.email='sparktestacc@gmail.com' commit -m "Merged commit"
-        echo "::set-output name=SPARK_REF::$apache_spark_ref"
+#    - name: Sync the current branch with the latest in spark-testing-base
+#      if: github.repository != 'holdenk/spark-testing-base'
+#      id: sync-branch
+#      run: |
+#        apache_spark_ref=`git rev-parse HEAD`
+#        git fetch https://github.com/$GITHUB_REPOSITORY.git ${GITHUB_REF##*/}
+#        git -c user.name='Spark Test Account' -c user.email='sparktestacc@gmail.com' merge --no-commit --progress --squash FETCH_HEAD
+#        git -c user.name='Spark Test Account' -c user.email='sparktestacc@gmail.com' commit -m "Merged commit"
+#        echo "::set-output name=SPARK_REF::$apache_spark_ref"
     # Cache local repositories. Note that GitHub Actions cache has a 2G limit.
     # Run the tests.
     - name: Run tests
