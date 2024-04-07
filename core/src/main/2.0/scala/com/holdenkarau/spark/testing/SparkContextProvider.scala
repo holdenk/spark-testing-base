@@ -31,7 +31,8 @@ trait SparkContextProvider {
       setAppName("test").
       set("spark.ui.enabled", "false").
       set("spark.app.id", appID).
-      set("spark.driver.host", "localhost")
+      set("spark.driver.host", "localhost").
+      set("spark.eventLog.enabled", sys.env.getOrElse("SPARK_EVENTLOG", "false"))
   }
 
 
