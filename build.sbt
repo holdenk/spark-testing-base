@@ -5,6 +5,21 @@ lazy val root = (project in file("."))
 val sparkVersion = settingKey[String]("Spark version")
 val sparkTestingVersion = settingKey[String]("Spark testing base version without Spark version part")
 
+def specialOptions = {
+  // We only need these extra props for JRE>17
+  if (sys.props("java.specification.version") > "1.17") {
+    Seq(
+      "base/java.lang", "base/java.lang.invoke", "base/java.lang.reflect", "base/java.io", "base/java.net", "base/java.nio",
+      "base/java.util", "base/java.util.concurrent", "base/java.util.concurrent.atomic",
+      "base/sun.nio.ch", "base/sun.nio.cs", "base/sun.security.action",
+      "base/sun.util.calendar", "security.jgss/sun.security.krb5",
+    ).map("--add-opens=java." + _ + "=ALL-UNNAMED")
+  } else {
+    Seq()
+  }
+}
+
+
 ThisBuild / libraryDependencySchemes ++= Seq(
   "org.scala-lang.modules" %% "scala-xml" % VersionScheme.Always
 )
@@ -108,6 +123,8 @@ val commonSettings = Seq(
   javaOptions ++= Seq("-Xms5G", "-Xmx5G"),
 
   coverageHighlighting := true,
+
+  Test / javaOptions ++= specialOptions,
 
   parallelExecution in Test := false,
   fork := true,
