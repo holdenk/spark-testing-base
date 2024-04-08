@@ -25,10 +25,14 @@ trait SparkContextProvider {
   def appID: String = (this.getClass.getName
     + math.floor(math.random * 10E4).toLong.toString)
 
+  def appName: String = {
+    "test"
+  }
+
   def conf: SparkConf = {
     new SparkConf().
       setMaster("local[*]").
-      setAppName("test").
+      setAppName(appName).
       set("spark.ui.enabled", "false").
       set("spark.app.id", appID).
       set("spark.driver.host", "localhost").
