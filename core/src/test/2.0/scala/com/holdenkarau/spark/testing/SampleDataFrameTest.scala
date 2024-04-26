@@ -125,10 +125,58 @@ class SampleDataFrameTest extends ScalaDataFrameSuiteBase {
     val row12a = Row(new java.math.BigDecimal(1.0 + 1.0E-6))
     val row13 = Row(scala.math.BigDecimal(1.0))
     val row13a = Row(scala.math.BigDecimal(1.0 + 1.0E-6))
-    val row14 =
-      Row("abc", 1.1, Row("any", Row(Timestamp.valueOf("2018-01-12 20:23:13"))))
-    val row14a =
-      Row("abc", 1.2, Row("any", Row(Timestamp.valueOf("2018-01-12 20:23:15"))))
+    val row14 = Row(
+      "abc", 1.1,
+      Row("any", Row(Timestamp.valueOf("2018-01-12 20:23:13"))),
+      "abc"
+    )
+    val row14a = Row(
+      "abc", 1.2,
+      Row("any", Row(Timestamp.valueOf("2018-01-12 20:23:15"))),
+      "abc"
+    )
+    val row15 = Row(
+      "some string",
+      Row(true, "28/02/2024", Seq(Timestamp.valueOf("2018-01-12 20:23:13"))),
+      Seq(
+        Row("something", "anything", null, Row("row1"), Row(Seq("Apple"))),
+        Row("", null, Row(Seq("email@xxxx.com"), "name", ""), Row("row2"), null)
+      ),
+      Seq(Row(
+        Seq(1.1),
+        Seq(1.1f),
+        Seq(new java.math.BigDecimal(1.1)),
+        Seq(scala.math.BigDecimal(1.1))
+      ))
+    )
+    val row15a = Row(
+      "some string",
+      Row(true, "28/02/2024", Seq(Timestamp.valueOf("2018-01-12 20:23:15"))),
+      Seq(
+        Row("something", "anything", null, Row("row1"), Row(Seq("Apple"))),
+        Row("", null, Row(Seq("email@xxxx.com"), "name", ""), Row("row2"), null)
+      ),
+      Seq(Row(
+        Seq(1.2),
+        Seq(1.2f),
+        Seq(new java.math.BigDecimal(1.2)),
+        Seq(scala.math.BigDecimal(1.2))
+      ))
+    )
+    val row15b = Row(
+      "some string",
+      Row(true, "28/02/2024", Seq(Timestamp.valueOf("2018-01-12 20:23:13"))),
+      Seq(
+        Row("something", "anything", null, Row("row1"), Row(Seq("Apple"))),
+        Row("", null, Row(Seq("AAAA@xxxx.com"), "name", ""), Row("row2"), null)
+      ),
+      Seq(Row(
+        Seq(1.1),
+        Seq(1.1f),
+        Seq(new java.math.BigDecimal(1.1)),
+        Seq(scala.math.BigDecimal(1.1))
+      ))
+    )
     assert(false === approxEquals(row, row2, 1E-7))
     assert(true === approxEquals(row, row2, 1E-5))
     assert(true === approxEquals(row3, row3, 1E-5))
@@ -147,6 +195,8 @@ class SampleDataFrameTest extends ScalaDataFrameSuiteBase {
     assert(true === approxEquals(row12, row12a, 1.0E-6))
     assert(true === approxEquals(row13, row13a, 1.0E-6))
     assert(true === approxEquals(row14, row14a, 0.1, Duration.ofSeconds(5)))
+    assert(true === approxEquals(row15, row15a, 0.2, Duration.ofSeconds(3)))
+    assert(false === approxEquals(row15, row15b, 0, Duration.ZERO))
   }
 
   test("verify hive function support") {

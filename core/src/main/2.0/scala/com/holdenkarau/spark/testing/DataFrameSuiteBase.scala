@@ -436,6 +436,51 @@ object DataFrameSuiteBase {
   def approxEquals(r1: Row, r2: Row, tolTimestamp: Duration): Boolean =
     approxEquals(r1, r2, 0, tolTimestamp)
 
+  private def compareTimestamp(t1: Timestamp, t2: Timestamp,
+                               tolTimestamp: Duration): Boolean = {
+    !(Duration.between(t1.toInstant, t2.toInstant).abs.compareTo(tolTimestamp) > 0)
+  }
+
+  private def compareDouble(d1: Double, d2: Double, tol: Double): Boolean = {
+    if (java.lang.Double.isNaN(d1) != java.lang.Double.isNaN(d2)) {
+      return false
+    }
+    if (abs(d1 - d2) > tol) {
+      return false
+    }
+    true
+  }
+
+  private def compareFloat(f1: Float, f2: Float, tol: Double): Boolean = {
+    if (java.lang.Float.isNaN(f1) != java.lang.Float.isNaN(f2)) {
+      return false
+    }
+    if (abs(f1 - f2) > tol) {
+      return false
+    }
+    true
+  }
+
+  private def compareJavaBigDecimal(d1: java.math.BigDecimal,
+                                    d2: java.math.BigDecimal,
+                                    tol: Double): Boolean = {
+    if (d1.compareTo(d2) != 0) {
+      if (d1.subtract(d2).abs.compareTo(new java.math.BigDecimal(tol)) > 0) {
+        return false
+      }
+    }
+    true
+  }
+
+  private def compareScalaBigDecimal(d1: scala.math.BigDecimal,
+                                    d2: scala.math.BigDecimal,
+                                    tol: Double): Boolean = {
+    if ((d1 - d2).abs > tol) {
+      return false
+    }
+    true
+  }
+
   /** Approximate equality, based on equals from [[Row]] */
   def approxEquals(r1: Row, r2: Row, tol: Double,
                    tolTimestamp: Duration): Boolean = {
@@ -457,47 +502,76 @@ object DataFrameSuiteBase {
               }
 
             case f1: Float =>
-              if (java.lang.Float.isNaN(f1) !=
-                java.lang.Float.isNaN(o2.asInstanceOf[Float]))
-              {
-                return false
-              }
-              if (abs(f1 - o2.asInstanceOf[Float]) > tol) {
+              if (!compareFloat(f1, o2.asInstanceOf[Float], tol)) {
                 return false
               }
 
             case d1: Double =>
-              if (java.lang.Double.isNaN(d1) !=
-                java.lang.Double.isNaN(o2.asInstanceOf[Double]))
-              {
-                return false
-              }
-              if (abs(d1 - o2.asInstanceOf[Double]) > tol) {
+              if (!compareDouble(d1, o2.asInstanceOf[Double], tol)) {
                 return false
               }
 
             case d1: java.math.BigDecimal =>
-              if (d1.compareTo(o2.asInstanceOf[java.math.BigDecimal]) != 0) {
-                if (d1.subtract(o2.asInstanceOf[java.math.BigDecimal]).abs
-                  .compareTo(new java.math.BigDecimal(tol)) > 0) {
-                  return false
-                }
+              if (!compareJavaBigDecimal(d1, o2.asInstanceOf[java.math.BigDecimal], tol)) {
+                return false
               }
 
             case d1: scala.math.BigDecimal =>
-              if ((d1 - o2.asInstanceOf[scala.math.BigDecimal]).abs > tol) {
+              if (!compareScalaBigDecimal(d1, o2.asInstanceOf[scala.math.BigDecimal], tol)) {
                 return false
               }
 
             case t1: Timestamp =>
-              val t1Instant = t1.toInstant
-              val t2Instant = o2.asInstanceOf[Timestamp].toInstant
-              if (Duration.between(t1Instant, t2Instant).abs.compareTo(tolTimestamp) > 0) {
+              if (!compareTimestamp(t1, o2.asInstanceOf[Timestamp], tolTimestamp)) {
                 return false
               }
 
-            case r1: Row =>
-              return approxEquals(r1, o2.asInstanceOf[Row], tol, tolTimestamp)
+            case row1: Row =>
+              if (!approxEquals(row1, o2.asInstanceOf[Row], tol, tolTimestamp)) {
+                return false
+              }
+
+            case head :: _ if head.isInstanceOf[Row] =>
+              o1.asInstanceOf[Seq[Row]].zip(o2.asInstanceOf[Seq[Row]]).foreach {
+                case (row1, row2) if !approxEquals(row1, row2, tol, tolTimestamp) =>
+                  return false
+                case _ =>
+              }
+
+            case head :: _ if head.isInstanceOf[Timestamp] =>
+              o1.asInstanceOf[Seq[Timestamp]].zip(o2.asInstanceOf[Seq[Timestamp]]).foreach {
+                case (t1, t2) if !compareTimestamp(t1, t2, tolTimestamp) =>
+                  return false
+                case _ =>
+              }
+
+            case head :: _ if head.isInstanceOf[Double] =>
+              o1.asInstanceOf[Seq[Double]].zip(o2.asInstanceOf[Seq[Double]]).foreach {
+                case (d1, d2) if !compareDouble(d1, d2, tol) =>
+                  return false
+                case _ =>
+              }
+
+            case head :: _ if head.isInstanceOf[Float] =>
+              o1.asInstanceOf[Seq[Float]].zip(o2.asInstanceOf[Seq[Float]]).foreach {
+                case (f1, f2) if !compareFloat(f1, f2, tol) =>
+                  return false
+                case _ =>
+              }
+
+            case head :: _ if head.isInstanceOf[java.math.BigDecimal] =>
+              o1.asInstanceOf[Seq[java.math.BigDecimal]].zip(o2.asInstanceOf[Seq[java.math.BigDecimal]]).foreach {
+                case (d1, d2) if !compareJavaBigDecimal(d1, d2, tol) =>
+                  return false
+                case _ =>
+              }
+
+            case head :: _ if head.isInstanceOf[scala.math.BigDecimal] =>
+              o1.asInstanceOf[Seq[scala.math.BigDecimal]].zip(o2.asInstanceOf[Seq[scala.math.BigDecimal]]).foreach {
+                case (d1, d2) if !compareScalaBigDecimal(d1, d2, tol) =>
+                  return false
+                case _ =>
+              }
 
             case _ =>
               if (o1 != o2) return false
