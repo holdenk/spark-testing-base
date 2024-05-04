@@ -41,7 +41,6 @@ lazy val core = (project in file("core"))
       "org.apache.spark" %% "spark-sql"         % sparkVersion.value,
       "org.apache.spark" %% "spark-hive"        % sparkVersion.value,
       "org.apache.spark" %% "spark-catalyst"    % sparkVersion.value,
-      "org.apache.spark" %% "spark-yarn"        % sparkVersion.value,
       "org.apache.spark" %% "spark-mllib"       % sparkVersion.value
     ) ++ commonDependencies ++
       {
@@ -102,13 +101,19 @@ val commonSettings = Seq(
   organization := "com.holdenkarau",
   publishMavenStyle := true,
   sparkVersion := System.getProperty("sparkVersion", "2.4.8"),
-  sparkTestingVersion := "1.5.2",
+  sparkTestingVersion := "1.6.0-SNAPSHOT",
   version := sparkVersion.value + "_" + sparkTestingVersion.value,
   scalaVersion := {
-    "2.12.15"
+    if (sparkVersion.value >= "4.0.0") {
+      "2.13.13"
+    } else {
+      "2.12.15"
+    }
   },
   crossScalaVersions := {
-    if (sparkVersion.value >= "3.2.0") {
+    if (sparkVersion.value >= "3.5.0") {
+      Seq("2.12.15", "2.13.13")
+    } else if (sparkVersion.value >= "3.2.0") {
       Seq("2.12.15", "2.13.10")
     } else if (sparkVersion.value >= "3.0.0") {
       Seq("2.12.15")
@@ -142,7 +147,7 @@ val commonSettings = Seq(
     "Typesafe repository" at "https://repo.typesafe.com/typesafe/releases/",
     "Second Typesafe repo" at "https://repo.typesafe.com/typesafe/maven-releases/",
     "Mesosphere Public Repository" at "https://downloads.mesosphere.io/maven",
-    Resolver.sonatypeRepo("public")
+    Resolver.sonatypeRepo("public"),
   )
 )
 
