@@ -148,6 +148,7 @@ val commonSettings = Seq(
     "Second Typesafe repo" at "https://repo.typesafe.com/typesafe/maven-releases/",
     "Mesosphere Public Repository" at "https://downloads.mesosphere.io/maven",
     Resolver.sonatypeRepo("public"),
+    Resolver.mavenLocal
   )
 )
 
