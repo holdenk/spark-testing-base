@@ -441,15 +441,9 @@ object DataFrameSuiteBase {
     !(Duration.between(t1.toInstant, t2.toInstant).abs.compareTo(tolTimestamp) > 0)
   }
 
-  private def compareDouble(d1: Double, d2: Double, tol: Double): Boolean = {
-    if (java.lang.Double.isNaN(d1) != java.lang.Double.isNaN(d2)) {
-      return false
-    }
-    if (abs(d1 - d2) > tol) {
-      return false
-    }
-    true
-  }
+  private def compareDouble(d1: Double, d2: Double, tol: Double): Boolean =
+    !((java.lang.Double.isNaN(d1) != java.lang.Double.isNaN(d2)) || (abs(d1 - d2) > tol))
+
 
   private def compareFloat(f1: Float, f2: Float, tol: Double): Boolean = {
     if (java.lang.Float.isNaN(f1) != java.lang.Float.isNaN(f2)) {
