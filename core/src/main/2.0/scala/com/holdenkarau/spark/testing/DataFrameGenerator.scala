@@ -48,7 +48,7 @@ object DataFrameGenerator {
    */
   def arbitraryDataFrameWithCustomFields(
     sqlContext: SQLContext, schema: StructType, minPartitions: Int = 1)
-    (userGenerators: ColumnGenerator*): Arbitrary[DataFrame] = {
+    (userGenerators: ColumnGeneratorBase*): Arbitrary[DataFrame] = {
 
     val arbitraryRDDs = RDDGenerator.genRDD(
       sqlContext.sparkContext, minPartitions)(
@@ -80,7 +80,7 @@ object DataFrameGenerator {
    * @return Gen[Row]
    */
   def getRowGenerator(
-    schema: StructType, customGenerators: Seq[ColumnGenerator]): Gen[Row] = {
+    schema: StructType, customGenerators: Seq[ColumnGeneratorBase]): Gen[Row] = {
     val generators: List[Gen[Any]] =
       createGenerators(schema.fields, customGenerators)
     val listGen: Gen[List[Any]] =
@@ -92,14 +92,14 @@ object DataFrameGenerator {
 
   private def createGenerators(
     fields: Array[StructField],
-    userGenerators: Seq[ColumnGenerator]):
+    userGenerators: Seq[ColumnGeneratorBase]):
       List[Gen[Any]] = {
     val generatorMap = userGenerators.map(
       generator => (generator.columnName -> generator)).toMap
     fields.toList.map { field =>
     if (generatorMap.contains(field.name)) {
         generatorMap.get(field.name) match {
-          case Some(gen: Column) => gen.gen
+          case Some(gen: ColumnGenerator) => gen.gen
           case Some(list: ColumnList) => getGenerator(field.dataType, list.gen, nullable = field.nullable)
         }
       }
@@ -109,7 +109,7 @@ object DataFrameGenerator {
 
   private def getGenerator(
     dataType: DataType,
-    generators: Seq[ColumnGenerator] = Seq(),
+    generators: Seq[ColumnGeneratorBase] = Seq(),
     nullable: Boolean = false): Gen[Any] = {
     val nonNullGen = dataType match {
       case ByteType => Arbitrary.arbitrary[Byte]
@@ -177,7 +177,7 @@ class ColumnGenerator(val columnName: String, generator: => Gen[Any])
  * ColumnList allows users to specify custom generators for a list of
  * columns inside a StructType column.
  */
-class ColumnList(val columnName: String, generators: => Seq[ColumnGenerator])
+class ColumnList(val columnName: String, generators: => Seq[ColumnGeneratorBase])
     extends ColumnGeneratorBase {
   lazy val gen = generators
 }

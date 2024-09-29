@@ -15,12 +15,12 @@ class MLScalaCheckTest extends AnyFunSuite with SharedSparkContext with Checkers
   test("vector generation") {
     val schema = StructType(List(StructField("vector", VectorType)))
     val sqlContext = SparkSession.builder.getOrCreate().sqlContext
-    val dataframeGen = DataframeGenerator.arbitraryDataFrame(sqlContext, schema)
+    val dataFrameGen = DataFrameGenerator.arbitraryDataFrame(sqlContext, schema)
 
     val property =
-      forAll(dataframeGen.arbitrary) {
-        dataframe => {
-          dataframe.schema === schema && dataframe.count >= 0
+      forAll(dataFrameGen.arbitrary) {
+        dataFrame => {
+          dataFrame.schema === schema && dataFrame.count >= 0
         }
       }
 
@@ -30,12 +30,12 @@ class MLScalaCheckTest extends AnyFunSuite with SharedSparkContext with Checkers
   test("matrix generation") {
     val schema = StructType(List(StructField("matrix", MatrixType)))
     val sqlContext = SparkSession.builder.getOrCreate().sqlContext
-    val dataframeGen = DataframeGenerator.arbitraryDataFrame(sqlContext, schema)
+    val dataFrameGen = DataFrameGenerator.arbitraryDataFrame(sqlContext, schema)
 
     val property =
-      forAll(dataframeGen.arbitrary) {
-        dataframe => {
-          dataframe.schema === schema && dataframe.count >= 0
+      forAll(dataFrameGen.arbitrary) {
+        dataFrame => {
+          dataFrame.schema === schema && dataFrame.count >= 0
         }
       }
 

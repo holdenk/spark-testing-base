@@ -143,7 +143,7 @@ class SampleScalaCheckTest extends AnyFunSuite
   test("assert rows' types like schema type") {
     val schema = StructType(
       List(StructField("name", StringType, nullable = false), StructField("age", IntegerType, nullable = false)))
-    val rowGen: Gen[Row] = DataframeGenerator.getRowGenerator(schema)
+    val rowGen: Gen[Row] = DataFrameGenerator.getRowGenerator(schema)
     val property =
       forAll(rowGen) {
         row => row.get(0).isInstanceOf[String] && row.get(1).isInstanceOf[Int]
@@ -152,11 +152,11 @@ class SampleScalaCheckTest extends AnyFunSuite
     check(property)
   }
 
-  test("test generating Dataframes") {
+  test("test generating DataFrames") {
     val schema = StructType(
       List(StructField("name", StringType), StructField("age", IntegerType)))
     val sqlContext = SparkSession.builder.getOrCreate().sqlContext
-    val dataframeGen = DataframeGenerator.arbitraryDataFrame(sqlContext, schema)
+    val dataframeGen = DataFrameGenerator.arbitraryDataFrame(sqlContext, schema)
 
     val property =
       forAll(dataframeGen.arbitrary) {
@@ -170,9 +170,9 @@ class SampleScalaCheckTest extends AnyFunSuite
     val schema = StructType(
       List(StructField("name", StringType), StructField("age", IntegerType)))
     val sqlContext = SparkSession.builder.getOrCreate().sqlContext
-    val ageGenerator = new Column("age", Gen.choose(10, 100))
+    val ageGenerator = new ColumnGenerator("age", Gen.choose(10, 100))
     val dataframeGen =
-      DataframeGenerator.arbitraryDataFrameWithCustomFields(
+      DataFrameGenerator.arbitraryDataFrameWithCustomFields(
         sqlContext, schema)(ageGenerator)
 
     val property =
@@ -190,10 +190,10 @@ class SampleScalaCheckTest extends AnyFunSuite
       List(StructField("name", StringType), StructField("age", IntegerType)))
     val sqlContext = SparkSession.builder.getOrCreate().sqlContext
     // name should be on of Holden or Hanafy
-    val nameGenerator = new Column("name", Gen.oneOf("Holden", "Hanafy"))
-    val ageGenerator = new Column("age", Gen.choose(10, 100))
+    val nameGenerator = new ColumnGenerator("name", Gen.oneOf("Holden", "Hanafy"))
+    val ageGenerator = new ColumnGenerator("age", Gen.choose(10, 100))
     val dataframeGen =
-      DataframeGenerator.arbitraryDataFrameWithCustomFields(
+      DataFrameGenerator.arbitraryDataFrameWithCustomFields(
         sqlContext, schema)(nameGenerator, ageGenerator)
 
     val sqlExpr =
@@ -221,12 +221,12 @@ class SampleScalaCheckTest extends AnyFunSuite
     val sqlContext = SparkSession.builder.getOrCreate().sqlContext
     val userGenerator = new ColumnList("user", Seq(
        // name should be on of Holden or Hanafy
-      new Column("name", Gen.oneOf("Holden", "Hanafy")),
-      new Column("age", Gen.choose(10, 100)),
-      new ColumnList("address", Seq(new Column("zip_code", Gen.choose(100, 200))))
+      new ColumnGenerator("name", Gen.oneOf("Holden", "Hanafy")),
+      new ColumnGenerator("age", Gen.choose(10, 100)),
+      new ColumnList("address", Seq(new ColumnGenerator("zip_code", Gen.choose(100, 200))))
     ))
     val dataframeGen =
-      DataframeGenerator.arbitraryDataFrameWithCustomFields(
+      DataFrameGenerator.arbitraryDataFrameWithCustomFields(
         sqlContext, schema)(userGenerator)
 
     val sqlExpr = """
@@ -272,7 +272,7 @@ class SampleScalaCheckTest extends AnyFunSuite
 
     val sqlContext = SparkSession.builder.getOrCreate().sqlContext
     val dataframeGen: Arbitrary[DataFrame] =
-      DataframeGenerator.arbitraryDataFrame(sqlContext, schema)
+      DataFrameGenerator.arbitraryDataFrame(sqlContext, schema)
     val property =
       forAll(dataframeGen.arbitrary) {
         dataframe => dataframe.schema === schema &&
@@ -293,7 +293,7 @@ class SampleScalaCheckTest extends AnyFunSuite
 
     val sqlContext = SparkSession.builder.getOrCreate().sqlContext
     val dataframeGen: Arbitrary[DataFrame] =
-      DataframeGenerator.arbitraryDataFrame(sqlContext, schema)
+      DataFrameGenerator.arbitraryDataFrame(sqlContext, schema)
     val property =
       forAll(dataframeGen.arbitrary) {
         dataframe => dataframe.schema === schema &&
@@ -307,7 +307,7 @@ class SampleScalaCheckTest extends AnyFunSuite
     val schema = StructType(
       List(StructField("timeStamp", TimestampType), StructField("date", DateType)))
     val sqlContext = SparkSession.builder.getOrCreate().sqlContext
-    val dataframeGen = DataframeGenerator.arbitraryDataFrame(sqlContext, schema)
+    val dataframeGen = DataFrameGenerator.arbitraryDataFrame(sqlContext, schema)
 
     val property =
       forAll(dataframeGen.arbitrary) {
@@ -326,7 +326,7 @@ class SampleScalaCheckTest extends AnyFunSuite
       StructField("large", DecimalType(38, 38))))
 
     val sqlContext = new SQLContext(sc)
-    val dataframeGen = DataframeGenerator.arbitraryDataFrame(sqlContext, schema)
+    val dataframeGen = DataFrameGenerator.arbitraryDataFrame(sqlContext, schema)
 
     val property =
       forAll(dataframeGen.arbitrary) {
@@ -342,7 +342,7 @@ class SampleScalaCheckTest extends AnyFunSuite
     val schema = StructType(
       List(StructField("map", MapType(LongType, IntegerType, true))))
     val sqlContext = SparkSession.builder.getOrCreate().sqlContext
-    val dataframeGen = DataframeGenerator.arbitraryDataFrame(sqlContext, schema)
+    val dataframeGen = DataFrameGenerator.arbitraryDataFrame(sqlContext, schema)
 
     val property =
       forAll(dataframeGen.arbitrary) {
@@ -377,7 +377,7 @@ class SampleScalaCheckTest extends AnyFunSuite
 
     val sqlContext = SparkSession.builder.getOrCreate().sqlContext
     val dataframeGen =
-      DataframeGenerator.arbitraryDataFrame(sqlContext, StructType(fields))
+      DataFrameGenerator.arbitraryDataFrame(sqlContext, StructType(fields))
 
     val property =
       forAll(dataframeGen.arbitrary) {
