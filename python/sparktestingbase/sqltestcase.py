@@ -48,25 +48,22 @@ class SQLTestCase(SparkTestingBaseReuse):
 
     def getConf(self):
         """Override this to specify any custom configuration."""
-        return {}
+        return {"spark.not.real": "42"}
 
     def setUp(self):
-        try:
-            from pyspark.sql import Session
-            self.session = Session.Builder.config(self.getConf())
-            self.sqlCtx = self.session._wrapped
-        except Exception:
-            self.sqlCtx = SQLContext(self.sc)
+        from pyspark.sql.session import SparkSession
+        self.session = SparkSession.builder.config(map=self.getConf()).getOrCreate()
+        self.sqlCtx = SQLContext(self.sc, sparkSession=self.session)
 
     def assertDataFrameEqual(self, expected, result, tol=0):
         """Assert that two DataFrames contain the same data.
         When comparing inexact fields uses tol.
         """
-        self.assertEqual(expected.schema, result.schema)
+        assert expected.schema == result.schema
         try:
             expectedRDD = expected.rdd.cache()
             resultRDD = result.rdd.cache()
-            self.assertEqual(expectedRDD.count(), resultRDD.count())
+            assert expectedRDD.count() == resultRDD.count()
 
             def zipWithIndex(rdd):
                 """Zip with index (idx, data)"""
@@ -94,7 +91,7 @@ class SQLTestCase(SparkTestingBaseReuse):
             unequalRDD = joinedRDD.filter(
                 lambda x: not equal(x[1][0], x[1][1]))
             differentRows = unequalRDD.take(10)
-            self.assertEqual([], differentRows)
+            assert [] == differentRows
         finally:
             expectedRDD.unpersist()
             resultRDD.unpersist()

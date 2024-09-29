@@ -5,6 +5,21 @@ lazy val root = (project in file("."))
 val sparkVersion = settingKey[String]("Spark version")
 val sparkTestingVersion = settingKey[String]("Spark testing base version without Spark version part")
 
+def specialOptions = {
+  // We only need these extra props for JRE>17
+  if (sys.props("java.specification.version") > "1.17") {
+    Seq(
+      "base/java.lang", "base/java.lang.invoke", "base/java.lang.reflect", "base/java.io", "base/java.net", "base/java.nio",
+      "base/java.util", "base/java.util.concurrent", "base/java.util.concurrent.atomic",
+      "base/sun.nio.ch", "base/sun.nio.cs", "base/sun.security.action",
+      "base/sun.util.calendar", "security.jgss/sun.security.krb5",
+    ).map("--add-opens=java." + _ + "=ALL-UNNAMED")
+  } else {
+    Seq()
+  }
+}
+
+
 ThisBuild / libraryDependencySchemes ++= Seq(
   "org.scala-lang.modules" %% "scala-xml" % VersionScheme.Always
 )
@@ -87,7 +102,7 @@ val commonSettings = Seq(
   organization := "com.holdenkarau",
   publishMavenStyle := true,
   sparkVersion := System.getProperty("sparkVersion", "2.4.8"),
-  sparkTestingVersion := "1.4.0",
+  sparkTestingVersion := "1.5.3",
   version := sparkVersion.value + "_" + sparkTestingVersion.value,
   scalaVersion := {
     "2.12.15"
@@ -108,6 +123,8 @@ val commonSettings = Seq(
   javaOptions ++= Seq("-Xms5G", "-Xmx5G") ++ java17Options,
 
   coverageHighlighting := true,
+
+  Test / javaOptions ++= specialOptions,
 
   parallelExecution in Test := false,
   fork := true,
@@ -168,9 +185,9 @@ val coreTestSources = unmanagedSourceDirectories in Test  := {
 
 // additional libraries
 lazy val commonDependencies = Seq(
-  "org.scalatest" %% "scalatest" % "3.2.15",
+  "org.scalatest" %% "scalatest" % "3.2.17",
   "org.scalatestplus" %% "scalacheck-1-15" % "3.2.3.0",
-  "org.scalatestplus" %% "junit-4-13" % "3.2.15.0",
+  "org.scalatestplus" %% "junit-4-13" % "3.2.17.0",
   "org.scalacheck" %% "scalacheck" % "1.15.2",
   "junit" % "junit" % "4.13.2",
   "org.eclipse.jetty" % "jetty-util" % "9.4.51.v20230217",

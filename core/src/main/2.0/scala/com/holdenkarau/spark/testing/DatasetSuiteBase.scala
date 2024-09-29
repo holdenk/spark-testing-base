@@ -5,7 +5,9 @@ import org.scalatest.Suite
 
 import scala.reflect.ClassTag
 
-import org.apache.spark.sql.Dataset
+import java.time.Duration
+
+import org.apache.spark.sql.{DataFrame, Dataset}
 
 trait DatasetSuiteBase extends DataFrameSuiteBase
     with DatasetSuiteBaseLike { self: Suite =>
@@ -41,13 +43,38 @@ trait DatasetSuiteBaseLike extends DataFrameSuiteBaseLike {
     * Compares if two Datasets are equal, Datasets should have the same type.
     * When comparing inexact fields uses tol.
     *
-    * @param tol max acceptable tolerance, should be less than 1.
+    * @param tol        max acceptable tolerance for numeric (between(0, 1)) &
+    *                   timestamp (millis).
+    */
+  @deprecated(
+    "Use `assertDatasetApproximateEquals` with timestamp tolerance",
+    since = "1.5.0"
+  )
+  def assertDatasetApproximateEquals[U](expected: Dataset[U], result: Dataset[U],
+                                        tol: Double)
+    (implicit UCT: ClassTag[U]): Unit = {
+    assertDataFrameApproximateEquals(expected.toDF, result.toDF, tol,
+      Duration.ofMillis(tol.toLong), _.show())
+  }
+
+  /**
+    * Compares if two Datasets are equal, Datasets should have the same type.
+    * When comparing inexact fields uses tol & tolTimestamp.
+    *
+    * @param tol          max acceptable tolerance for numeric (between(0, 1))
+    * @param tolTimestamp max acceptable timestamp tolerance.
+    * @param customShow   unit function to customize the '''show''' method
+    *                     when dataframes are not equal. IE: '''df.show(false)''' or
+    *                     '''df.toJSON.show(false)'''.
     */
   def assertDatasetApproximateEquals[U]
-    (expected: Dataset[U], result: Dataset[U], tol: Double)
+    (expected: Dataset[U], result: Dataset[U], tol: Double,
+     tolTimestamp: Duration,
+     customShow: DataFrame => Unit = _.show())
     (implicit UCT: ClassTag[U]): Unit = {
 
-    assertDataFrameApproximateEquals(expected.toDF, result.toDF, tol)
+    assertDataFrameApproximateEquals(expected.toDF, result.toDF, tol,
+      tolTimestamp, customShow)
   }
 
 }

@@ -61,6 +61,7 @@ object WorkingCodegenExpression {
 }
 
 
+//tag::unary[]
 case class WorkingCodegenExpression(child: Expression) extends UnaryExpression {
   override def prettyName = "workingCodegen"
 
@@ -89,6 +90,7 @@ case class WorkingCodegenExpression(child: Expression) extends UnaryExpression {
     copy(child = newChild)
   }
 }
+//end::unary[]
 
 object FailingCodegenExpression {
   private def withExpr(expr: Expression): SColumn = new SColumn(expr)

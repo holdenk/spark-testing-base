@@ -17,7 +17,7 @@
 """Simple streaming test"""
 
 from sparktestingbase.streamingtestcase import StreamingTestCase
-import unittest2
+import unittest
 
 
 class SimpleStreamingTest(StreamingTestCase):
@@ -73,8 +73,8 @@ class SimpleStreamingTest(StreamingTestCase):
         input = [["hi"], ["hi holden"], ["bye"]]
         input = [self.sc.parallelize(d, 1) for d in input]
         input_stream = self.ssc.queueStream(input)
-        self.assertEqual(["hi"], self._take(input_stream, 1))
+        assert ["hi"] == self._take(input_stream, 1)
 
 
 if __name__ == "__main__":
-    unittest2.main()
+    unittest.main()

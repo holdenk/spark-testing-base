@@ -17,9 +17,12 @@
 package com.holdenkarau.spark.testing
 
 import java.sql.Timestamp
+import java.time.Duration
 
 import org.apache.spark.sql.{DataFrame, Row}
 import org.apache.spark.sql.types._
+
+case class Pandas(name: String, zip: String, pandaSize: Integer, age: Integer)
 
 class SampleDataFrameTest extends ScalaDataFrameSuiteBase {
   val byteArray = new Array[Byte](1)
@@ -116,6 +119,64 @@ class SampleDataFrameTest extends ScalaDataFrameSuiteBase {
     val row8 = Row(Timestamp.valueOf("2018-01-12 20:22:13"))
     val row9 = Row(Timestamp.valueOf("2018-01-12 20:22:18"))
     val row10 = Row(Timestamp.valueOf("2018-01-12 20:23:13"))
+    val row11 = Row("abc", 1.1, Timestamp.valueOf("2018-01-12 20:23:13"))
+    val row11a = Row("abc", 1.2, Timestamp.valueOf("2018-01-12 20:23:15"))
+    val row12 = Row(new java.math.BigDecimal(1.0))
+    val row12a = Row(new java.math.BigDecimal(1.0 + 1.0E-6))
+    val row13 = Row(scala.math.BigDecimal(1.0))
+    val row13a = Row(scala.math.BigDecimal(1.0 + 1.0E-6))
+    val row14 = Row(
+      "abc", 1.1,
+      Row("any", Row(Timestamp.valueOf("2018-01-12 20:23:13"))),
+      "abc"
+    )
+    val row14a = Row(
+      "abc", 1.2,
+      Row("any", Row(Timestamp.valueOf("2018-01-12 20:23:15"))),
+      "abc"
+    )
+    val row15 = Row(
+      "some string",
+      Row(true, "28/02/2024", Seq(Timestamp.valueOf("2018-01-12 20:23:13"))),
+      Seq(
+        Row("something", "anything", null, Row("row1"), Row(Seq("Apple"))),
+        Row("", null, Row(Seq("email@xxxx.com"), "name", ""), Row("row2"), null)
+      ),
+      Seq(Row(
+        Seq(1.1),
+        Seq(1.1f),
+        Seq(new java.math.BigDecimal(1.1)),
+        Seq(scala.math.BigDecimal(1.1))
+      ))
+    )
+    val row15a = Row(
+      "some string",
+      Row(true, "28/02/2024", Seq(Timestamp.valueOf("2018-01-12 20:23:15"))),
+      Seq(
+        Row("something", "anything", null, Row("row1"), Row(Seq("Apple"))),
+        Row("", null, Row(Seq("email@xxxx.com"), "name", ""), Row("row2"), null)
+      ),
+      Seq(Row(
+        Seq(1.2),
+        Seq(1.2f),
+        Seq(new java.math.BigDecimal(1.2)),
+        Seq(scala.math.BigDecimal(1.2))
+      ))
+    )
+    val row15b = Row(
+      "some string",
+      Row(true, "28/02/2024", Seq(Timestamp.valueOf("2018-01-12 20:23:13"))),
+      Seq(
+        Row("something", "anything", null, Row("row1"), Row(Seq("Apple"))),
+        Row("", null, Row(Seq("AAAA@xxxx.com"), "name", ""), Row("row2"), null)
+      ),
+      Seq(Row(
+        Seq(1.1),
+        Seq(1.1f),
+        Seq(new java.math.BigDecimal(1.1)),
+        Seq(scala.math.BigDecimal(1.1))
+      ))
+    )
     assert(false === approxEquals(row, row2, 1E-7))
     assert(true === approxEquals(row, row2, 1E-5))
     assert(true === approxEquals(row3, row3, 1E-5))
@@ -130,6 +191,12 @@ class SampleDataFrameTest extends ScalaDataFrameSuiteBase {
     assert(false === approxEquals(row9, row8, 3000))
     assert(true === approxEquals(row9, row10, 60000))
     assert(false === approxEquals(row9, row10, 53000))
+    assert(true === approxEquals(row11, row11a, 0.1, Duration.ofSeconds(5)))
+    assert(true === approxEquals(row12, row12a, 1.0E-6))
+    assert(true === approxEquals(row13, row13a, 1.0E-6))
+    assert(true === approxEquals(row14, row14a, 0.1, Duration.ofSeconds(5)))
+    assert(true === approxEquals(row15, row15a, 0.2, Duration.ofSeconds(3)))
+    assert(false === approxEquals(row15, row15b, 0, Duration.ZERO))
   }
 
   test("verify hive function support") {
@@ -261,6 +328,34 @@ class SampleDataFrameTest extends ScalaDataFrameSuiteBase {
     val rdd = sc.parallelize(List(row))
     val schema = StructType(fields.map(f => StructField(f._1, f._2._1)))
     sqlContext.createDataFrame(rdd, schema)
+  }
+
+  private def createDF(list: List[Row], fields: (String, DataType)*) =
+    sqlContext.createDataFrame(sc.parallelize(list), structType2(fields))
+
+  private def structType2(fields: Seq[(String, DataType)]) =
+    StructType(fields.map(f => StructField(f._1, f._2)).toList)
+
+  test("ignore magic schema fields") {
+    val pandasList = List(Pandas("bata", "10010", 10, 2),
+      Pandas("wiza", "10010", 20, 4),
+      Pandas("dabdob", "11000", 8, 2),
+      Pandas("hanafy", "11000", 15, 7),
+      Pandas("hamdi", "11111", 20, 10))
+
+    val inputDF = sqlContext.createDataFrame(pandasList)
+    val resultDF = inputDF.groupBy(inputDF("zip")).agg(Map("pandaSize" -> "min", "age" -> "max"))
+
+    val expectedRows = List(
+      Row(pandasList(1).zip, pandasList(0).pandaSize, pandasList(1).age),
+      Row(pandasList(3).zip, pandasList(2).pandaSize, pandasList(3).age),
+      Row(pandasList(4).zip, pandasList(4).pandaSize, pandasList(4).age))
+
+    val expectedDF = createDF(expectedRows, ("zip", StringType),
+                                            ("min(pandaSize)", IntegerType),
+                                            ("max(age)", IntegerType))
+
+    assertDataFrameEquals(expectedDF.orderBy("zip"), resultDF.orderBy("zip"))
   }
 }
 

@@ -141,4 +141,4 @@ class StreamingTestCase(SparkTestingBaseReuse):
         if sort:
             self._sort_result_based_on_key(result)
             self._sort_result_based_on_key(expected)
-        self.assertEqual(expected, result)
+        assert expected == result

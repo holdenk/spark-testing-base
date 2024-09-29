@@ -1,3 +1,10 @@
+# 1.5.0
+- Enable `struct` approx equality (recursive calling)
+- Improve `java.math.BigDecimal` tolerance
+- Add `scala.math.BigDecimal` tolerance
+- Change `java.sql.Timestamp` tolerance:
+  - New param tolTimestamp based on `java.time.Duration`
+  - Previous timestamp tolerance was based on `tol` param
 # 1.4.0
 - Minimum supported version is now 2.4.8
 - We have Scala 2.11,2.12, and 2.13 support
