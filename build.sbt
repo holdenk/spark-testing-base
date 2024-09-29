@@ -120,7 +120,7 @@ val commonSettings = Seq(
   javacOptions ++= {
     Seq("-source", "1.8", "-target", "1.8")
   },
-  javaOptions ++= Seq("-Xms5G", "-Xmx5G") ++ java17Options,
+  javaOptions ++= Seq("-Xms5G", "-Xmx5G"),
 
   coverageHighlighting := true,
 
@@ -245,24 +245,4 @@ lazy val publishSettings = Seq(
 
 lazy val noPublishSettings =
   skip in publish := true
-
-/*
-These values come from the pull request that enabled Support for Java 17 in Spark
-https://github.com/apache/spark/pull/34153
- */
-lazy val java17Options = {
-      Seq(
-        "-XX:+IgnoreUnrecognizedVMOptions",
-        "--add-opens=java.base/java.lang=ALL-UNNAMED",
-        "--add-opens=java.base/java.lang.invoke=ALL-UNNAMED",
-        "--add-opens=java.base/java.io=ALL-UNNAMED",
-        "--add-opens=java.base/java.net=ALL-UNNAMED",
-        "--add-opens=java.base/java.nio=ALL-UNNAMED",
-        "--add-opens=java.base/java.util=ALL-UNNAMED",
-        "--add-opens=java.base/java.util.concurrent=ALL-UNNAMED",
-        "--add-opens=java.base/sun.nio.ch=ALL-UNNAMED",
-        "--add-opens=java.base/sun.nio.cs=ALL-UNNAMED",
-        "--add-opens=java.base/sun.security.action=ALL-UNNAMED",
-        "--add-opens=java.base/sun.util.calendar=ALL-UNNAMED",
-      )
 }
