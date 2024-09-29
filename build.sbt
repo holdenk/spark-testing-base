@@ -34,7 +34,6 @@ lazy val core = (project in file("core"))
     publishSettings,
     coreSources,
     coreTestSources,
-    evictionErrorLevel := Level.Info,
     addCompilerPlugin(scalafixSemanticdb),
      libraryDependencies ++= Seq(
       "org.apache.spark" %% "spark-core"        % sparkVersion.value,
@@ -108,6 +107,7 @@ val commonSettings = Seq(
   organization := "com.holdenkarau",
   publishMavenStyle := true,
   libraryDependencySchemes += "com.github.luben" %% "zstd-jni" % "early-semver", // "early-semver",
+  evictionErrorLevel := Level.Info,
   sparkVersion := System.getProperty("sparkVersion", "2.4.8"),
   sparkTestingVersion := "1.6.0",
   version := sparkVersion.value + "_" + sparkTestingVersion.value,
