@@ -134,7 +134,7 @@ val commonSettings = Seq(
   scalacOptions ++= Seq("-deprecation", "-unchecked", "-Yrangepos"),
   javacOptions ++= {
     if (sparkVersion.value >= "4.0.0") {
-      Seq("-source", "1.17", "-target", "1.17")
+      Seq("-source", "17", "-target", "17")
     } else {
       Seq("-source", "1.8", "-target", "1.8")
     }
