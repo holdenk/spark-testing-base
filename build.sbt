@@ -263,6 +263,6 @@ lazy val publishSettings = Seq(
   }
 )
 
-lazy val noPublishSettings =
+lazy val noPublishSettings = {
   skip in publish := true
 }
