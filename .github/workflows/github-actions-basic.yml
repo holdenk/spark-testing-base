@@ -38,9 +38,9 @@ jobs:
           - spark: "3.4.0"
             java-version: "17"
             distribution: "temurin"
-#          - spark: "4.0.0-PREVIEW2"
-#            java-version: "17"
-#            distribution: "temurin"
+          - spark: "4.0.0-preview2"
+            java-version: "17"
+            distribution: "temurin"
     env:
       SPARK_VERSION: ${{ matrix.spark }}
     steps:
