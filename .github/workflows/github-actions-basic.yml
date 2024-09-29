@@ -38,7 +38,7 @@ jobs:
           - spark: "3.4.0"
             java-version: "17"
             distribution: "temurin"
-          - spark: "4.4.0"
+          - spark: "4.0.0-PREVIEW2"
             java-version: "17"
             distribution: "temurin"
     env:
