@@ -204,6 +204,8 @@ def excludeJavaxServlet(items: Seq[ModuleID]) =
 def excludeJpountz(items: Seq[ModuleID]) =
   excludeFromAll(items, "net.jpountz.lz4", "lz4")
 
+
+
 lazy val kafkaPublishSettings =
   publishSettings ++ Seq(
     skip in publish := scalaVersion.value >= "2.12.0"
@@ -243,3 +245,4 @@ lazy val publishSettings = Seq(
 
 lazy val noPublishSettings =
   skip in publish := true
+}
