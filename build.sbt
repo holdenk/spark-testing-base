@@ -34,6 +34,7 @@ lazy val core = (project in file("core"))
     publishSettings,
     coreSources,
     coreTestSources,
+    evictionErrorLevel := Level.Info,
     addCompilerPlugin(scalafixSemanticdb),
      libraryDependencies ++= Seq(
       "org.apache.spark" %% "spark-core"        % sparkVersion.value,
@@ -44,7 +45,13 @@ lazy val core = (project in file("core"))
       "org.apache.spark" %% "spark-mllib"       % sparkVersion.value
     ) ++ commonDependencies ++
       {
-        if (sparkVersion.value > "3.0.0") {
+        if (sparkVersion.value > "4.0.0") {
+          Seq(
+            "io.netty" % "netty-all" % "4.1.96.Final",
+            "io.netty" % "netty-tcnative-classes" % "2.0.66.Final",
+            "com.github.luben" % "zstd-jni" % "1.5.5-4"
+          )
+        } else if (sparkVersion.value > "3.0.0") {
           Seq(
             "io.netty" % "netty-all" % "4.1.77.Final",
             "io.netty" % "netty-tcnative-classes" % "2.0.52.Final"
@@ -100,8 +107,9 @@ lazy val kafka_0_8 = {
 val commonSettings = Seq(
   organization := "com.holdenkarau",
   publishMavenStyle := true,
+  libraryDependencySchemes += "com.github.luben" %% "zstd-jni" % "early-semver", // "early-semver",
   sparkVersion := System.getProperty("sparkVersion", "2.4.8"),
-  sparkTestingVersion := "1.6.0-SNAPSHOT",
+  sparkTestingVersion := "1.6.0",
   version := sparkVersion.value + "_" + sparkTestingVersion.value,
   scalaVersion := {
     if (sparkVersion.value >= "4.0.0") {
@@ -111,7 +119,9 @@ val commonSettings = Seq(
     }
   },
   crossScalaVersions := {
-    if (sparkVersion.value >= "3.5.0") {
+    if (sparkVersion.value >= "4.0.0") {
+      Seq("2.13.13")
+    } else if (sparkVersion.value >= "3.5.0") {
       Seq("2.12.15", "2.13.13")
     } else if (sparkVersion.value >= "3.2.0") {
       Seq("2.12.15", "2.13.10")
@@ -123,9 +133,13 @@ val commonSettings = Seq(
   },
   scalacOptions ++= Seq("-deprecation", "-unchecked", "-Yrangepos"),
   javacOptions ++= {
-    Seq("-source", "1.8", "-target", "1.8")
+    if (sparkVersion.value >= "4.0.0") {
+      Seq("-source", "1.17", "-target", "1.17")
+    } else {
+      Seq("-source", "1.8", "-target", "1.8")
+    }
   },
-  javaOptions ++= Seq("-Xms5G", "-Xmx5G"),
+  javaOptions ++= Seq("-Xms8G", "-Xmx8G"),
 
   coverageHighlighting := true,
 
