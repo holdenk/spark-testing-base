@@ -112,7 +112,7 @@ val commonSettings = Seq(
   libraryDependencySchemes += "com.github.luben" %% "zstd-jni" % "early-semver", // "early-semver",
   evictionErrorLevel := Level.Info,
   sparkVersion := System.getProperty("sparkVersion", "2.4.8"),
-  sparkTestingVersion := "1.6.0",
+  sparkTestingVersion := "2.0.0",
   version := sparkVersion.value + "_" + sparkTestingVersion.value,
   scalaVersion := {
     if (sparkVersion.value >= "4.0.0") {
@@ -261,6 +261,7 @@ lazy val kafkaPublishSettings =
 lazy val publishSettings = Seq(
   pomIncludeRepository := { _ => false },
   publishTo := sonatypePublishToBundle.value,
+  sonatypeCredentialHost := sonatypeCentralHost,
 
   licenses := Seq("Apache License 2.0" -> url("http://www.apache.org/licenses/LICENSE-2.0.html")),
 
