@@ -16,8 +16,8 @@
  */
 package com.holdenkarau.spark.testing
 
-import org.apache.spark.sql.{Column => SColumn, SparkSession, DataFrame}
-import org.apache.spark.sql.internal.SQLConf
+import org.apache.spark.sql.{Column, SparkSession, DataFrame}
+import org.apache.spark.sql.internal._
 import org.apache.spark.sql.catalyst.expressions._
 import org.apache.spark.sql.catalyst.expressions.codegen._
 import org.apache.spark.sql.catalyst.expressions.codegen.Block._
@@ -53,10 +53,11 @@ class SampleSparkExpressionTest extends ScalaDataFrameSuiteBase {
 }
 
 object WorkingCodegenExpression {
-  private def withExpr(expr: Expression): SColumn = new SColumn(expr)
+  private def withExpr(expr: Expression): Column = new Column(
+    EvilExpressionColumnNode.toColumnNode(expr))
 
-  def work(col: SColumn): SColumn = withExpr {
-    WorkingCodegenExpression(col.expr)
+  def work(col: Column): Column = withExpr {
+    WorkingCodegenExpression(EvilExpressionColumnNode.getExpr(col.node))
   }
 }
 
@@ -93,10 +94,11 @@ case class WorkingCodegenExpression(child: Expression) extends UnaryExpression {
 //end::unary[]
 
 object FailingCodegenExpression {
-  private def withExpr(expr: Expression): SColumn = new SColumn(expr)
+  private def withExpr(expr: Expression): Column = new Column(
+    EvilExpressionColumnNode.toColumnNode(expr))
 
-  def fail(col: SColumn): SColumn = withExpr {
-    FailingCodegenExpression(col.expr)
+  def fail(col: Column): Column = withExpr {
+    FailingCodegenExpression(EvilExpressionColumnNode.getExpr(col.node))
   }
 }
 
