@@ -199,7 +199,7 @@ val coreSources = unmanagedSourceDirectories in Compile  := {
 }
 
 val coreTestSources = unmanagedSourceDirectories in Test  := {
-  if (sparkVersion.value >= "3.0.0" && scalaVersion.value >= "2.12.0") Seq(
+  if (sparkVersion.value >= "4.0.0" && scalaVersion.value >= "2.12.0") Seq(
     (sourceDirectory in Test)(_ / "4.0/scala"),
     (sourceDirectory in Test)(_ / "3.0/scala"),
     (sourceDirectory in Test)(_ / "3.0/java"),
