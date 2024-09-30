@@ -49,12 +49,15 @@ object DataFrameGenerator {
   def arbitraryDataFrameWithCustomFields(
     sqlContext: SQLContext, schema: StructType, minPartitions: Int = 1)
     (userGenerators: ColumnGeneratorBase*): Arbitrary[DataFrame] = {
+    import sqlContext._
 
     val arbitraryRDDs = RDDGenerator.genRDD(
       sqlContext.sparkContext, minPartitions)(
       getRowGenerator(schema, userGenerators))
     Arbitrary {
-      arbitraryRDDs.map(sqlContext.createDataFrame(_, schema))
+      arbitraryRDDs.map { r =>
+        sqlContext.createDataFrame(r, schema)
+      }
     }
   }
 
@@ -128,9 +131,21 @@ object DataFrameGenerator {
         l => new Date(l/10000)
       }
       case dec: DecimalType => {
+        // With the new ANSI default we need to make sure were passing in
+        // valid values.
         Arbitrary.arbitrary[BigDecimal]
-          .retryUntil(_.precision <= dec.precision)
+          .retryUntil { d =>
+            try {
+              val sd = new Decimal()
+              // Make sure it can be converted
+              sd.set(d, dec.precision, dec.scale)
+              true
+            } catch {
+              case e: Exception => false
+            }
+          }
           .map(_.bigDecimal.setScale(dec.scale, RoundingMode.HALF_UP))
+          .asInstanceOf[Gen[java.math.BigDecimal]]
       }
       case arr: ArrayType => {
         val elementGenerator = getGenerator(arr.elementType, nullable = arr.containsNull)

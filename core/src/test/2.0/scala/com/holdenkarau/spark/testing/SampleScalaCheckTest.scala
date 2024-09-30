@@ -319,6 +319,24 @@ class SampleScalaCheckTest extends AnyFunSuite
     check(property)
   }
 
+  test("decimal generation mini") {
+    val schema = StructType(List(
+      StructField("bloop", DecimalType(38, 2), nullable=true)))
+
+    val sqlContext = new SQLContext(sc)
+    val dataframeGen = DataFrameGenerator.arbitraryDataFrame(sqlContext, schema)
+
+    val property =
+      forAll(dataframeGen.arbitrary) {
+        dataframe => {
+          dataframe.schema === schema && dataframe.count >= 0
+        }
+      }
+
+    check(property)
+  }
+
+
   test("decimal generation") {
     val schema = StructType(List(
       StructField("small", DecimalType(3, 1)),
