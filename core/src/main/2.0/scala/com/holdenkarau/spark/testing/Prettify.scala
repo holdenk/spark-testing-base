@@ -8,7 +8,7 @@ trait Prettify {
   val maxNumberOfShownValues = 100
 
   implicit def prettyDataFrame(dataframe: DataFrame): Pretty =
-    Pretty { _ => describeDataframe(dataframe)}
+    Pretty { _ => describeDataFrame(dataframe)}
 
   implicit def prettyRDD(rdd: RDD[_]): Pretty =
     Pretty { _ => describeRDD(rdd)}
@@ -16,7 +16,7 @@ trait Prettify {
   implicit def prettyDataset(dataset: Dataset[_]): Pretty =
     Pretty { _ => describeDataset(dataset)}
 
-  private def describeDataframe(dataframe: DataFrame) =
+  private def describeDataFrame(dataframe: DataFrame) =
     s"""<DataFrame: schema = ${dataframe.toString}, size = ${dataframe.count()},
         |values = (${dataframe.take(maxNumberOfShownValues).mkString(", ")})>""".
       stripMargin.replace("\n", " ")

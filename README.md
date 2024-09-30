@@ -97,7 +97,7 @@ While we hope you choose our library, https://github.com/juanrh/sscheck , https:
 
 ## [Release Notes](RELEASE_NOTES.md)
 
-JDK17 support exists only for Spark 3.4.0
+JDK17 support exists only for Spark 3.4.0 & Spark 4 (previews)
 
 ## Security Disclosure e-mails
 

@@ -16,10 +16,10 @@ class PrettifyTest extends AnyFunSuite with SharedSparkContext with Checkers wit
   test("pretty output of DataFrame's check") {
     val schema = StructType(List(StructField("name", StringType), StructField("age", IntegerType)))
     val sqlContext = SparkSession.builder.getOrCreate().sqlContext
-    val nameGenerator = new Column("name", Gen.const("Holden Hanafy"))
-    val ageGenerator = new Column("age", Gen.const(20))
+    val nameGenerator = new ColumnGenerator("name", Gen.const("Holden Hanafy"))
+    val ageGenerator = new ColumnGenerator("age", Gen.const(20))
 
-    val dataframeGen = DataframeGenerator.arbitraryDataFrameWithCustomFields(sqlContext, schema)(nameGenerator, ageGenerator)
+    val dataframeGen = DataFrameGenerator.arbitraryDataFrameWithCustomFields(sqlContext, schema)(nameGenerator, ageGenerator)
 
     val actual = runFailingCheck(dataframeGen.arbitrary)
     val expected =

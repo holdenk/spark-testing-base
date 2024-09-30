@@ -7,7 +7,7 @@ import org.apache.spark.sql.types._
 import org.apache.spark.sql.{DataFrame, Row, SQLContext}
 import org.scalacheck.{Arbitrary, Gen}
 
-object DataframeGenerator {
+object DataFrameGenerator {
 
   /**
    * Creates a DataFrame Generator for the given Schema.
@@ -48,13 +48,16 @@ object DataframeGenerator {
    */
   def arbitraryDataFrameWithCustomFields(
     sqlContext: SQLContext, schema: StructType, minPartitions: Int = 1)
-    (userGenerators: ColumnGenerator*): Arbitrary[DataFrame] = {
+    (userGenerators: ColumnGeneratorBase*): Arbitrary[DataFrame] = {
+    import sqlContext._
 
     val arbitraryRDDs = RDDGenerator.genRDD(
       sqlContext.sparkContext, minPartitions)(
       getRowGenerator(schema, userGenerators))
     Arbitrary {
-      arbitraryRDDs.map(sqlContext.createDataFrame(_, schema))
+      arbitraryRDDs.map { r =>
+        sqlContext.createDataFrame(r, schema)
+      }
     }
   }
 
@@ -80,7 +83,7 @@ object DataframeGenerator {
    * @return Gen[Row]
    */
   def getRowGenerator(
-    schema: StructType, customGenerators: Seq[ColumnGenerator]): Gen[Row] = {
+    schema: StructType, customGenerators: Seq[ColumnGeneratorBase]): Gen[Row] = {
     val generators: List[Gen[Any]] =
       createGenerators(schema.fields, customGenerators)
     val listGen: Gen[List[Any]] =
@@ -92,14 +95,14 @@ object DataframeGenerator {
 
   private def createGenerators(
     fields: Array[StructField],
-    userGenerators: Seq[ColumnGenerator]):
+    userGenerators: Seq[ColumnGeneratorBase]):
       List[Gen[Any]] = {
     val generatorMap = userGenerators.map(
       generator => (generator.columnName -> generator)).toMap
     fields.toList.map { field =>
     if (generatorMap.contains(field.name)) {
         generatorMap.get(field.name) match {
-          case Some(gen: Column) => gen.gen
+          case Some(gen: ColumnGenerator) => gen.gen
           case Some(list: ColumnList) => getGenerator(field.dataType, list.gen, nullable = field.nullable)
         }
       }
@@ -109,7 +112,7 @@ object DataframeGenerator {
 
   private def getGenerator(
     dataType: DataType,
-    generators: Seq[ColumnGenerator] = Seq(),
+    generators: Seq[ColumnGeneratorBase] = Seq(),
     nullable: Boolean = false): Gen[Any] = {
     val nonNullGen = dataType match {
       case ByteType => Arbitrary.arbitrary[Byte]
@@ -128,9 +131,21 @@ object DataframeGenerator {
         l => new Date(l/10000)
       }
       case dec: DecimalType => {
+        // With the new ANSI default we need to make sure were passing in
+        // valid values.
         Arbitrary.arbitrary[BigDecimal]
-          .retryUntil(_.precision <= dec.precision)
+          .retryUntil { d =>
+            try {
+              val sd = new Decimal()
+              // Make sure it can be converted
+              sd.set(d, dec.precision, dec.scale)
+              true
+            } catch {
+              case e: Exception => false
+            }
+          }
           .map(_.bigDecimal.setScale(dec.scale, RoundingMode.HALF_UP))
+          .asInstanceOf[Gen[java.math.BigDecimal]]
       }
       case arr: ArrayType => {
         val elementGenerator = getGenerator(arr.elementType, nullable = arr.containsNull)
@@ -165,11 +180,11 @@ object DataframeGenerator {
 }
 
 /**
- * Previously ColumnGenerator. Allows the user to specify a generator for a
+ * Previously Column. Allows the user to specify a generator for a
  * specific column.
  */
-class Column(val columnName: String, generator: => Gen[Any])
-    extends ColumnGenerator {
+class ColumnGenerator(val columnName: String, generator: => Gen[Any])
+    extends ColumnGeneratorBase {
   lazy val gen = generator
 }
 
@@ -177,8 +192,8 @@ class Column(val columnName: String, generator: => Gen[Any])
  * ColumnList allows users to specify custom generators for a list of
  * columns inside a StructType column.
  */
-class ColumnList(val columnName: String, generators: => Seq[ColumnGenerator])
-    extends ColumnGenerator {
+class ColumnList(val columnName: String, generators: => Seq[ColumnGeneratorBase])
+    extends ColumnGeneratorBase {
   lazy val gen = generators
 }
 
@@ -186,6 +201,6 @@ class ColumnList(val columnName: String, generators: => Seq[ColumnGenerator])
  * ColumnGenerator - prevously Column; it is now the base class for all
  * ColumnGenerators.
  */
-abstract class ColumnGenerator extends java.io.Serializable {
+abstract class ColumnGeneratorBase extends java.io.Serializable {
   val columnName: String
 }

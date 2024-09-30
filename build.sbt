@@ -41,11 +41,17 @@ lazy val core = (project in file("core"))
       "org.apache.spark" %% "spark-sql"         % sparkVersion.value,
       "org.apache.spark" %% "spark-hive"        % sparkVersion.value,
       "org.apache.spark" %% "spark-catalyst"    % sparkVersion.value,
-      "org.apache.spark" %% "spark-yarn"        % sparkVersion.value,
       "org.apache.spark" %% "spark-mllib"       % sparkVersion.value
     ) ++ commonDependencies ++
       {
-        if (sparkVersion.value > "3.0.0") {
+        if (sparkVersion.value > "4.0.0") {
+          Seq(
+            "org.apache.spark" %% "spark-sql-api"        % sparkVersion.value,
+            "io.netty" % "netty-all" % "4.1.96.Final",
+            "io.netty" % "netty-tcnative-classes" % "2.0.66.Final",
+            "com.github.luben" % "zstd-jni" % "1.5.5-4"
+          )
+        } else if (sparkVersion.value > "3.0.0") {
           Seq(
             "io.netty" % "netty-all" % "4.1.77.Final",
             "io.netty" % "netty-tcnative-classes" % "2.0.52.Final"
@@ -101,14 +107,24 @@ lazy val kafka_0_8 = {
 val commonSettings = Seq(
   organization := "com.holdenkarau",
   publishMavenStyle := true,
+  libraryDependencySchemes += "com.github.luben" %% "zstd-jni" % "early-semver", // "early-semver",
+  evictionErrorLevel := Level.Info,
   sparkVersion := System.getProperty("sparkVersion", "2.4.8"),
-  sparkTestingVersion := "1.5.3",
+  sparkTestingVersion := "1.6.0",
   version := sparkVersion.value + "_" + sparkTestingVersion.value,
   scalaVersion := {
-    "2.12.15"
+    if (sparkVersion.value >= "4.0.0") {
+      "2.13.13"
+    } else {
+      "2.12.15"
+    }
   },
   crossScalaVersions := {
-    if (sparkVersion.value >= "3.2.0") {
+    if (sparkVersion.value >= "4.0.0") {
+      Seq("2.13.13")
+    } else if (sparkVersion.value >= "3.5.0") {
+      Seq("2.12.15", "2.13.13")
+    } else if (sparkVersion.value >= "3.2.0") {
       Seq("2.12.15", "2.13.10")
     } else if (sparkVersion.value >= "3.0.0") {
       Seq("2.12.15")
@@ -118,9 +134,13 @@ val commonSettings = Seq(
   },
   scalacOptions ++= Seq("-deprecation", "-unchecked", "-Yrangepos"),
   javacOptions ++= {
-    Seq("-source", "1.8", "-target", "1.8")
+    if (sparkVersion.value >= "4.0.0") {
+      Seq("-source", "17", "-target", "17")
+    } else {
+      Seq("-source", "1.8", "-target", "1.8")
+    }
   },
-  javaOptions ++= Seq("-Xms5G", "-Xmx5G"),
+  javaOptions ++= Seq("-Xms8G", "-Xmx8G"),
 
   coverageHighlighting := true,
 
@@ -142,16 +162,31 @@ val commonSettings = Seq(
     "Typesafe repository" at "https://repo.typesafe.com/typesafe/releases/",
     "Second Typesafe repo" at "https://repo.typesafe.com/typesafe/maven-releases/",
     "Mesosphere Public Repository" at "https://downloads.mesosphere.io/maven",
-    Resolver.sonatypeRepo("public")
+    Resolver.sonatypeRepo("public"),
+    Resolver.mavenLocal
   )
 )
 
 // Allow kafka (and other) utils to have version specific files
 val coreSources = unmanagedSourceDirectories in Compile  := {
-  if (sparkVersion.value >= "3.0.0" && scalaVersion.value >= "2.12.0") Seq(
+  if (sparkVersion.value >= "4.0.0") Seq(
+    (sourceDirectory in Compile)(_ / "4.0/scala"),
     (sourceDirectory in Compile)(_ / "2.2/scala"),
     (sourceDirectory in Compile)(_ / "3.0/scala"),
-    (sourceDirectory in Compile)(_ / "2.0/scala"), (sourceDirectory in Compile)(_ / "2.0/java")
+    (sourceDirectory in Compile)(_ / "2.0/scala"),
+    (sourceDirectory in Compile)(_ / "2.0/java")
+  ).join.value
+  else if (sparkVersion.value >= "3.0.0" && scalaVersion.value >= "2.12.0") Seq(
+    (sourceDirectory in Compile)(_ / "2.2/scala"),
+    (sourceDirectory in Compile)(_ / "3.0/scala"),
+    (sourceDirectory in Compile)(_ / "2.0/scala"),
+    (sourceDirectory in Compile)(_ / "2.0/java")
+  ).join.value
+  else if (sparkVersion.value >= "3.0.0" && scalaVersion.value >= "2.12.0") Seq(
+    (sourceDirectory in Compile)(_ / "2.2/scala"),
+    (sourceDirectory in Compile)(_ / "3.0/scala"),
+    (sourceDirectory in Compile)(_ / "2.0/scala"),
+    (sourceDirectory in Compile)(_ / "2.0/java")
   ).join.value
   else if (sparkVersion.value >= "2.4.0" && scalaVersion.value >= "2.12.0") Seq(
     (sourceDirectory in Compile)(_ / "2.2/scala"),
@@ -164,7 +199,16 @@ val coreSources = unmanagedSourceDirectories in Compile  := {
 }
 
 val coreTestSources = unmanagedSourceDirectories in Test  := {
-  if (sparkVersion.value >= "3.0.0" && scalaVersion.value >= "2.12.0") Seq(
+  if (sparkVersion.value >= "4.0.0" && scalaVersion.value >= "2.12.0") Seq(
+    (sourceDirectory in Test)(_ / "4.0/scala"),
+    (sourceDirectory in Test)(_ / "3.0/scala"),
+    (sourceDirectory in Test)(_ / "3.0/java"),
+    (sourceDirectory in Test)(_ / "2.2/scala"),
+    (sourceDirectory in Test)(_ / "2.0/scala"),
+    (sourceDirectory in Test)(_ / "2.0/java")
+  ).join.value
+  else if (sparkVersion.value >= "3.0.0" && scalaVersion.value >= "2.12.0") Seq(
+    (sourceDirectory in Test)(_ / "pre-4.0/scala"),
     (sourceDirectory in Test)(_ / "3.0/scala"),
     (sourceDirectory in Test)(_ / "3.0/java"),
     (sourceDirectory in Test)(_ / "2.2/scala"),
@@ -243,6 +287,6 @@ lazy val publishSettings = Seq(
   }
 )
 
-lazy val noPublishSettings =
+lazy val noPublishSettings = {
   skip in publish := true
 }

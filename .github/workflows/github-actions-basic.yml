@@ -38,9 +38,9 @@ jobs:
           - spark: "3.4.0"
             java-version: "17"
             distribution: "temurin"
-#          - spark: "4.0.0-PREVIEW2"
-#            java-version: "17"
-#            distribution: "temurin"
+          - spark: "4.0.0-preview2"
+            java-version: "17"
+            distribution: "temurin"
     env:
       SPARK_VERSION: ${{ matrix.spark }}
     steps:
@@ -50,11 +50,11 @@ jobs:
       with:
         fetch-depth: 0
         repository: holdenk/spark-testing-base
-        ref: main
-    - uses: actions/setup-java@v3
+    - uses: actions/setup-java@v4
       with:
         java-version: ${{ matrix.java-version }}
         distribution: ${{ matrix.distribution }}
+        cache: sbt
     - name: Cache maven modules
       id: cache-maven
       uses: actions/cache@v4.0.0
