@@ -46,6 +46,7 @@ lazy val core = (project in file("core"))
       {
         if (sparkVersion.value > "4.0.0") {
           Seq(
+            "org.apache.spark" %% "spark-sql-api"        % sparkVersion.value,
             "io.netty" % "netty-all" % "4.1.96.Final",
             "io.netty" % "netty-tcnative-classes" % "2.0.66.Final",
             "com.github.luben" % "zstd-jni" % "1.5.5-4"
