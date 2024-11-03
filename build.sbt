@@ -2,7 +2,9 @@ lazy val root = (project in file("."))
   .aggregate(core, kafka_0_8)
   .settings(noPublishSettings, commonSettings)
 
+//tag::sparkVersion[]
 val sparkVersion = settingKey[String]("Spark version")
+//end::sparkVersion[]
 val sparkTestingVersion = settingKey[String]("Spark testing base version without Spark version part")
 
 def specialOptions = {
@@ -119,6 +121,7 @@ val commonSettings = Seq(
       "2.12.15"
     }
   },
+  //tag::dynamicScalaVersion[]
   crossScalaVersions := {
     if (sparkVersion.value >= "4.0.0") {
       Seq("2.13.13")
@@ -132,6 +135,7 @@ val commonSettings = Seq(
       Seq("2.12.15", "2.11.12")
     }
   },
+  //end::dynamicScalaVersion[]
   scalacOptions ++= Seq("-deprecation", "-unchecked", "-Yrangepos"),
   javacOptions ++= {
     if (sparkVersion.value >= "4.0.0") {
@@ -168,6 +172,7 @@ val commonSettings = Seq(
 )
 
 // Allow kafka (and other) utils to have version specific files
+//tag::dynamicCodeSelection[]
 val coreSources = unmanagedSourceDirectories in Compile  := {
   if (sparkVersion.value >= "4.0.0") Seq(
     (sourceDirectory in Compile)(_ / "4.0/scala"),
@@ -182,6 +187,7 @@ val coreSources = unmanagedSourceDirectories in Compile  := {
     (sourceDirectory in Compile)(_ / "2.0/scala"),
     (sourceDirectory in Compile)(_ / "2.0/java")
   ).join.value
+//endDynamicCodeSelection[]
   else if (sparkVersion.value >= "3.0.0" && scalaVersion.value >= "2.12.0") Seq(
     (sourceDirectory in Compile)(_ / "2.2/scala"),
     (sourceDirectory in Compile)(_ / "3.0/scala"),
