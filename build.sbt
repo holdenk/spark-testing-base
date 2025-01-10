@@ -242,7 +242,7 @@ lazy val commonDependencies = Seq(
   "org.scalatestplus" %% "junit-4-13" % "3.2.19.0",
   "org.scalacheck" %% "scalacheck" % "1.15.2",
   "junit" % "junit" % "4.13.2",
-  "org.eclipse.jetty" % "jetty-util" % "9.4.51.v20230217",
+  "org.eclipse.jetty" % "jetty-util" % "9.4.57.v20241219",
   "com.github.sbt" % "junit-interface" % "0.13.3" % "test->default")
 
 // Based on Hadoop Mini Cluster tests from Alpine's PluginSDK (Apache licensed)
