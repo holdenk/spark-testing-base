@@ -410,8 +410,30 @@ Columns aren't equal
       expected.rdd.unpersist()
       result.rdd.unpersist()
     }
-  }
+  } 
 
+  /**
+    * Modify map type to an array of struct for having the possibility of compare
+    * the two dataframes.
+    */
+
+  private[testing] def convertMapToArrayStruct(df : DataFrame) : DataFrame = {
+    def modifyColumMap(field : DataType, columnName : Column, initialName : String) : Column = {
+      field match {
+      case MapType(_,_,_) => map_entries(columnName).alias(initialName)
+      case StructType(fields) =>
+        struct(fields.map(f => modifyColumMap(f.dataType,col(s"$columnName.${f.name}"), f.name)):_*).alias(initialName)
+      case ArrayType(e,_) =>
+        e match {
+         case StructType(fields) =>
+           transform(columnName, x => struct(fields.map(f => modifyColumMap(f.dataType, x.getField(f.name), f.name)):_*)).alias(initialName)
+         case _ => transform(columnName, x => modifyColumMap(e, x, "element")).alias(initialName)
+         }
+      case _ => columnName
+      }
+    }
+    df.select(df.schema.fields.map(f => modifyColumMap(f.dataType,col(f.name), f.name)):_*)
+  }
 
   /**
    * Compares if two [[DataFrame]]s are equal without caring about order of rows, by
