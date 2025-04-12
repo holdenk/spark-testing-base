@@ -385,30 +385,32 @@ Columns aren't equal
   def assertDataFrameDataEquals(expected: DataFrame, result: DataFrame): Unit = {
     val expectedCol = "assertDataFrameNoOrderEquals_expected"
     val actualCol = "assertDataFrameNoOrderEquals_actual"
+    val expectedPostMap = convertMapToArrayStruct(expected)
+    val resultPostMap = convertMapToArrayStruct(result)
     try {
-      expected.rdd.cache
-      result.rdd.cache
-      assert("Column size not Equal", expected.columns.size, result.columns.size)
-      assert("Length not Equal", expected.rdd.count, result.rdd.count)
+      expectedPostMap.rdd.cache
+      resultPostMap.rdd.cache
+      assert("Column size not Equal", expectedPostMap.columns.size, resultPostMap.columns.size)
+      assert("Length not Equal", expectedPostMap.rdd.count, resultPostMap.rdd.count)
 
-      val columns = expected.columns.map(s => col(s))
-      val expectedElementsCount = expected
+      val columns = expectedPostMap.columns.map(s => col(s))
+      val expectedElementsCount = expectedPostMap
         .groupBy(columns: _*)
         .agg(count(lit(1)).as(expectedCol))
-      val resultElementsCount = result
+      val resultElementsCount = resultPostMap
         .groupBy(columns: _*)
         .agg(count(lit(1)).as(actualCol))
 
-      val joinExprs = expected.columns
-        .map(s => expected.col(s) <=> result.col(s)).reduce(_.and(_))
+      val joinExprs = expectedPostMap.columns
+        .map(s => expectedPostMap.col(s) <=> resultPostMap.col(s)).reduce(_.and(_))
       val diff = expectedElementsCount
         .join(resultElementsCount, joinExprs, "full_outer")
         .filter(not(col(expectedCol) <=> col(actualCol)))
 
       assertEmpty(diff.take(maxUnequalRowsToShow))
     } finally {
-      expected.rdd.unpersist()
-      result.rdd.unpersist()
+      expectedPostMap.rdd.unpersist()
+      resultPostMap.rdd.unpersist()
     }
   } 
 
@@ -426,7 +428,8 @@ Columns aren't equal
       case ArrayType(e,_) =>
         e match {
          case StructType(fields) =>
-           transform(columnName, x => struct(fields.map(f => modifyColumMap(f.dataType, x.getField(f.name), f.name)):_*)).alias(initialName)
+            transform(columnName, x => struct(fields.map(
+              f => modifyColumMap(f.dataType, x.getField(f.name), f.name)):_*)).alias(initialName)
          case _ => transform(columnName, x => modifyColumMap(e, x, "element")).alias(initialName)
          }
       case _ => columnName
