@@ -10,7 +10,7 @@ addSbtPlugin("org.scoverage" % "sbt-scoverage" % "2.3.0")
 
 addDependencyTreePlugin
 
-addSbtPlugin("ch.epfl.scala" % "sbt-scalafix" % "0.11.1")
+addSbtPlugin("ch.epfl.scala" % "sbt-scalafix" % "0.14.3")
 
 ThisBuild / libraryDependencySchemes ++= Seq(
   "org.scala-lang.modules" %% "scala-xml" % VersionScheme.Always
