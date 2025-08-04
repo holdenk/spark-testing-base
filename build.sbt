@@ -1,5 +1,3 @@
-import xerial.sbt.Sonatype._
-
 lazy val root = (project in file("."))
   .aggregate(core, kafka_0_8)
   .settings(noPublishSettings, commonSettings)
@@ -265,13 +263,17 @@ lazy val kafkaPublishSettings =
     skip in publish := scalaVersion.value >= "2.12.0"
   )
 
+val centralSnapshots = "https://central.sonatype.com/repository/maven-snapshots/"
+
 // publish settings
 lazy val publishSettings = Seq(
   pomIncludeRepository := { _ => false },
-  sonatypeSessionName := "[sbt-sonatype] ${name.value}-${version.value}",
-  val centralSnapshots = "https://central.sonatype.com/repository/maven-snapshots/"
-  if (isSnapshot.value) Some("central-snapshots" at centralSnapshots)
-  else localStaging.value
+  stagingDirectory := (ThisBuild / baseDirectory).value / "target" / "sona-staging-${name.value}-${version.value}",
+
+  publishTo := {
+    if (isSnapshot.value) Some("central-snapshots" at centralSnapshots)
+    else localStaging.value
+  },
 
   licenses := Seq("Apache License 2.0" -> url("http://www.apache.org/licenses/LICENSE-2.0.html")),
 
