@@ -110,11 +110,13 @@ lazy val kafka_0_8 = {
 
 val commonSettings = Seq(
   organization := "com.holdenkarau",
+  organizationName := "Holden Karau",
+  organizationHomePage := "http://www.holdenkarau.com",
   publishMavenStyle := true,
   libraryDependencySchemes += "com.github.luben" %% "zstd-jni" % "early-semver", // "early-semver",
   evictionErrorLevel := Level.Info,
   sparkVersion := System.getProperty("sparkVersion", "2.4.8"),
-  sparkTestingVersion := "2.1.1",
+  sparkTestingVersion := "2.1.1-SNAPSHOT",
   version := sparkVersion.value + "_" + sparkTestingVersion.value,
   scalaVersion := {
     if (sparkVersion.value >= "4.0.0") {
@@ -267,9 +269,9 @@ lazy val kafkaPublishSettings =
 lazy val publishSettings = Seq(
   pomIncludeRepository := { _ => false },
   sonatypeSessionName := "[sbt-sonatype] ${name.value}-${version.value}",
-  publishTo := sonatypePublishToBundle.value,
-  sonatypeCredentialHost := xerial.sbt.Sonatype.sonatypeCentralHost,
-  sbtPluginPublishLegacyMavenStyle := false,
+  val centralSnapshots = "https://central.sonatype.com/repository/maven-snapshots/"
+  if (isSnapshot.value) Some("central-snapshots" at centralSnapshots)
+  else localStaging.value
 
   licenses := Seq("Apache License 2.0" -> url("http://www.apache.org/licenses/LICENSE-2.0.html")),
 
