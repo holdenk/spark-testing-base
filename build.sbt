@@ -267,6 +267,8 @@ lazy val kafkaPublishSettings =
 lazy val publishSettings = Seq(
   pomIncludeRepository := { _ => false },
   publishTo := sonatypePublishToBundle.value,
+  sonatypeSessionName := "[sbt-sonatype] ${name.value}-${version.value}",
+
   sonatypeCredentialHost := sonatypeCentralHost,
 
   licenses := Seq("Apache License 2.0" -> url("http://www.apache.org/licenses/LICENSE-2.0.html")),
