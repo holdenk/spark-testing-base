@@ -1,6 +1,6 @@
 resolvers += Resolver.sonatypeRepo("releases")
 
-addSbtPlugin("org.xerial.sbt" % "sbt-sonatype" % "3.11.2")
+addSbtPlugin("org.xerial.sbt" % "sbt-sonatype" % "3.12.2")
 
 addSbtPlugin("org.scalastyle" %% "scalastyle-sbt-plugin" % "1.0.0")
 
