@@ -114,6 +114,7 @@ val commonSettings = Seq(
   libraryDependencySchemes += "com.github.luben" %% "zstd-jni" % "early-semver", // "early-semver",
   evictionErrorLevel := Level.Info,
   sparkVersion := System.getProperty("sparkVersion", "2.4.8"),
+  isSnapshot := true,
   sparkTestingVersion := "2.1.1-SNAPSHOT",
   version := sparkVersion.value + "_" + sparkTestingVersion.value,
   scalaVersion := {
