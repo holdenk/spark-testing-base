@@ -23,8 +23,9 @@ addSbtPlugin("org.scoverage" % "sbt-scoverage" % "2.3.1")
 
 addDependencyTreePlugin
 
-// Only enable ScalaFix for Spark 2.X & late 3 & 4 because of Scala version issues.
-val maybeScalafix = if (major(sparkV) == 4 || major(sparkV) == 2 || (major(sparkV) == 3 && minor(sparkV) >= 2)) {
+// Only enable ScalaFix for Spark 2.X & Spark 4 because of Scala version issues.
+// You _could_ use this in Spark 3 but not with 2.12/2.13 cross compile.
+val maybeScalafix = if (major(sparkV) == 4 || major(sparkV) == 2) {
   Seq(addSbtPlugin("ch.epfl.scala" % "sbt-scalafix" % scalafixPluginVersion))
 } else {
   Seq.empty
