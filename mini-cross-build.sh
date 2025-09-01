@@ -1,12 +1,16 @@
 #!/bin/bash
 set -ex
-spark_versions =  [2.4.8 3.0.0 3.0.1 3.0.2 3.1.1 3.1.2 3.1.3 3.2.0 3.2.1 3.2.2 3.2.3 3.2.4 3.3.0 3.3.1 3.3.2 3.4.0 3.4.1 3.4.2 3.5.0 3.5.1 3.5.2 3.5.3 4.0.0-preview1 4.0.0-preview2 4.0.0]
+spark_versions=(
+  2.4.8
+  3.0.0 3.0.1 3.0.2 3.1.1 3.1.2 3.1.3 3.2.0 3.2.1 3.2.2 3.2.3 3.2.4 3.3.0 3.3.1 3.3.2 3.4.0 3.4.1 3.4.2 3.5.0 3.5.1 3.5.2 3.5.3
+  4.0.0-preview1 4.0.0-preview2 4.0.0
+)
 # Avoid m2 race conditions which "shouldn't" happen but do :p
-for spark_version in spark_versions
+for spark_version in $spark_versions
 do
   sbt -DsparkVersion=$spark_version +update
 done
-for spark_version in spark_versions
+for spark_version in $spark_versions
     do
       build_dir="/tmp/spark-testing-base-$spark_version-magic"
       rm -rf "${build_dir}"
