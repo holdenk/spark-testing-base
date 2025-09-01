@@ -115,11 +115,11 @@ val commonSettings = Seq(
   evictionErrorLevel := Level.Info,
   sparkVersion := System.getProperty("sparkVersion", "2.4.8"),
   isSnapshot := true,
-  sparkTestingVersion := "2.1.1-SNAPSHOT",
+  sparkTestingVersion := "2.1.2-SNAPSHOT",
   version := sparkVersion.value + "_" + sparkTestingVersion.value,
   scalaVersion := {
     if (sparkVersion.value >= "4.0.0") {
-      "2.13.13"
+      "2.13.16"
     } else {
       "2.12.15"
     }
@@ -127,7 +127,7 @@ val commonSettings = Seq(
   //tag::dynamicScalaVersion[]
   crossScalaVersions := {
     if (sparkVersion.value >= "4.0.0") {
-      Seq("2.13.16") // Minor version incompat will break, ah Scala :p
+      Seq("2.13.16", "3.3.6") // Minor version incompat will break, ah Scala :p
     } else if (sparkVersion.value >= "3.5.0") {
       Seq("2.12.15", "2.13.13")
     } else if (sparkVersion.value >= "3.2.0") {
@@ -159,19 +159,15 @@ val commonSettings = Seq(
   scalastyleSources in Compile ++= {unmanagedSourceDirectories in Compile}.value,
   scalastyleSources in Test ++= {unmanagedSourceDirectories in Test}.value,
 
-  resolvers ++= Seq(
-    "JBoss Repository" at "https://repository.jboss.org/nexus/content/repositories/releases/",
-    "Cloudera Repository" at "https://repository.cloudera.com/artifactory/cloudera-repos/",
-    "Apache HBase" at "https://repository.apache.org/content/repositories/releases",
-    "Twitter Maven Repo" at "https://maven.twttr.com/",
-    "scala-tools-legacy" at "https://oss.sonatype.org/content/groups/scala-tools",
-    "sonatype-releases-legacy" at "https://oss.sonatype.org/content/repositories/releases/",
-    "Typesafe repository" at "https://repo.typesafe.com/typesafe/releases/",
-    "Second Typesafe repo" at "https://repo.typesafe.com/typesafe/maven-releases/",
-    "Mesosphere Public Repository" at "https://downloads.mesosphere.io/maven",
+  resolvers ++= (Seq(
+    Resolver.typesafeRepo("releases"),
+    Resolver.sbtPluginRepo("releases"),
     Resolver.sonatypeRepo("public"),
-    Resolver.mavenLocal
-  )
+    Resolver.mavenLocal,
+    Resolver.DefaultMavenRepository,
+  ) ++ Resolver.sonatypeOssRepos("releases") ++
+    Resolver.sonatypeOssRepos("snapshots"))
+
 )
 
 // Allow kafka (and other) utils to have version specific files
@@ -289,7 +285,12 @@ lazy val publishSettings = Seq(
     Developer("holdenk", "Holden Karau", "holden@pigscanfly.ca", url("http://www.holdenkarau.com"))
   ),
 
-  credentials ++= Seq(Credentials(Path.userHome / ".ivy2" / ".sbtcredentials"), Credentials(Path.userHome / ".ivy2" / ".sparkcredentials")),
+  credentials ++= Seq(
+    ".sbtcredentials",
+    ".sparkcredentials").map(
+    n => Path.userHome / ".ivy2" / n)
+  .filter(_.exists)
+  .map(Credentials(_)),
   useGpg := true,
   artifactName := { (sv: ScalaVersion, module: ModuleID, artifact: Artifact) =>
     Artifact.artifactName(sv, module, artifact).replaceAll(s"-${module.revision}", s"-${sparkVersion.value}${module.revision}")
