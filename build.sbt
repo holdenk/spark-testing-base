@@ -128,10 +128,8 @@ val commonSettings = Seq(
   crossScalaVersions := {
     if (sparkVersion.value >= "4.0.0") {
       Seq("2.13.16", "3.3.6") // Minor version incompat will break, ah Scala :p
-    } else if (sparkVersion.value >= "3.5.0") {
-      Seq("2.12.15", "2.13.13")
     } else if (sparkVersion.value >= "3.2.0") {
-      Seq("2.12.15", "2.13.10")
+      Seq("2.12.15", "2.13.13")
     } else if (sparkVersion.value >= "3.0.0") {
       Seq("2.12.15")
     } else {
