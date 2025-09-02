@@ -323,7 +323,7 @@ class SampleScalaCheckTest extends AnyFunSuite
     val schema = StructType(List(
       StructField("bloop", DecimalType(38, 2), nullable=true)))
 
-    val sqlContext = new SQLContext(sc)
+    val sqlContext = SparkSession.builder.getOrCreate().sqlContext
     val dataframeGen = DataFrameGenerator.arbitraryDataFrame(sqlContext, schema)
 
     val property =
@@ -343,7 +343,7 @@ class SampleScalaCheckTest extends AnyFunSuite
       StructField("medium", DecimalType(15, 8)),
       StructField("large", DecimalType(38, 38))))
 
-    val sqlContext = new SQLContext(sc)
+    val sqlContext = SparkSession.builder.getOrCreate().sqlContext
     val dataframeGen = DataFrameGenerator.arbitraryDataFrame(sqlContext, schema)
 
     val property =

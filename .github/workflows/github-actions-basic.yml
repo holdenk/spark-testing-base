@@ -38,7 +38,7 @@ jobs:
           - spark: "3.4.0"
             java-version: "17"
             distribution: "temurin"
-          - spark: "4.0.0-preview2"
+          - spark: "4.0.0"
             java-version: "17"
             distribution: "temurin"
     env:
@@ -55,9 +55,11 @@ jobs:
         java-version: ${{ matrix.java-version }}
         distribution: ${{ matrix.distribution }}
         cache: sbt
+    - name: Add sbt
+      uses: sbt/setup-sbt@v1
     - name: Cache maven modules
       id: cache-maven
-      uses: actions/cache@v4.0.0
+      uses: actions/cache@v4
       env:
         cache-name: cache-maven
       with:
@@ -65,22 +67,13 @@ jobs:
         path: |
           ~/.m2
           ~/.ivy2/cache
+          ~/.sbt
+          ~/.cache/coursier
         key: ${{ runner.os }}-${{ matrix.spark }}-build-${{ env.cache-name }}-${{ hashFiles('build.sbt') }}
         restore-keys: |
           ${{ runner.os }}-${{ matrix.spark }}-build-${{ env.cache-name }}-
           ${{ runner.os }}-${{ matrix.spark }}-build-
           ${{ runner.os }}-${{ matrix.spark }}-
           ${{ runner.os }}
-#    - name: Sync the current branch with the latest in spark-testing-base
-#      if: github.repository != 'holdenk/spark-testing-base'
-#      id: sync-branch
-#      run: |
-#        apache_spark_ref=`git rev-parse HEAD`
-#        git fetch https://github.com/$GITHUB_REPOSITORY.git ${GITHUB_REF##*/}
-#        git -c user.name='Spark Test Account' -c user.email='sparktestacc@gmail.com' merge --no-commit --progress --squash FETCH_HEAD
-#        git -c user.name='Spark Test Account' -c user.email='sparktestacc@gmail.com' commit -m "Merged commit"
-#        echo "::set-output name=SPARK_REF::$apache_spark_ref"
-    # Cache local repositories. Note that GitHub Actions cache has a 2G limit.
-    # Run the tests.
     - name: Run tests
       run: SPARK_TESTING=yes ./build/sbt clean +compile +test -DsparkVersion=$SPARK_VERSION

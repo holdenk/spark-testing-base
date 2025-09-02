@@ -26,8 +26,9 @@ ThisBuild / libraryDependencySchemes ++= Seq(
   "org.scala-lang.modules" %% "scala-xml" % VersionScheme.Always
 )
 
-scalafixDependencies in ThisBuild +=
-  "com.holdenkarau" %% "spark-scalafix-rules" % "0.1.1-2.4.8"
+// Disabled for now because we are not upgrading & it doesn't play nice with Scala 2.12 & 2.13 at the same time.
+//scalafixDependencies in ThisBuild +=
+//  "com.holdenkarau" %% "spark-scalafix-rules" % "0.1.1-2.4.8"
 
 lazy val core = (project in file("core"))
   .settings(
@@ -36,7 +37,8 @@ lazy val core = (project in file("core"))
     publishSettings,
     coreSources,
     coreTestSources,
-    addCompilerPlugin(scalafixSemanticdb),
+// Disabled for now because we are not upgrading & it doesn't play nice with Scala 2.12 & 2.13 at the same time.
+//    addCompilerPlugin(scalafixSemanticdb),
      libraryDependencies ++= Seq(
       "org.apache.spark" %% "spark-core"        % sparkVersion.value,
       "org.apache.spark" %% "spark-streaming"   % sparkVersion.value,
@@ -127,11 +129,9 @@ val commonSettings = Seq(
   //tag::dynamicScalaVersion[]
   crossScalaVersions := {
     if (sparkVersion.value >= "4.0.0") {
-      Seq("2.13.16", "3.3.6") // Minor version incompat will break, ah Scala :p
-    } else if (sparkVersion.value >= "3.5.0") {
-      Seq("2.12.15", "2.13.13")
+      Seq("2.13.16") // Minor version incompat will break, ah Scala :p
     } else if (sparkVersion.value >= "3.2.0") {
-      Seq("2.12.15", "2.13.10")
+      Seq("2.12.15", "2.13.16")
     } else if (sparkVersion.value >= "3.0.0") {
       Seq("2.12.15")
     } else {
@@ -236,7 +236,7 @@ val coreTestSources = unmanagedSourceDirectories in Test  := {
 lazy val commonDependencies = Seq(
   "org.scalatest" %% "scalatest" % "3.2.17",
   "org.scalatestplus" %% "scalacheck-1-15" % "3.2.3.0",
-  "org.scalatestplus" %% "junit-4-13" % "3.2.19.0",
+  "org.scalatestplus" %% "junit-4-13" % "3.2.19.1",
   "org.scalacheck" %% "scalacheck" % "1.15.2",
   "junit" % "junit" % "4.13.2",
   "org.eclipse.jetty" % "jetty-util" % "9.4.51.v20230217",
