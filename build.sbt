@@ -260,7 +260,7 @@ lazy val kafkaPublishSettings =
     skip in publish := scalaVersion.value >= "2.12.0"
   )
 
-val centralSnapshots = "https://central.sonatype.com/repository/maven-snapshots/"
+val centralSnapshots = "https://ossrh-staging-api.central.sonatype.com/service/local/staging/deploy/maven2/"
 
 // publish settings
 lazy val publishSettings = Seq(
