@@ -13,10 +13,12 @@ spark_versions=(
 # Avoid m2 race conditions which "shouldn't" happen but do :p
 for spark_version in $spark_versions
 do
+  echo "Updating $spark_version"
   sbt -DsparkVersion=$spark_version +update
 done
 for spark_version in $spark_versions
     do
+      echo "Building $spark_version"
       build_dir="/tmp/spark-testing-base-$spark_version-magic"
       rm -rf "${build_dir}"
       mkdir -p "${build_dir}"
@@ -27,3 +29,4 @@ for spark_version in $spark_versions
       cd -
 done
 wait
+echo $?
