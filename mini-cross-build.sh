@@ -11,12 +11,12 @@ spark_versions=(
   4.0.0
 )
 # Avoid m2 race conditions which "shouldn't" happen but do :p
-for spark_version in $spark_versions
+for spark_version in "${spark_versions[@]}"
 do
   echo "Updating $spark_version"
   sbt -DsparkVersion=$spark_version +update
 done
-for spark_version in $spark_versions
+for spark_version in "${spark_versions[@]}"
     do
       echo "Building $spark_version"
       build_dir="/tmp/spark-testing-base-$spark_version-magic"
