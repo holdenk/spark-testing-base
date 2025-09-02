@@ -12,10 +12,10 @@ This is not my beautiful code.
 
 ## How?
 
-So you include com.holdenkarau.spark-testing-base [spark_version]_1.4.0 and extend one of the classes and write some simple tests instead.  For example to include this in a project using Spark 3.0.0:
+So you include com.holdenkarau.spark-testing-base [spark_version]_[spark_testing_base_version] (in thise case 2.1.2) and extend one of the classes and write some simple tests instead.  For example to include this in a project using Spark 4.0.0:
 
 ```scala
-"com.holdenkarau" %% "spark-testing-base" % "3.0.0_1.4.0" % "test"
+"com.holdenkarau" %% "spark-testing-base" % "4.0.0_2.1.2" % "test"
 ```
 
 or
@@ -23,8 +23,8 @@ or
 ```
 <dependency>
 	<groupId>com.holdenkarau</groupId>
-	<artifactId>spark-testing-base_2.12</artifactId>
-	<version>${spark.version}_1.4.0</version>
+	<artifactId>spark-testing-base_2.13</artifactId>
+	<version>${spark.version}_2.1.2</version>
 	<scope>test</scope>
 </dependency>
 ```
