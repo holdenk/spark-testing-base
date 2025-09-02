@@ -287,6 +287,7 @@ lazy val publishSettings = Seq(
 
   credentials ++= Seq(
     ".sbtcredentials",
+    ".sbt_staging_credentials",
     ".sparkcredentials").map(
     n => Path.userHome / ".ivy2" / n)
   .filter(_.exists)
