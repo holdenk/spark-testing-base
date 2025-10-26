@@ -2,8 +2,7 @@ package com.holdenkarau.spark.testing.receiver
 
 import com.holdenkarau.spark.testing.StreamingSuiteBase
 import org.apache.spark.SparkConf
-import org.scalatest.FunSuite
-
+import org.scalatest.funsuite.AnyFunSuite
 
 /**
   * Supports unit testing of [[org.apache.spark.streaming.dstream.InputDStream]]s
@@ -20,7 +19,7 @@ import org.scalatest.FunSuite
   * for each individual test. The [[org.apache.spark.SparkContext]]
   * is re-used for each test in the suite.
   */
-trait InputStreamSuiteBase extends FunSuite with StreamingSuiteBase {
+trait InputStreamSuiteBase extends AnyFunSuite with StreamingSuiteBase {
   /**
     *  Use system clock rather than TestManualClock, otherwise receivers never run.
     */

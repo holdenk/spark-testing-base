@@ -175,31 +175,23 @@ val commonSettings = Seq(
 val coreSources = unmanagedSourceDirectories in Compile  := {
   if (sparkVersion.value >= "4.0.0") Seq(
     (sourceDirectory in Compile)(_ / "4.0/scala"),
-    (sourceDirectory in Compile)(_ / "2.2/scala"),
     (sourceDirectory in Compile)(_ / "3.0/scala"),
-    (sourceDirectory in Compile)(_ / "2.0/scala"),
-    (sourceDirectory in Compile)(_ / "2.0/java")
+    (sourceDirectory in Compile)(_ / "2.4/scala"),
+    (sourceDirectory in Compile)(_ / "2.4/java")
   ).join.value
   else if (sparkVersion.value >= "3.0.0" && scalaVersion.value >= "2.12.0") Seq(
-    (sourceDirectory in Compile)(_ / "2.2/scala"),
     (sourceDirectory in Compile)(_ / "3.0/scala"),
-    (sourceDirectory in Compile)(_ / "2.0/scala"),
-    (sourceDirectory in Compile)(_ / "2.0/java")
+    (sourceDirectory in Compile)(_ / "2.4/scala"),
+    (sourceDirectory in Compile)(_ / "2.4/java")
   ).join.value
 //end::dynamicCodeSelection[]
   else if (sparkVersion.value >= "3.0.0" && scalaVersion.value >= "2.12.0") Seq(
-    (sourceDirectory in Compile)(_ / "2.2/scala"),
     (sourceDirectory in Compile)(_ / "3.0/scala"),
-    (sourceDirectory in Compile)(_ / "2.0/scala"),
-    (sourceDirectory in Compile)(_ / "2.0/java")
+    (sourceDirectory in Compile)(_ / "2.4/scala"),
+    (sourceDirectory in Compile)(_ / "2.4/java")
   ).join.value
-  else if (sparkVersion.value >= "2.4.0" && scalaVersion.value >= "2.12.0") Seq(
-    (sourceDirectory in Compile)(_ / "2.2/scala"),
-    (sourceDirectory in Compile)(_ / "2.0/scala"), (sourceDirectory in Compile)(_ / "2.0/java")
-  ).join.value
-  else Seq( // For scala 2.11 only bother building scala support, skip java bridge.
-    (sourceDirectory in Compile)(_ / "2.2/scala"),
-    (sourceDirectory in Compile)(_ / "2.0/scala")
+  else // Oldest we support is 2.4.8
+    Seq((sourceDirectory in Compile)(_ / "2.4/scala"), (sourceDirectory in Compile)(_ / "2.4/java")
   ).join.value
 }
 
@@ -208,25 +200,18 @@ val coreTestSources = unmanagedSourceDirectories in Test  := {
     (sourceDirectory in Test)(_ / "4.0/scala"),
     (sourceDirectory in Test)(_ / "3.0/scala"),
     (sourceDirectory in Test)(_ / "3.0/java"),
-    (sourceDirectory in Test)(_ / "2.2/scala"),
-    (sourceDirectory in Test)(_ / "2.0/scala"),
-    (sourceDirectory in Test)(_ / "2.0/java")
+    (sourceDirectory in Test)(_ / "2.4/scala"),
+    (sourceDirectory in Test)(_ / "2.4/java")
   ).join.value
   else if (sparkVersion.value >= "3.0.0" && scalaVersion.value >= "2.12.0") Seq(
     (sourceDirectory in Test)(_ / "pre-4.0/scala"),
     (sourceDirectory in Test)(_ / "3.0/scala"),
     (sourceDirectory in Test)(_ / "3.0/java"),
-    (sourceDirectory in Test)(_ / "2.2/scala"),
-    (sourceDirectory in Test)(_ / "2.0/scala"),
-    (sourceDirectory in Test)(_ / "2.0/java")
+    (sourceDirectory in Test)(_ / "2.4/scala"),
+    (sourceDirectory in Test)(_ / "2.4/java")
   ).join.value
-  else if (sparkVersion.value >= "2.2.0" && scalaVersion.value >= "2.12.0") Seq(
-    (sourceDirectory in Test)(_ / "2.2/scala"),
-    (sourceDirectory in Test)(_ / "2.0/scala"), (sourceDirectory in Test)(_ / "2.0/java")
-  ).join.value
-  else Seq(
-    (sourceDirectory in Test)(_ / "2.2/scala"),
-    (sourceDirectory in Test)(_ / "2.0/scala")
+  else // Oldest we support is 2.4.8
+    Seq( (sourceDirectory in Test)(_ / "2.4/scala"), (sourceDirectory in Test)(_ / "2.4/java")
   ).join.value
 }
 

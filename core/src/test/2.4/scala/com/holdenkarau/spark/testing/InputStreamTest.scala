@@ -21,10 +21,10 @@ import com.holdenkarau.spark.testing.receiver.InputStreamSuiteBase
 import org.apache.spark.SparkContext
 import org.apache.spark.streaming._
 import org.apache.spark.streaming.dstream.DStream
-import org.scalatest.FunSuite
+import org.scalatest.funsuite.AnyFunSuite
 
 
-class InputStreamTest extends FunSuite with InputStreamSuiteBase {
+class InputStreamTest extends AnyFunSuite with InputStreamSuiteBase {
 
   test("verify success if inputs received within expected timeout") {
     runTest(
@@ -88,4 +88,3 @@ class InputStreamTest extends FunSuite with InputStreamSuiteBase {
   }
 
 }
-
