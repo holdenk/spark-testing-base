@@ -35,3 +35,21 @@ for spark_version in "${spark_versions[@]}"
 done
 wait
 echo $?
+echo "Uploads complete."
+# Prompt AFTER uploads about publishing/releasing
+read -p "Do you want to publish (release) the staged artifacts to Maven Central? (y/N): " publish_answer
+publish_answer=${publish_answer,,}  # to lower
+
+if [[ "$publish_answer" == "y" ]]; then
+  echo "Releasing all staged artifacts..."
+  for spark_version in "${spark_versions[@]}"
+  do
+    build_dir="/tmp/spark-testing-base-$spark_version-magic"
+    cd ${build_dir}
+    sbt $SBT_EXTRA -DsparkVersion=$spark_version sonaRelease
+  done
+else
+  echo "Skipping release. Staged artifacts remain in Sonatype."
+fi
+
+echo "Done."
