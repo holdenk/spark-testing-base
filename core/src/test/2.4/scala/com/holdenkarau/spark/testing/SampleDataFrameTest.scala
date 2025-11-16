@@ -19,8 +19,10 @@ package com.holdenkarau.spark.testing
 import java.sql.Timestamp
 import java.time.Duration
 
-import org.apache.spark.sql.{DataFrame, Row}
+import org.apache.spark.sql._
+import org.apache.spark.sql.functions._
 import org.apache.spark.sql.types._
+import scala.collection.JavaConverters._
 
 case class Pandas(name: String, zip: String, pandaSize: Integer, age: Integer)
 
@@ -33,6 +35,28 @@ class SampleDataFrameTest extends ScalaDataFrameSuiteBase {
   val inputList2 = List(
     Magic("panda", 9001.0 + 1E-6, byteArray),
     Magic("coffee", 9002.0, byteArray))
+
+  test("assertColumnEquality") {
+    import sqlContext.implicits._
+    def myAddFunction(colName1: String, colName2: String): Column = {
+      col(colName1) + col(colName2)
+    }
+    val df = spark.createDataFrame(
+      List(
+        Row(1, 3, 4),
+        Row(5, 3, 8)
+      ).asJava, StructType(List(
+        StructField("num1", IntegerType, true),
+        StructField("num2", IntegerType, true),
+        StructField("expected", IntegerType, true)
+      ))
+    ).withColumn(
+      "the_sum",
+      myAddFunction("num1", "num2")
+    )
+
+    assertColumnEquality(df, "expected", "the_sum")
+  }
 
   test("dataframe should be equal to its self") {
     import sqlContext.implicits._
