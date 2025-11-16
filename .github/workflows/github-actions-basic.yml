@@ -69,11 +69,6 @@ jobs:
           ~/.ivy2/cache
           ~/.sbt
           ~/.cache/coursier
-        key: ${{ runner.os }}-${{ matrix.spark }}-build-${{ env.cache-name }}-${{ hashFiles('build.sbt') }}
-        restore-keys: |
-          ${{ runner.os }}-${{ matrix.spark }}-build-${{ env.cache-name }}-
-          ${{ runner.os }}-${{ matrix.spark }}-build-
-          ${{ runner.os }}-${{ matrix.spark }}-
-          ${{ runner.os }}
+        key: ${{ runner.os }}-${{ matrix.java-version }}-${{ matrix.spark }}-build-${{ env.cache-name }}-${{ hashFiles('build.sbt') }}
     - name: Run tests
       run: SPARK_TESTING=yes ./build/sbt clean +compile +test -DsparkVersion=$SPARK_VERSION
