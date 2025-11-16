@@ -37,6 +37,8 @@ import org.scalatest.funsuite.AnyFunSuite
 
 import scala.math.abs
 
+case class ColumnMismatch(smth: String) extends Exception(smth)
+
 /**
  * Base trait for testing Spark DataFrames in Scala.
  */
@@ -255,6 +257,29 @@ trait DataFrameSuiteBaseLike extends SparkContextProvider
                             customShow: DataFrame => Unit = _.show()): Unit = {
     assertDataFrameApproximateEquals(expected, result, 0.0,
       Duration.ZERO, customShow)
+  }
+
+  /**
+   * Compare if two columns in the same DataFrame are equal.
+   */
+  def assertColumnEquality(
+    df: DataFrame,
+    colName1: String,
+    colName2: String
+  ): Unit = {
+    val elements = df.select(colName1, colName2).filter(col(colName1) =!= col(colName2)).collect()
+    val colName1Elements = elements.map(_(0))
+    val colName2Elements = elements.map(_(1))
+    val mismatchMessage = s"""
+Columns aren't equal
+'$colName1' elements:
+[${colName1Elements.mkString(", ")}]
+'$colName2' elements:
+[${colName2Elements.mkString(", ")}]
+"""
+    if (!colName1Elements.sameElements(colName2Elements)) {
+      throw ColumnMismatch(mismatchMessage)
+    }
   }
 
   /**
