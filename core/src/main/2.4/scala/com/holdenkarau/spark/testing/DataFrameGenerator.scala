@@ -4,10 +4,24 @@ import java.math.{RoundingMode}
 import java.sql.{Date, Timestamp}
 
 import org.apache.spark.sql.types._
-import org.apache.spark.sql.{DataFrame, Row, SQLContext}
+import org.apache.spark.sql.{DataFrame, Row, SQLContext, SparkSession}
 import org.scalacheck.{Arbitrary, Gen}
 
 object DataFrameGenerator {
+
+  /**
+   * Creates a DataFrame Generator for the given Schema.
+   *
+   * @param spark         Spark Session.
+   * @param schema        The required Schema.
+   * @param minPartitions minimum number of partitions, defaults to 1.
+   * @return Arbitrary DataFrames generator of the required schema.
+   */
+  def arbitraryDataFrame(
+    spark: SparkSession, schema: StructType, minPartitions: Int):
+      Arbitrary[DataFrame] = {
+    arbitraryDataFrameWithCustomFields(spark, schema, minPartitions)()
+  }
 
   /**
    * Creates a DataFrame Generator for the given Schema.
@@ -21,6 +35,44 @@ object DataFrameGenerator {
     sqlContext: SQLContext, schema: StructType, minPartitions: Int = 1):
       Arbitrary[DataFrame] = {
     arbitraryDataFrameWithCustomFields(sqlContext, schema, minPartitions)()
+  }
+
+  /**
+   * Creates a DataFrame Generator for the given Schema, and the given custom
+   * generators.
+   * Custom generators should be specified as a list of:
+   * (column index, generator function) tuples.
+   *
+   * Note: The given custom generators should match the required schema,
+   * for ex. you can't use Int generator for StringType.
+   *
+   * Note 2: The ColumnGenerator* accepted as userGenerators has changed.
+   * ColumnGenerator is now the base class of the
+   * accepted generators, users upgrading to 0.6 need to change their calls
+   * to use Column.  Further explanation can be found in the release notes, and
+   * in the class descriptions at the bottom of this file.
+   *
+   * @param spark          Spark Session.
+   * @param schema         The required Schema.
+   * @param minPartitions  minimum number of partitions, defaults to 1.
+   * @param userGenerators custom user generators in the form of:
+   *                       (column index, generator function).
+   *                       where column index starts from 0 to length - 1
+   * @return Arbitrary DataFrames generator of the required schema.
+   */
+  def arbitraryDataFrameWithCustomFields(
+    spark: SparkSession, schema: StructType, minPartitions: Int)
+    (userGenerators: ColumnGeneratorBase*): Arbitrary[DataFrame] = {
+    val sqlContext = spark.sqlContext
+
+    val arbitraryRDDs = RDDGenerator.genRDD(
+      spark.sparkContext, minPartitions)(
+      getRowGenerator(schema, userGenerators))
+    Arbitrary {
+      arbitraryRDDs.map { r =>
+        sqlContext.createDataFrame(r, schema)
+      }
+    }
   }
 
   /**

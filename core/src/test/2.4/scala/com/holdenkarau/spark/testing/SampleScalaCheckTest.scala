@@ -413,6 +413,25 @@ class SampleScalaCheckTest extends AnyFunSuite
     check(property)
   }
 
+  // Test SparkSession-based API
+  test("dataframe generator with SparkSession should work") {
+    val session = SparkSession.builder.getOrCreate()
+    
+    val schema = StructType(List(
+      StructField("name", StringType, nullable = false),
+      StructField("age", IntegerType, nullable = false)))
+    val dataframeGen = DataFrameGenerator.arbitraryDataFrame(session, schema, 1)
+    
+    val property =
+      forAll(dataframeGen.arbitrary) {
+        dataframe => {
+          dataframe.schema == schema && dataframe.count() >= 0
+        }
+      }
+    
+    check(property)
+  }
+
   private def filterOne(rdd: RDD[String]): RDD[Int] = {
     rdd.filter(_.length > 2).map(_.length)
   }

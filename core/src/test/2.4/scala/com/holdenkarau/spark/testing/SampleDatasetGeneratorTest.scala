@@ -65,6 +65,40 @@ class SampleDatasetGeneratorTest extends AnyFunSuite
 
     check(property)
   }
+
+  test("test generating Datasets[String] with SparkSession") {
+    val session = SparkSession.builder.getOrCreate()
+    import session.implicits._
+
+    val property =
+      forAll(
+        DatasetGenerator.genDataset[String](session, 1)(
+          Arbitrary.arbitrary[String])) {
+        dataset => dataset.map(_.length).count() == dataset.count()
+      }
+
+    check(property)
+  }
+
+  test("test generating sized Datasets[String] with SparkSession") {
+    val session = SparkSession.builder.getOrCreate()
+    import session.implicits._
+
+    val property =
+      forAll {
+        DatasetGenerator.genSizedDataset[(Int, String)](session, 1) { size =>
+          Gen.listOfN(size, Arbitrary.arbitrary[Char]).map(l => (size, l.mkString))
+        }
+      }{
+        dataset =>
+          val tuples = dataset.collect()
+          val value = dataset.map{ case (_, str) => str.length}
+          tuples.forall{ case (size, str) => size == str.length} &&
+          value.count() == dataset.count
+      }
+
+    check(property)
+  }
 }
 
 case class Car(name: String, speed: Int)
