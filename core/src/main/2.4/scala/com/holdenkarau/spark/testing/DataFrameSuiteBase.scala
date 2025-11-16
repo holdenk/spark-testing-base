@@ -340,6 +340,36 @@ trait DataFrameSuiteBaseLike extends SparkContextProvider
 
 
   /**
+    * Compares if two [[Dataset]]s are equal (alias for assertDataFrameEquals when dealing with Dataset[Row]).
+    * This is provided for convenience as Datasets are the preferred API name in modern Spark.
+    * For strongly-typed Datasets, extend DatasetSuiteBase instead.
+    *
+    * @param customShow unit function to customize the '''show''' method
+    *                   when datasets are not equal. IE: '''ds.show(false)''' or
+    *                   '''ds.toJSON.show(false)'''.
+    */
+  def assertDatasetEquals(expected: Dataset[Row], result: Dataset[Row],
+                         customShow: DataFrame => Unit = _.show()): Unit = {
+    assertDataFrameEquals(expected, result, customShow)
+  }
+
+  /**
+    * Compares if two [[Dataset]]s are approximately equal (alias for assertDataFrameApproximateEquals when dealing with Dataset[Row]).
+    * When comparing inexact fields uses tol & tolTimestamp.
+    *
+    * @param tol          max acceptable numeric tolerance, should be less than 1.
+    * @param tolTimestamp max acceptable timestamp tolerance.
+    * @param customShow   unit function to customize the '''show''' method
+    *                     when datasets are not equal.
+    */
+  def assertDatasetApproximateEquals(
+    expected: Dataset[Row], result: Dataset[Row],
+    tol: Double, tolTimestamp: Duration,
+    customShow: DataFrame => Unit): Unit = {
+    assertDataFrameApproximateEquals(expected, result, tol, tolTimestamp, customShow)
+  }
+
+  /**
     * Compares if two [[DataFrame]]s are equal without caring about order of rows, by
     * finding elements in one DataFrame that is not in the other. The resulting
     * DataFrame should be empty inferring the two DataFrames have the same elements.
