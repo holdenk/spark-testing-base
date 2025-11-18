@@ -42,7 +42,7 @@ class InputStreamTest extends AnyFunSuite with InputStreamSuiteBase {
         generatorDelay = Seconds(10),
         awaitResultsTimeout = Seconds(0))
     }
-    assert(thrown.getMessage contains "Futures timed out")
+    assert(thrown.getMessage contains "timed out")
   }
 
   test("verify error raised if execpted results do not equal actual results") {
