@@ -116,7 +116,7 @@ val commonSettings = Seq(
   libraryDependencySchemes += "com.github.luben" %% "zstd-jni" % "early-semver", // "early-semver",
   evictionErrorLevel := Level.Info,
   sparkVersion := System.getProperty("sparkVersion", "2.4.8"),
-  sparkTestingVersion := "2.1.3",
+  sparkTestingVersion := "3.0.0",
   isSnapshot := sparkTestingVersion.value.contains("SNAPSHOT"),
   version := sparkVersion.value + "_" + sparkTestingVersion.value,
   scalaVersion := {
@@ -135,7 +135,7 @@ val commonSettings = Seq(
     } else if (sparkVersion.value >= "3.0.0") {
       Seq("2.12.15")
     } else {
-      Seq("2.12.15", "2.11.12")
+      Seq("2.12.15")
     }
   },
   //end::dynamicScalaVersion[]
