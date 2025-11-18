@@ -63,16 +63,7 @@ object DataFrameGenerator {
   def arbitraryDataFrameWithCustomFields(
     spark: SparkSession, schema: StructType, minPartitions: Int)
     (userGenerators: ColumnGeneratorBase*): Arbitrary[DataFrame] = {
-    val sqlContext = spark.sqlContext
-
-    val arbitraryRDDs = RDDGenerator.genRDD(
-      spark.sparkContext, minPartitions)(
-      getRowGenerator(schema, userGenerators))
-    Arbitrary {
-      arbitraryRDDs.map { r =>
-        sqlContext.createDataFrame(r, schema)
-      }
-    }
+    arbitraryDataFrameWithCustomFields(spark.sqlContext, schema, minPartitions)(userGenerators: _*)
   }
 
   /**

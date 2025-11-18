@@ -91,15 +91,7 @@ object DatasetGenerator {
   def arbitraryDataset[T: ClassTag : Encoder]
     (spark: SparkSession, minPartitions: Int)
     (generator: => Gen[T]): Arbitrary[Dataset[T]] = {
-
-    val rddGen: Gen[RDD[T]] =
-      RDDGenerator.genRDD[T](spark.sparkContext, minPartitions)(generator)
-    val datasetGen: Gen[Dataset[T]] =
-      rddGen.map(rdd => spark.createDataset(rdd))
-
-    Arbitrary {
-      datasetGen
-    }
+    arbitraryDataset(spark.sqlContext, minPartitions)(generator)
   }
 
   /**
@@ -141,15 +133,7 @@ object DatasetGenerator {
   def arbitrarySizedDataset[T: ClassTag : Encoder]
     (spark: SparkSession, minPartitions: Int)
     (generator: Int => Gen[T]): Arbitrary[Dataset[T]] = {
-
-    val rddGen: Gen[RDD[T]] =
-      RDDGenerator.genSizedRDD[T](spark.sparkContext, minPartitions)(generator)
-    val datasetGen: Gen[Dataset[T]] =
-      rddGen.map(rdd => spark.createDataset(rdd))
-
-    Arbitrary {
-      datasetGen
-    }
+    arbitrarySizedDataset(spark.sqlContext, minPartitions)(generator)
   }
 
   /**
