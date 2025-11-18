@@ -14,7 +14,7 @@ object DataFrameGenerator {
    *
    * @param spark         Spark Session.
    * @param schema        The required Schema.
-   * @param minPartitions minimum number of partitions, defaults to 1.
+   * @param minPartitions minimum number of partitions.
    * @return Arbitrary DataFrames generator of the required schema.
    */
   def arbitraryDataFrame(
@@ -54,7 +54,7 @@ object DataFrameGenerator {
    *
    * @param spark          Spark Session.
    * @param schema         The required Schema.
-   * @param minPartitions  minimum number of partitions, defaults to 1.
+   * @param minPartitions  minimum number of partitions.
    * @param userGenerators custom user generators in the form of:
    *                       (column index, generator function).
    *                       where column index starts from 0 to length - 1

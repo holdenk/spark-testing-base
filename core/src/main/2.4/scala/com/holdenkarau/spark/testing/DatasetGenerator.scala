@@ -11,8 +11,6 @@ object DatasetGenerator {
   /**
    * Generate an Dataset Generator of the desired type. Attempt to try different
    * number of partitions so as to catch problems with empty partitions, etc.
-   * minPartitions defaults to 1, but when generating data too large for a single
-   * machine, choose a larger value.
    *
    * @param spark         Spark Session
    * @param minPartitions minimum number of partitions
@@ -48,8 +46,6 @@ object DatasetGenerator {
     * Generate an Dataset Generator of the desired type with its size accessible.
     * Attempt to try different
     * number of partitions so as to catch problems with empty partitions, etc.
-    * minPartitions defaults to 1, but when generating data too large for a single
-    * machine, choose a larger value.
     *
     * @param spark         Spark Session
     * @param minPartitions minimum number of partitions
@@ -85,8 +81,6 @@ object DatasetGenerator {
   /**
    * Generate an Dataset Generator of the desired type. Attempt to try different
    * number of partitions so as to catch problems with empty partitions, etc.
-   * minPartitions defaults to 1, but when generating data too large for a single
-   * machine, choose a larger value.
    *
    * @param spark         Spark Session
    * @param minPartitions minimum number of partitions
@@ -137,8 +131,6 @@ object DatasetGenerator {
   /**
     * Generate an Dataset Generator of the desired type. Attempt to try different
     * number of partitions so as to catch problems with empty partitions, etc.
-    * minPartitions defaults to 1, but when generating data too large for a single
-    * machine, choose a larger value.
     *
     * @param spark         Spark Session
     * @param minPartitions minimum number of partitions
