@@ -222,7 +222,7 @@ lazy val commonDependencies = Seq(
   "org.scalatest" %% "scalatest" % "3.2.19",
   "org.scalatestplus" %% "scalacheck-1-15" % "3.2.3.0",
   "org.scalatestplus" %% "junit-4-13" % "3.2.19.1",
-  "org.scalacheck" %% "scalacheck" % "1.15.2",
+  "org.scalacheck" %% "scalacheck" % "1.15.4",
   "junit" % "junit" % "4.13.2",
   "org.eclipse.jetty" % "jetty-util" % "9.4.51.v20230217",
   "com.github.sbt" % "junit-interface" % "0.13.3" % "test->default")
