@@ -418,24 +418,33 @@ Columns aren't equal
     * Modify map type to an array of struct for having the possibility of compare
     * the two dataframes.
     */
-
-  private[testing] def convertMapToArrayStruct(df : DataFrame) : DataFrame = {
-    def modifyColumMap(field : DataType, columnName : Column, initialName : String) : Column = {
-      field match {
-      case MapType(_,_,_) => map_entries(columnName).alias(initialName)
+  private[testing] def convertMapToArrayStruct(df: DataFrame): DataFrame = {
+    def buildExpr(dataType: DataType, colName: String): String = dataType match {
+      case MapType(_, _, _) =>
+        s"arrays_zip(map_keys($colName), map_values($colName)) AS $colName"
       case StructType(fields) =>
-        struct(fields.map(f => modifyColumMap(f.dataType,col(s"$columnName.${f.name}"), f.name)):_*).alias(initialName)
-      case ArrayType(e,_) =>
-        e match {
-         case StructType(fields) =>
-            transform(columnName, x => struct(fields.map(
-              f => modifyColumMap(f.dataType, x.getField(f.name), f.name)):_*)).alias(initialName)
-         case _ => transform(columnName, x => modifyColumMap(e, x, "element")).alias(initialName)
-         }
-      case _ => columnName
-      }
+        val inner = fields.map { f =>
+          s"'${f.name}', ${buildExpr(f.dataType, s"$colName.${f.name}").replaceAll(" AS .*", "")}"
+        }.mkString(", ")
+        s"named_struct($inner) AS $colName"
+      case ArrayType(elementType, _) =>
+        elementType match {
+          case StructType(fields) =>
+            val structExpr =
+              fields.map(f =>
+                s"'${f.name}', ${buildExpr(f.dataType, s"x.${f.name}").replaceAll(" AS .*", "")}"
+              ).mkString(", ")
+            s"transform($colName, x -> named_struct($structExpr)) AS $colName"
+          case _ =>
+            val inner = buildExpr(elementType, "x").replaceAll(" AS .*", "")
+            s"transform($colName, x -> $inner) AS $colName"
+        }
+      case _ =>
+        s"$colName"
     }
-    df.select(df.schema.fields.map(f => modifyColumMap(f.dataType,col(f.name), f.name)):_*)
+
+    val exprs = df.schema.fields.map(f => buildExpr(f.dataType, f.name))
+    df.selectExpr(exprs: _*)
   }
 
   /**
