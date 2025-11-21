@@ -381,7 +381,167 @@ class SampleDataFrameTest extends ScalaDataFrameSuiteBase {
 
     assertDataFrameEquals(expectedDF.orderBy("zip"), resultDF.orderBy("zip"))
   }
+
+  test("convertMapToArrayStruct should return a schema with struct type instead a map"){
+
+    import sqlContext.implicits._
+    val originalDF = Seq(
+      BigTestClass(
+        simpleMap = Map("one" -> 1, "two" -> 2),
+        arrayOfStruct = Array(
+          InnerStruct("x", 10, Map("one" -> 1)),
+          InnerStruct("y", 20, Map("one" -> 1))),
+        nestedStruct = DeepStruct(
+        nested = InnerStruct("deep", 9, Map("one" -> 1)),
+        numbers = Array(1, 2, 3),
+        meta = Map("k1" -> "v1")
+        )
+      )
+    ).toDF()
+
+    originalDF.show(false)
+
+    val resultDF = convertMapToArrayStruct(originalDF)
+    resultDF.show(false)
+
+   
+    val expectedSchema = StructType(Seq(
+    StructField(
+      "simpleMap",
+      ArrayType(
+        StructType(Seq(
+          StructField("0", StringType, nullable = true),
+          StructField("1", IntegerType, nullable = true)
+        )),
+        containsNull = false
+      ),
+      nullable = true
+    ),
+    StructField(
+      "arrayOfStruct",
+      ArrayType(
+        StructType(Seq(
+          StructField("a", StringType, nullable = true),
+          StructField("b", IntegerType, nullable = true),
+          StructField(
+            "c",
+            ArrayType(
+              StructType(Seq(
+                StructField("0", StringType, nullable = true),
+                StructField("1", IntegerType, nullable = true)
+              )),
+              containsNull = false
+            ),
+            nullable = true
+          )
+        )),
+        containsNull = false
+      ),
+      nullable = true
+    ),
+    StructField(
+      "nestedStruct",
+      StructType(Seq(
+        StructField(
+          "nested",
+          StructType(Seq(
+            StructField("a", StringType, nullable = true),
+            StructField("b", IntegerType, nullable = true),
+            StructField(
+              "c",
+              ArrayType(
+                StructType(Seq(
+                  StructField("0", StringType, nullable = true),
+                  StructField("1", IntegerType, nullable = true)
+                )),
+                containsNull = false
+              ),
+              nullable = true
+            )
+          )),
+          nullable = false
+        ),
+        StructField(
+          "numbers",
+          ArrayType(IntegerType, containsNull = false),
+          nullable = true
+        ),
+        StructField(
+          "meta",
+          ArrayType(
+            StructType(Seq(
+              StructField("0", StringType, nullable = true),
+              StructField("1", StringType, nullable = true)
+            )),
+            containsNull = false
+          ),
+          nullable = true
+        )
+      )),
+      nullable = false
+    )
+    ))
+   
+    assert(expectedSchema == resultDF.schema)
+
+  }
+
+  test("assertDataFrameDataEquals should work with map types converting it to structs") {
+
+    import sqlContext.implicits._
+    val originalDF = Seq(
+      BigTestClass(
+        simpleMap = Map("one" -> 1, "two" -> 2),
+        arrayOfStruct = Array(
+          InnerStruct("x", 10, Map("one"-> 1)),
+          InnerStruct("y", 20, Map("one"-> 1))),
+        nestedStruct = DeepStruct(
+        nested = InnerStruct("deep", 9, Map("one"-> 1)),
+        numbers = Array(1, 2, 3),
+        meta = Map("k1" -> "v1")
+        )
+      )
+    ).toDF()
+
+    //Same dataframes should be equals
+    assertDataFrameDataEquals(originalDF, originalDF)
+
+    //Part 2 test if detect properly differents dataframes
+    val modifiedDF = Seq(
+      BigTestClass(
+        simpleMap = Map("one" -> 999, "two" -> 2), // Here comes the difference
+        arrayOfStruct = Array(
+          InnerStruct("x", 10, Map("one"-> 1)),
+          InnerStruct("y", 20, Map("one"-> 1))),
+        nestedStruct = DeepStruct(
+        nested = InnerStruct("deep", 9, Map("one"-> 1)),
+        numbers = Array(1, 2, 3),
+        meta = Map("k1" -> "v1")
+        )
+      )
+    ).toDF()
+
+    intercept[org.scalatest.exceptions.TestFailedException] {
+      assertDataFrameDataEquals(originalDF, modifiedDF)
+    }
+  }
+
 }
+
 
 case class Magic(name: String, power: Double, byteArray: Array[Byte])
 case class IntMagic(name: String, power: Int, byteArray: Array[Byte])
+
+case class InnerStruct(a: String, b: Int, c: Map[String, Int])
+case class DeepStruct(
+    nested: InnerStruct,
+    numbers: Array[Int],
+    meta: Map[String, String]
+  )
+
+case class BigTestClass(
+    simpleMap: Map[String, Int],
+    arrayOfStruct: Array[InnerStruct],
+    nestedStruct: DeepStruct
+  )
+

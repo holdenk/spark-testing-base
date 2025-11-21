@@ -385,33 +385,67 @@ Columns aren't equal
   def assertDataFrameDataEquals(expected: DataFrame, result: DataFrame): Unit = {
     val expectedCol = "assertDataFrameNoOrderEquals_expected"
     val actualCol = "assertDataFrameNoOrderEquals_actual"
+    val expectedPostMap = convertMapToArrayStruct(expected)
+    val resultPostMap = convertMapToArrayStruct(result)
     try {
-      expected.rdd.cache
-      result.rdd.cache
-      assert("Column size not Equal", expected.columns.size, result.columns.size)
-      assert("Length not Equal", expected.rdd.count, result.rdd.count)
+      expectedPostMap.rdd.cache
+      resultPostMap.rdd.cache
+      assert("Column size not Equal", expectedPostMap.columns.size, resultPostMap.columns.size)
+      assert("Length not Equal", expectedPostMap.rdd.count, resultPostMap.rdd.count)
 
-      val columns = expected.columns.map(s => col(s))
-      val expectedElementsCount = expected
+      val columns = expectedPostMap.columns.map(s => col(s))
+      val expectedElementsCount = expectedPostMap
         .groupBy(columns: _*)
         .agg(count(lit(1)).as(expectedCol))
-      val resultElementsCount = result
+      val resultElementsCount = resultPostMap
         .groupBy(columns: _*)
         .agg(count(lit(1)).as(actualCol))
 
-      val joinExprs = expected.columns
-        .map(s => expected.col(s) <=> result.col(s)).reduce(_.and(_))
+      val joinExprs = expectedPostMap.columns
+        .map(s => expectedPostMap.col(s) <=> resultPostMap.col(s)).reduce(_.and(_))
       val diff = expectedElementsCount
         .join(resultElementsCount, joinExprs, "full_outer")
         .filter(not(col(expectedCol) <=> col(actualCol)))
 
       assertEmpty(diff.take(maxUnequalRowsToShow))
     } finally {
-      expected.rdd.unpersist()
-      result.rdd.unpersist()
+      expectedPostMap.rdd.unpersist()
+      resultPostMap.rdd.unpersist()
     }
-  }
+  } 
 
+  /**
+    * Modify map type to an array of struct for having the possibility of compare
+    * the two dataframes.
+    */
+  private[testing] def convertMapToArrayStruct(df: DataFrame): DataFrame = {
+    def buildExpr(dataType: DataType, colName: String): String = dataType match {
+      case MapType(_, _, _) =>
+        s"arrays_zip(map_keys($colName), map_values($colName)) AS $colName"
+      case StructType(fields) =>
+        val inner = fields.map { f =>
+          s"'${f.name}', ${buildExpr(f.dataType, s"$colName.${f.name}").replaceAll(" AS .*", "")}"
+        }.mkString(", ")
+        s"named_struct($inner) AS $colName"
+      case ArrayType(elementType, _) =>
+        elementType match {
+          case StructType(fields) =>
+            val structExpr =
+              fields.map(f =>
+                s"'${f.name}', ${buildExpr(f.dataType, s"x.${f.name}").replaceAll(" AS .*", "")}"
+              ).mkString(", ")
+            s"transform($colName, x -> named_struct($structExpr)) AS $colName"
+          case _ =>
+            val inner = buildExpr(elementType, "x").replaceAll(" AS .*", "")
+            s"transform($colName, x -> $inner) AS $colName"
+        }
+      case _ =>
+        s"$colName"
+    }
+
+    val exprs = df.schema.fields.map(f => buildExpr(f.dataType, f.name))
+    df.selectExpr(exprs: _*)
+  }
 
   /**
    * Compares if two [[DataFrame]]s are equal without caring about order of rows, by
