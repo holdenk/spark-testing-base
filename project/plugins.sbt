@@ -2,7 +2,7 @@ resolvers += Resolver.sonatypeRepo("releases")
 
 import scala.util.Try
 
-val sparkV: String = sys.props.getOrElse("sparkVersion", "2.4.8")
+val sparkV: String = sys.props.getOrElse("sparkVersion", "3.5.7")
 
 def major(v: String): Int = Try(v.takeWhile(_ != '.').toInt).getOrElse(2)
 
