@@ -20,7 +20,7 @@ trait DatasetSuiteBaseLike extends DataFrameSuiteBaseLike {
    * This method could be customized by overriding equals method for
    * the given class type.
    */
-  def assertDatasetEquals[U](expected: Dataset[U], result: Dataset[U])
+  override def assertDatasetEquals[U](expected: Dataset[U], result: Dataset[U])
                             (implicit UCT: ClassTag[U]): Unit = {
     try {
       expected.rdd.cache
@@ -67,7 +67,7 @@ trait DatasetSuiteBaseLike extends DataFrameSuiteBaseLike {
     *                     when dataframes are not equal. IE: '''df.show(false)''' or
     *                     '''df.toJSON.show(false)'''.
     */
-  def assertDatasetApproximateEquals[U]
+  override def assertDatasetApproximateEquals[U]
     (expected: Dataset[U], result: Dataset[U], tol: Double,
      tolTimestamp: Duration,
      customShow: DataFrame => Unit = _.show())
