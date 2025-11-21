@@ -388,9 +388,11 @@ class SampleDataFrameTest extends ScalaDataFrameSuiteBase {
     val originalDF = Seq(
       BigTestClass(
         simpleMap = Map("one" -> 1, "two" -> 2),
-        arrayOfStruct = Array(InnerStruct("x", 10), InnerStruct("y", 20)),
+        arrayOfStruct = Array(
+          InnerStruct("x", 10, Map("one" -> 1)),
+          InnerStruct("y", 20, Map("one" -> 1))),
         nestedStruct = DeepStruct(
-        nested = InnerStruct("deep", 9),
+        nested = InnerStruct("deep", 9, Map("one" -> 1)),
         numbers = Array(1, 2, 3),
         meta = Map("k1" -> "v1")
         )
@@ -402,6 +404,7 @@ class SampleDataFrameTest extends ScalaDataFrameSuiteBase {
     val resultDF = convertMapToArrayStruct(originalDF)
     resultDF.show(false)
 
+   
     val expectedSchema = StructType(Seq(
     StructField(
       "simpleMap",
@@ -419,7 +422,18 @@ class SampleDataFrameTest extends ScalaDataFrameSuiteBase {
       ArrayType(
         StructType(Seq(
           StructField("a", StringType, nullable = true),
-          StructField("b", IntegerType, nullable = true)
+          StructField("b", IntegerType, nullable = true),
+          StructField(
+            "c",
+            ArrayType(
+              StructType(Seq(
+                StructField("0", StringType, nullable = true),
+                StructField("1", IntegerType, nullable = true)
+              )),
+              containsNull = false
+            ),
+            nullable = true
+          )
         )),
         containsNull = false
       ),
@@ -432,7 +446,18 @@ class SampleDataFrameTest extends ScalaDataFrameSuiteBase {
           "nested",
           StructType(Seq(
             StructField("a", StringType, nullable = true),
-            StructField("b", IntegerType, nullable = true)
+            StructField("b", IntegerType, nullable = true),
+            StructField(
+              "c",
+              ArrayType(
+                StructType(Seq(
+                  StructField("0", StringType, nullable = true),
+                  StructField("1", IntegerType, nullable = true)
+                )),
+                containsNull = false
+              ),
+              nullable = true
+            )
           )),
           nullable = false
         ),
@@ -456,7 +481,7 @@ class SampleDataFrameTest extends ScalaDataFrameSuiteBase {
       nullable = false
     )
     ))
-
+   
     assert(expectedSchema == resultDF.schema)
 
   }
@@ -467,9 +492,11 @@ class SampleDataFrameTest extends ScalaDataFrameSuiteBase {
     val originalDF = Seq(
       BigTestClass(
         simpleMap = Map("one" -> 1, "two" -> 2),
-        arrayOfStruct = Array(InnerStruct("x", 10), InnerStruct("y", 20)),
+        arrayOfStruct = Array(
+          InnerStruct("x", 10, Map("one"-> 1)),
+          InnerStruct("y", 20, Map("one"-> 1))),
         nestedStruct = DeepStruct(
-        nested = InnerStruct("deep", 9),
+        nested = InnerStruct("deep", 9, Map("one"-> 1)),
         numbers = Array(1, 2, 3),
         meta = Map("k1" -> "v1")
         )
@@ -483,9 +510,11 @@ class SampleDataFrameTest extends ScalaDataFrameSuiteBase {
     val modifiedDF = Seq(
       BigTestClass(
         simpleMap = Map("one" -> 999, "two" -> 2), // Here comes the difference
-        arrayOfStruct = Array(InnerStruct("x", 10), InnerStruct("y", 20)),
+        arrayOfStruct = Array(
+          InnerStruct("x", 10, Map("one"-> 1)),
+          InnerStruct("y", 20, Map("one"-> 1))),
         nestedStruct = DeepStruct(
-        nested = InnerStruct("deep", 9),
+        nested = InnerStruct("deep", 9, Map("one"-> 1)),
         numbers = Array(1, 2, 3),
         meta = Map("k1" -> "v1")
         )
@@ -503,7 +532,7 @@ class SampleDataFrameTest extends ScalaDataFrameSuiteBase {
 case class Magic(name: String, power: Double, byteArray: Array[Byte])
 case class IntMagic(name: String, power: Int, byteArray: Array[Byte])
 
-case class InnerStruct(a: String, b: Int)
+case class InnerStruct(a: String, b: Int, c: Map[String, Int])
 case class DeepStruct(
     nested: InnerStruct,
     numbers: Array[Int],
