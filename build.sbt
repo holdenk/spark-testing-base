@@ -120,7 +120,9 @@ val commonSettings = Seq(
   isSnapshot := sparkTestingVersion.value.contains("SNAPSHOT"),
   version := sparkVersion.value + "_" + sparkTestingVersion.value,
   scalaVersion := {
-    if (sparkVersion.value >= "4.0.0") {
+    if (sparkVersion.value >= "4.1.0") {
+      "2.13.17"
+    } else if (sparkVersion.value >= "4.0.0") {
       "2.13.16"
     } else {
       "2.12.15"
@@ -129,7 +131,7 @@ val commonSettings = Seq(
   //tag::dynamicScalaVersion[]
   crossScalaVersions := {
     if (sparkVersion.value >= "4.0.0") {
-      Seq("2.13.16") // Minor version incompat will break, ah Scala :p
+      Seq() // We don't cross compile for the 4.X branch (until Scala 3 support comes).
     } else if (sparkVersion.value >= "3.2.0") {
       Seq("2.12.15", "2.13.16")
     } else if (sparkVersion.value >= "3.0.0") {

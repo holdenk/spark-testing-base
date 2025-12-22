@@ -9,6 +9,7 @@ spark_versions=(
   3.4.0 3.4.1 3.4.2
   3.5.0 3.5.1 3.5.2 3.5.3 3.5.4 3.5.6
   4.0.0 4.0.1
+  4.1.0
 )
 # sbt doesn't read the JAVA_HOME env variable.
 SBT_EXTRA=""
