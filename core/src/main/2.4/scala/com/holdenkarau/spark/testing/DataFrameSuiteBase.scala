@@ -412,7 +412,7 @@ Columns aren't equal
       expectedPostMap.rdd.unpersist()
       resultPostMap.rdd.unpersist()
     }
-  } 
+  }
 
   /**
     * Converts map-typed columns into array-of-struct columns so that [[DataFrame]]s
