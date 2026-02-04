@@ -400,10 +400,7 @@ class SampleDataFrameTest extends ScalaDataFrameSuiteBase {
       )
     ).toDF()
 
-    originalDF.show(false)
-
     val resultDF = convertMapToArrayStruct(originalDF)
-    resultDF.show(false)
 
    
     val expectedSchema = StructType(Seq(
