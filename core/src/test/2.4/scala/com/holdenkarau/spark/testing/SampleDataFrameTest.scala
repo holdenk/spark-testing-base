@@ -382,7 +382,7 @@ class SampleDataFrameTest extends ScalaDataFrameSuiteBase {
     assertDataFrameEquals(expectedDF.orderBy("zip"), resultDF.orderBy("zip"))
   }
 
-  test("convertMapToArrayStruct should return a schema with struct type instead a map"){
+  test("convertMapToArrayStruct should return a schema with struct type instead of a map"){
 
     import sqlContext.implicits._
     val originalDF = Seq(
@@ -516,10 +516,10 @@ class SampleDataFrameTest extends ScalaDataFrameSuiteBase {
       )
     ).toDF()
 
-    //Same dataframes should be equals
+    //Same dataframes should be equal
     assertDataFrameDataEquals(originalDF, originalDF)
 
-    //Part 2 test if detect properly differents dataframes
+    //Part 2: test that it correctly detects different dataframes
     val modifiedDF = Seq(
       BigTestClass(
         simpleMap = Map("one" -> 999, "two" -> 2), // Here comes the difference

@@ -415,8 +415,27 @@ Columns aren't equal
   } 
 
   /**
-    * Modify map type to an array of struct for having the possibility of compare
-    * the two dataframes.
+    * Converts map-typed columns into array-of-struct columns so that [[DataFrame]]s
+    * containing maps can be compared reliably in tests.
+    *
+    * Spark does not define a stable ordering for values of map type, which means that
+    * operations used in test assertions (such as set-like comparisons that ignore
+    * row order) cannot directly rely on map columns being orderable. This helper
+    * normalizes map columns into an orderable representation before comparison.
+    *
+    * For each map column, this method produces an array of structs created by
+    * zipping the map keys and values via `arrays_zip(map_keys(col), map_values(col))`.
+    * In the resulting struct, field `"0"` holds the key and field `"1"` holds the
+    * corresponding value. Non-map columns are preserved as-is.
+    *
+    * The transformation is applied recursively to nested structures: maps inside
+    * structs, arrays of structs containing maps, and other combinations are all
+    * rewritten so that every map encountered in the schema is converted to an
+    * array of structs in this way.
+    *
+    * The method is marked `private[testing]` because it is an internal utility of
+    * the testing framework, intended to support DataFrame equality checks rather
+    * than to be part of the public API.
     */
   private[testing] def convertMapToArrayStruct(df: DataFrame): DataFrame = {
     def buildExpr(dataType: DataType, colName: String): String = dataType match {
