@@ -429,6 +429,10 @@ Columns aren't equal
         s"named_struct($inner) AS $colName"
       case ArrayType(elementType, _) =>
         elementType match {
+          case MapType(_, _, _) =>
+            val mapExpr =
+              s"arrays_zip(map_keys(x), map_values(x))"
+            s"flatten(transform($colName, x -> $mapExpr)) AS $colName"
           case StructType(fields) =>
             val structExpr =
               fields.map(f =>
