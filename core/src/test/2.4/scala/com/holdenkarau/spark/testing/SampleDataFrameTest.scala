@@ -395,7 +395,8 @@ class SampleDataFrameTest extends ScalaDataFrameSuiteBase {
         nested = InnerStruct("deep", 9, Map("one" -> 1)),
         numbers = Array(1, 2, 3),
         meta = Map("k1" -> "v1")
-        )
+        ),
+        arrayMap = Array(Map("one" -> 1), Map("two" -> 2))
       )
     ).toDF()
 
@@ -479,7 +480,18 @@ class SampleDataFrameTest extends ScalaDataFrameSuiteBase {
         )
       )),
       nullable = false
-    )
+    ),
+    StructField(
+      "arrayMap",
+      ArrayType(
+        StructType(Seq(
+          StructField("0", StringType, nullable = true),
+          StructField("1", IntegerType, nullable = true)
+        )),
+        containsNull = false
+      ),
+      nullable = true
+      )
     ))
    
     assert(expectedSchema == resultDF.schema)
@@ -493,13 +505,14 @@ class SampleDataFrameTest extends ScalaDataFrameSuiteBase {
       BigTestClass(
         simpleMap = Map("one" -> 1, "two" -> 2),
         arrayOfStruct = Array(
-          InnerStruct("x", 10, Map("one"-> 1)),
-          InnerStruct("y", 20, Map("one"-> 1))),
+          InnerStruct("x", 10, Map("one" -> 1)),
+          InnerStruct("y", 20, Map("one" -> 1))),
         nestedStruct = DeepStruct(
-        nested = InnerStruct("deep", 9, Map("one"-> 1)),
+        nested = InnerStruct("deep", 9, Map("one" -> 1)),
         numbers = Array(1, 2, 3),
         meta = Map("k1" -> "v1")
-        )
+        ),
+        arrayMap = Array(Map("one" -> 1), Map("two" -> 2))
       )
     ).toDF()
 
@@ -511,13 +524,14 @@ class SampleDataFrameTest extends ScalaDataFrameSuiteBase {
       BigTestClass(
         simpleMap = Map("one" -> 999, "two" -> 2), // Here comes the difference
         arrayOfStruct = Array(
-          InnerStruct("x", 10, Map("one"-> 1)),
-          InnerStruct("y", 20, Map("one"-> 1))),
+          InnerStruct("x", 10, Map("one" -> 1)),
+          InnerStruct("y", 20, Map("one" -> 1))),
         nestedStruct = DeepStruct(
-        nested = InnerStruct("deep", 9, Map("one"-> 1)),
+        nested = InnerStruct("deep", 9, Map("one" -> 1)),
         numbers = Array(1, 2, 3),
         meta = Map("k1" -> "v1")
-        )
+        ),
+        arrayMap = Array(Map("one" -> 1), Map("two" -> 2))
       )
     ).toDF()
 
@@ -542,6 +556,7 @@ case class DeepStruct(
 case class BigTestClass(
     simpleMap: Map[String, Int],
     arrayOfStruct: Array[InnerStruct],
-    nestedStruct: DeepStruct
+    nestedStruct: DeepStruct,
+    arrayMap : Array[Map[String, Int]]
   )
 
