@@ -120,7 +120,9 @@ val commonSettings = Seq(
   isSnapshot := sparkTestingVersion.value.contains("SNAPSHOT"),
   version := sparkVersion.value + "_" + sparkTestingVersion.value,
   scalaVersion := {
-    if (sparkVersion.value >= "4.1.0") {
+    if (sparkVersion.value >= "4.2.0") {
+      "2.13.18"
+    } else if (sparkVersion.value >= "4.1.0") {
       "2.13.17"
     } else if (sparkVersion.value >= "4.0.0") {
       "2.13.16"
