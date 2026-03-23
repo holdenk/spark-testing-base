@@ -19,6 +19,7 @@ package com.holdenkarau.spark.testing
 
 import org.apache.spark.sql._
 import org.apache.spark.sql.execution.streaming._
+import org.apache.spark.sql.execution.streaming.runtime._
 
 import org.scalatest.Suite
 
