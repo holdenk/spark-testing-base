@@ -143,26 +143,32 @@ trait ConnectEnabled extends BeforeAndAfterAll with DataFrameSuiteBaseLike {
       expected: DataFrame, result: DataFrame,
       tol: Double, tolTimestamp: Duration,
       customShow: DataFrame => Unit = _.show()): Unit = {
+    try {
+      expected.cache()
+      result.cache()
+      assertSchemasEqual(expected.schema, result.schema)
 
-    assertSchemasEqual(expected.schema, result.schema)
+      val expectedRows = expected.collect()
+      val resultRows = result.collect()
 
-    val expectedRows = expected.collect()
-    val resultRows = result.collect()
+      assert("Length not Equal", expectedRows.length.toLong, resultRows.length.toLong)
 
-    assert("Length not Equal", expectedRows.length.toLong, resultRows.length.toLong)
+      val unequalRows = expectedRows.zip(resultRows).zipWithIndex.filter {
+        case ((r1, r2), _) =>
+          !(r1.equals(r2) ||
+            DataFrameSuiteBase.approxEquals(r1, r2, tol, tolTimestamp))
+      }
 
-    val unequalRows = expectedRows.zip(resultRows).zipWithIndex.filter {
-      case ((r1, r2), _) =>
-        !(r1.equals(r2) ||
-          DataFrameSuiteBase.approxEquals(r1, r2, tol, tolTimestamp))
-    }
-
-    if (unequalRows.nonEmpty) {
-      val sample = unequalRows.take(maxUnequalRowsToShow)
-      val message = sample.map { case ((r1, r2), idx) =>
-        s"Row $idx: expected=$r1, actual=$r2"
-      }.mkString("\n")
-      fail(s"There are some unequal rows:\n$message")
+      if (unequalRows.nonEmpty) {
+        val sample = unequalRows.take(maxUnequalRowsToShow)
+        val message = sample.map { case ((r1, r2), idx) =>
+          s"Row $idx: expected=$r1, actual=$r2"
+        }.mkString("\n")
+        fail(s"There are some unequal rows:\n$message")
+      }
+    } finally {
+      expected.unpersist()
+      result.unpersist()
     }
   }
 

@@ -385,25 +385,31 @@ Columns aren't equal
   def assertDataFrameDataEquals(expected: DataFrame, result: DataFrame): Unit = {
     val expectedCol = "assertDataFrameNoOrderEquals_expected"
     val actualCol = "assertDataFrameNoOrderEquals_actual"
+    try {
+      expected.cache()
+      result.cache()
+      assert("Column size not Equal", expected.columns.size, result.columns.size)
+      assert("Length not Equal", expected.count(), result.count())
 
-    assert("Column size not Equal", expected.columns.size, result.columns.size)
-    assert("Length not Equal", expected.count(), result.count())
+      val columns = expected.columns.map(s => col(s))
+      val expectedElementsCount = expected
+        .groupBy(columns: _*)
+        .agg(count(lit(1)).as(expectedCol))
+      val resultElementsCount = result
+        .groupBy(columns: _*)
+        .agg(count(lit(1)).as(actualCol))
 
-    val columns = expected.columns.map(s => col(s))
-    val expectedElementsCount = expected
-      .groupBy(columns: _*)
-      .agg(count(lit(1)).as(expectedCol))
-    val resultElementsCount = result
-      .groupBy(columns: _*)
-      .agg(count(lit(1)).as(actualCol))
+      val joinExprs = expected.columns
+        .map(s => expected.col(s) <=> result.col(s)).reduce(_.and(_))
+      val diff = expectedElementsCount
+        .join(resultElementsCount, joinExprs, "full_outer")
+        .filter(not(col(expectedCol) <=> col(actualCol)))
 
-    val joinExprs = expected.columns
-      .map(s => expected.col(s) <=> result.col(s)).reduce(_.and(_))
-    val diff = expectedElementsCount
-      .join(resultElementsCount, joinExprs, "full_outer")
-      .filter(not(col(expectedCol) <=> col(actualCol)))
-
-    assertEmpty(diff.take(maxUnequalRowsToShow))
+      assertEmpty(diff.take(maxUnequalRowsToShow))
+    } finally {
+      expected.unpersist()
+      result.unpersist()
+    }
   }
 
 
