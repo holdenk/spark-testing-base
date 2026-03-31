@@ -39,6 +39,22 @@ class SampleSparkConnectTest extends ScalaDataFrameSuiteBase
     assert(rows(0)(0) === 1)
   }
 
+  test("Connect bridge returns same results as classic session") {
+    import spark.implicits._
+    Seq(("Alice", 30), ("Bob", 25)).toDF("name", "age")
+      .createOrReplaceTempView("connect_test_people")
+    // Execute via classic session
+    val classicRows = spark.sql(
+      "SELECT name FROM connect_test_people WHERE age > 26")
+      .collect().map(_.getString(0)).toSet
+    // Execute the same query via the shaded Connect bridge
+    val connectRows = ConnectBridge.executeSql(
+      "SELECT name FROM connect_test_people WHERE age > 26")
+      .map(_(0).asInstanceOf[String]).toSet
+    assert(classicRows === connectRows,
+      "Connect bridge should return the same results as classic session")
+  }
+
   test("verify Connect session - .rdd should fail on 4.0+") {
     assume(isConnectSession, "Not a Connect session (requires Spark 4.0+)")
     import spark.implicits._

@@ -53,6 +53,7 @@ trait ConnectEnabled extends BeforeAndAfterAll with DataFrameSuiteBaseLike {
   self: Suite with SparkContextProvider =>
 
   @transient private var _connectSession: SparkSession = _
+  @transient private var _previousSession: SparkSession = _
   private lazy val _connectPort: Int = findFreePort()
   private var _isConnectSession: Boolean = false
 
@@ -108,6 +109,7 @@ trait ConnectEnabled extends BeforeAndAfterAll with DataFrameSuiteBaseLike {
     // Connect validation.
     tryCreateConnectSession(_connectPort) match {
       case Some(session) =>
+        _previousSession = SparkSessionProvider._sparkSession
         _connectSession = session
         _isConnectSession = true
         SparkSessionProvider._sparkSession = _connectSession
@@ -125,6 +127,10 @@ trait ConnectEnabled extends BeforeAndAfterAll with DataFrameSuiteBaseLike {
         _connectSession.close()
         _connectSession = null
       }
+      // Restore the previous session so later suites (or reuseContextIfPossible)
+      // don't see a closed Connect session in SparkSessionProvider.
+      SparkSessionProvider._sparkSession = _previousSession
+      _isConnectSession = false
       SparkConnectService.stop()
     } finally {
       super.afterAll()
