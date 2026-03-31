@@ -1,5 +1,5 @@
 lazy val root = (project in file("."))
-  .aggregate(core, kafka_0_8)
+  .aggregate(core, kafka_0_8, connectClientShaded)
   .settings(noPublishSettings, commonSettings)
 
 //tag::sparkVersion[]
@@ -31,6 +31,7 @@ ThisBuild / libraryDependencySchemes ++= Seq(
 //  "com.holdenkarau" %% "spark-scalafix-rules" % "0.1.1-2.4.8"
 
 lazy val core = (project in file("core"))
+  .dependsOn(connectClientShaded)
   .settings(
     name := "spark-testing-base",
     commonSettings,
@@ -48,7 +49,7 @@ lazy val core = (project in file("core"))
       "org.apache.spark" %% "spark-mllib"       % sparkVersion.value
     ) ++ commonDependencies ++
       {
-        if (sparkVersion.value > "4.0.0") {
+        if (sparkVersion.value >= "4.0.0") {
           Seq(
             "org.apache.spark" %% "spark-sql-api"        % sparkVersion.value,
             "io.netty" % "netty-all" % "4.1.96.Final",
@@ -65,6 +66,21 @@ lazy val core = (project in file("core"))
           Seq(
             "org.apache.xbean" % "xbean-asm6-shaded" % "4.10",
           )
+        }} ++ {
+        // Spark Connect server for 3.5+ (starts gRPC service).
+        // Client dep only for 4.0+ where the unified SparkSession API
+        // avoids classpath conflicts with spark-sql.
+        if (sparkVersion.value >= "4.0.0") {
+          Seq(
+            "org.apache.spark" %% "spark-connect"            % sparkVersion.value,
+            "org.apache.spark" %% "spark-connect-client-jvm" % sparkVersion.value
+          )
+        } else if (sparkVersion.value >= "3.5.0") {
+          Seq(
+            "org.apache.spark" %% "spark-connect"            % sparkVersion.value
+          )
+        } else {
+          Seq()
         }}
 
   )
@@ -107,6 +123,47 @@ lazy val kafka_0_8 = {
       }
     )
 }
+
+// Shaded Spark Connect client sub-project.
+// Relocates org.apache.spark.sql.** from spark-connect-client-jvm so it can
+// coexist with spark-sql on the same classpath. This is needed for Spark 3.5
+// where both JARs define org.apache.spark.sql.SparkSession.
+lazy val connectClientShaded = (project in file("connect-client-shaded"))
+  .settings(
+    name := "spark-testing-connect-shaded",
+    commonSettings,
+    noPublishSettings,
+    exportJars := true,
+    Compile / packageBin := assembly.value,
+    assembly / assemblyShadeRules := Seq(
+      ShadeRule.rename("org.apache.spark.sql.**" ->
+        "com.holdenkarau.spark.testing.connect.shaded.@1").inAll
+    ),
+    assembly / assemblyMergeStrategy := {
+      case PathList("META-INF", _*) => MergeStrategy.discard
+      case _ => MergeStrategy.first
+    },
+    assembly / assemblyOption := (assembly / assemblyOption).value
+      .withIncludeScala(false),
+    libraryDependencies ++= {
+      if (sparkVersion.value >= "3.5.0") {
+        Seq(
+          "org.apache.spark" %% "spark-connect-client-jvm" % sparkVersion.value
+        )
+      } else {
+        Seq()
+      }
+    },
+    // Skip this sub-project entirely for Spark < 3.5
+    Compile / unmanagedSourceDirectories := {
+      if (sparkVersion.value >= "3.5.0")
+        (Compile / unmanagedSourceDirectories).value
+      else Seq.empty
+    },
+    skip in compile := sparkVersion.value < "3.5.0",
+    skip in test := true,
+    skip in publish := true
+  )
 
 val commonSettings = Seq(
   organization := "com.holdenkarau",
@@ -177,11 +234,13 @@ val commonSettings = Seq(
 val coreSources = unmanagedSourceDirectories in Compile  := {
   if (sparkVersion.value >= "4.0.0") Seq(
     (sourceDirectory in Compile)(_ / "4.0/scala"),
+    (sourceDirectory in Compile)(_ / "3.5/scala"),
     (sourceDirectory in Compile)(_ / "3.0/scala"),
     (sourceDirectory in Compile)(_ / "2.4/scala"),
     (sourceDirectory in Compile)(_ / "2.4/java")
   ).join.value
-  else if (sparkVersion.value >= "3.0.0" && scalaVersion.value >= "2.12.0") Seq(
+  else if (sparkVersion.value >= "3.5.0" && scalaVersion.value >= "2.12.0") Seq(
+    (sourceDirectory in Compile)(_ / "3.5/scala"),
     (sourceDirectory in Compile)(_ / "3.0/scala"),
     (sourceDirectory in Compile)(_ / "2.4/scala"),
     (sourceDirectory in Compile)(_ / "2.4/java")
@@ -200,6 +259,15 @@ val coreSources = unmanagedSourceDirectories in Compile  := {
 val coreTestSources = unmanagedSourceDirectories in Test  := {
   if (sparkVersion.value >= "4.0.0" && scalaVersion.value >= "2.12.0") Seq(
     (sourceDirectory in Test)(_ / "4.0/scala"),
+    (sourceDirectory in Test)(_ / "3.5/scala"),
+    (sourceDirectory in Test)(_ / "3.0/scala"),
+    (sourceDirectory in Test)(_ / "3.0/java"),
+    (sourceDirectory in Test)(_ / "2.4/scala"),
+    (sourceDirectory in Test)(_ / "2.4/java")
+  ).join.value
+  else if (sparkVersion.value >= "3.5.0" && scalaVersion.value >= "2.12.0") Seq(
+    (sourceDirectory in Test)(_ / "3.5/scala"),
+    (sourceDirectory in Test)(_ / "pre-4.0/scala"),
     (sourceDirectory in Test)(_ / "3.0/scala"),
     (sourceDirectory in Test)(_ / "3.0/java"),
     (sourceDirectory in Test)(_ / "2.4/scala"),

@@ -385,31 +385,25 @@ Columns aren't equal
   def assertDataFrameDataEquals(expected: DataFrame, result: DataFrame): Unit = {
     val expectedCol = "assertDataFrameNoOrderEquals_expected"
     val actualCol = "assertDataFrameNoOrderEquals_actual"
-    try {
-      expected.rdd.cache
-      result.rdd.cache
-      assert("Column size not Equal", expected.columns.size, result.columns.size)
-      assert("Length not Equal", expected.rdd.count, result.rdd.count)
 
-      val columns = expected.columns.map(s => col(s))
-      val expectedElementsCount = expected
-        .groupBy(columns: _*)
-        .agg(count(lit(1)).as(expectedCol))
-      val resultElementsCount = result
-        .groupBy(columns: _*)
-        .agg(count(lit(1)).as(actualCol))
+    assert("Column size not Equal", expected.columns.size, result.columns.size)
+    assert("Length not Equal", expected.count(), result.count())
 
-      val joinExprs = expected.columns
-        .map(s => expected.col(s) <=> result.col(s)).reduce(_.and(_))
-      val diff = expectedElementsCount
-        .join(resultElementsCount, joinExprs, "full_outer")
-        .filter(not(col(expectedCol) <=> col(actualCol)))
+    val columns = expected.columns.map(s => col(s))
+    val expectedElementsCount = expected
+      .groupBy(columns: _*)
+      .agg(count(lit(1)).as(expectedCol))
+    val resultElementsCount = result
+      .groupBy(columns: _*)
+      .agg(count(lit(1)).as(actualCol))
 
-      assertEmpty(diff.take(maxUnequalRowsToShow))
-    } finally {
-      expected.rdd.unpersist()
-      result.rdd.unpersist()
-    }
+    val joinExprs = expected.columns
+      .map(s => expected.col(s) <=> result.col(s)).reduce(_.and(_))
+    val diff = expectedElementsCount
+      .join(resultElementsCount, joinExprs, "full_outer")
+      .filter(not(col(expectedCol) <=> col(actualCol)))
+
+    assertEmpty(diff.take(maxUnequalRowsToShow))
   }
 
 
