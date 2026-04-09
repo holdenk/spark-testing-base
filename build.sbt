@@ -133,8 +133,6 @@ lazy val connectClientShaded = (project in file("connect-client-shaded"))
     name := "spark-testing-connect-shaded",
     commonSettings,
     noPublishSettings,
-    exportJars := true,
-    Compile / packageBin := assembly.value,
     assembly / assemblyShadeRules := Seq(
       ShadeRule.rename("org.apache.spark.sql.**" ->
         "com.holdenkarau.spark.testing.connect.shaded.@1").inAll
@@ -163,6 +161,18 @@ lazy val connectClientShaded = (project in file("connect-client-shaded"))
     skip in compile := sparkVersion.value < "3.5.0",
     skip in test := true,
     skip in publish := true
+  )
+  .settings(
+    // Only wire assembly as packageBin for Spark 3.5+ (uses System property
+    // since this must be resolved at build load time, not setting evaluation)
+    if (System.getProperty("sparkVersion", "2.4.8") >= "3.5.0") {
+      Seq(
+        exportJars := true,
+        Compile / packageBin := assembly.value
+      )
+    } else {
+      Seq.empty
+    }
   )
 
 val commonSettings = Seq(
