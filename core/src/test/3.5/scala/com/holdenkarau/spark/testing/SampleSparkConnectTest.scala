@@ -24,9 +24,12 @@ import com.holdenkarau.spark.testing.connect.ConnectBridge
  * ScalaDataFrameSuiteBase test makes everything go through Spark Connect.
  * Same assertion methods, same `spark` session -- just routed through Connect.
  *
- * On Spark 4.0+, operations go through the Connect protocol.
- * On Spark 3.5.x, the Connect gRPC server starts but the session falls back
- * to classic (tests still pass, just not through Connect).
+ * On Spark 4.0+, the primary `spark` session is replaced with a Connect
+ * client session so all operations go through the Connect protocol.
+ * On Spark 3.5.x, the Connect gRPC server runs and the shaded
+ * `ConnectBridge` validates gRPC routing end-to-end. The primary `spark`
+ * session stays classic on 3.5 due to spark-sql / spark-connect-client-jvm
+ * classpath conflicts; use `isConnectSession` to gate Connect-only tests.
  */
 class SampleSparkConnectTest extends ScalaDataFrameSuiteBase
     with ConnectEnabled {

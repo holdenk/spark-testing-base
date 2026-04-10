@@ -23,8 +23,9 @@ import java.time.Duration
 import org.apache.spark.{SparkConf, SparkContext}
 import org.apache.spark.sql._
 import org.apache.spark.sql.connect.service.SparkConnectService
-import com.holdenkarau.spark.testing.connect.ConnectBridge
 import org.scalatest.{BeforeAndAfterAll, Suite}
+
+import com.holdenkarau.spark.testing.connect.ConnectBridge
 
 /**
  * :: Experimental ::
@@ -57,7 +58,10 @@ trait ConnectEnabled extends BeforeAndAfterAll with DataFrameSuiteBaseLike {
   private lazy val _connectPort: Int = findFreePort()
   private var _isConnectSession: Boolean = false
 
-  /** Whether the primary `spark` session goes through Connect (true on 4.0+). */
+  /**
+   * Whether the primary `spark` session is routed through Connect.
+   * True when SparkSession.Builder exposes .remote() (Spark 4.0+ unified API).
+   */
   def isConnectSession: Boolean = _isConnectSession
 
   /**
@@ -123,13 +127,15 @@ trait ConnectEnabled extends BeforeAndAfterAll with DataFrameSuiteBaseLike {
   override def afterAll(): Unit = {
     try {
       ConnectBridge.stop()
+      // Only restore SparkSessionProvider if we actually replaced it in
+      // beforeAll (the Some branch). On 3.5 the provider was never touched
+      // and must not be clobbered with null.
       if (_connectSession != null) {
         _connectSession.close()
         _connectSession = null
+        SparkSessionProvider._sparkSession = _previousSession
+        _previousSession = null
       }
-      // Restore the previous session so later suites (or reuseContextIfPossible)
-      // don't see a closed Connect session in SparkSessionProvider.
-      SparkSessionProvider._sparkSession = _previousSession
       _isConnectSession = false
       SparkConnectService.stop()
     } finally {

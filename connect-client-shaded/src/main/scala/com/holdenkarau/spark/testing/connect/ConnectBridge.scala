@@ -37,13 +37,18 @@ import org.apache.spark.sql.SparkSession
 object ConnectBridge {
   @volatile private var session: SparkSession = _
 
-  def start(port: Int): Unit = {
+  def start(port: Int): Unit = synchronized {
+    // Close any prior session so repeated start() calls don't leak.
+    if (session != null) {
+      session.close()
+      session = null
+    }
     session = SparkSession.builder()
       .remote(s"sc://localhost:$port")
       .getOrCreate()
   }
 
-  def stop(): Unit = {
+  def stop(): Unit = synchronized {
     if (session != null) {
       session.close()
       session = null
@@ -59,13 +64,5 @@ object ConnectBridge {
   def executeSql(query: String): Array[Array[Any]] = {
     require(session != null, "ConnectBridge not started")
     session.sql(query).collect().map(_.toSeq.toArray)
-  }
-
-  /**
-   * Get the schema JSON for a SQL query result.
-   */
-  def getSchemaJson(query: String): String = {
-    require(session != null, "ConnectBridge not started")
-    session.sql(query).schema.json
   }
 }
