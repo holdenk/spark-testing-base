@@ -386,10 +386,10 @@ Columns aren't equal
     val expectedCol = "assertDataFrameNoOrderEquals_expected"
     val actualCol = "assertDataFrameNoOrderEquals_actual"
     try {
-      expected.rdd.cache
-      result.rdd.cache
+      expected.cache()
+      result.cache()
       assert("Column size not Equal", expected.columns.size, result.columns.size)
-      assert("Length not Equal", expected.rdd.count, result.rdd.count)
+      assert("Length not Equal", expected.count(), result.count())
 
       val columns = expected.columns.map(s => col(s))
       val expectedElementsCount = expected
@@ -407,8 +407,8 @@ Columns aren't equal
 
       assertEmpty(diff.take(maxUnequalRowsToShow))
     } finally {
-      expected.rdd.unpersist()
-      result.rdd.unpersist()
+      expected.unpersist()
+      result.unpersist()
     }
   }
 
