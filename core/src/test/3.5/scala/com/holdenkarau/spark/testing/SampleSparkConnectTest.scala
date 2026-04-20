@@ -34,14 +34,6 @@ import com.holdenkarau.spark.testing.connect.ConnectBridge
 class SampleSparkConnectTest extends ScalaDataFrameSuiteBase
     with ConnectEnabled {
 
-  test("Connect gRPC server is reachable via shaded bridge") {
-    assert(isConnectServerActive,
-      "ConnectBridge should be active after beforeAll")
-    val rows = ConnectBridge.executeSql("SELECT 1 as value")
-    assert(rows.length === 1)
-    assert(rows(0)(0) === 1)
-  }
-
   test("Connect bridge returns same results as classic session") {
     import spark.implicits._
     Seq(("Alice", 30), ("Bob", 25)).toDF("name", "age")

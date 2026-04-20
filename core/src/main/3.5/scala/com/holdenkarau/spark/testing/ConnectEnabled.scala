@@ -85,32 +85,17 @@ trait ConnectEnabled extends BeforeAndAfterAll with DataFrameSuiteBaseLike {
   }
 
   /**
-   * Try to create a Connect client SparkSession using reflection.
-   * Returns Some(session) on Spark 4.0+ (unified API with .remote()),
-   * None on Spark 3.5 (classic Builder without .remote()).
+   * Use our ConnectBridge to make a SparkConnect session which might be relocated.
    */
   private def tryCreateConnectSession(port: Int): Option[SparkSession] = {
-    val builder = SparkSession.builder()
-    try {
-      val remoteMethod = builder.getClass.getMethod("remote", classOf[String])
-      val connectedBuilder = remoteMethod.invoke(builder, s"sc://localhost:$port")
-      val session = connectedBuilder.getClass
-        .getMethod("getOrCreate")
-        .invoke(connectedBuilder)
-        .asInstanceOf[SparkSession]
-      Some(session)
-    } catch {
-      case _: NoSuchMethodException => None
-    }
+    val builder = ConnectBridge.start(port).asInstanceOf[SparkSession]
   }
 
   override def beforeAll(): Unit = {
     super.beforeAll()
     SparkConnectService.start(SparkContext.getOrCreate())
 
-    // On 4.0+, replace the primary session with a Connect session.
-    // On 3.5, the classic session stays but the shaded bridge provides
-    // Connect validation.
+    // Replace the primary session with a Connect session.
     tryCreateConnectSession(_connectPort) match {
       case Some(session) =>
         _previousSession = SparkSessionProvider._sparkSession

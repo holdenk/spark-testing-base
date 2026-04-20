@@ -37,7 +37,7 @@ import org.apache.spark.sql.SparkSession
 object ConnectBridge {
   @volatile private var session: SparkSession = _
 
-  def start(port: Int): Unit = synchronized {
+  def start(port: Int): SparkSession = synchronized {
     // Close any prior session so repeated start() calls don't leak.
     if (session != null) {
       session.close()
@@ -56,13 +56,4 @@ object ConnectBridge {
   }
 
   def isActive: Boolean = session != null
-
-  /**
-   * Execute a SQL query through the Connect session.
-   * Returns rows as Array[Array[Any]] (primitive values only).
-   */
-  def executeSql(query: String): Array[Array[Any]] = {
-    require(session != null, "ConnectBridge not started")
-    session.sql(query).collect().map(_.toSeq.toArray)
-  }
 }
