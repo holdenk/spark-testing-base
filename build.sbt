@@ -70,12 +70,7 @@ lazy val core = (project in file("core"))
         // Spark Connect server for 3.5+ (starts gRPC service).
         // Client dep only for 4.0+ where the unified SparkSession API
         // avoids classpath conflicts with spark-sql.
-        if (sparkVersion.value >= "4.0.0") {
-          Seq(
-            "org.apache.spark" %% "spark-connect"            % sparkVersion.value,
-            "org.apache.spark" %% "spark-connect-client-jvm" % sparkVersion.value
-          )
-        } else if (sparkVersion.value >= "3.5.0") {
+        if (sparkVersion.value >= "3.5.0") {
           Seq(
             "org.apache.spark" %% "spark-connect"            % sparkVersion.value
           )
