@@ -388,10 +388,10 @@ Columns aren't equal
     val expectedPostMap = convertMapToArrayStruct(expected)
     val resultPostMap = convertMapToArrayStruct(result)
     try {
-      expectedPostMap.rdd.cache
-      resultPostMap.rdd.cache
-      assert("Column size not Equal", expectedPostMap.columns.size, resultPostMap.columns.size)
-      assert("Length not Equal", expectedPostMap.rdd.count, resultPostMap.rdd.count)
+      expected.cache()
+      result.cache()
+      assert("Column size not Equal", expected.columns.size, result.columns.size)
+      assert("Length not Equal", expected.count(), result.count())
 
       val columns = expectedPostMap.columns.map(s => col(s))
       val expectedElementsCount = expectedPostMap
@@ -409,8 +409,8 @@ Columns aren't equal
 
       assertEmpty(diff.take(maxUnequalRowsToShow))
     } finally {
-      expectedPostMap.rdd.unpersist()
-      resultPostMap.rdd.unpersist()
+      expected.unpersist()
+      result.unpersist()
     }
   }
 
