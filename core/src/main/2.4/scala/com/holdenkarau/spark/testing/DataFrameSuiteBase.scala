@@ -365,6 +365,82 @@ Columns aren't equal
 
 
   /**
+    * Compares if two [[Dataset]]s are equal (alias for assertDataFrameEquals when dealing with Dataset[Row]).
+    * This is provided for convenience as Datasets are the preferred API name in modern Spark.
+    * For strongly-typed Datasets, extend DatasetSuiteBase instead.
+    *
+    * @param customShow unit function to customize the '''show''' method
+    *                   when datasets are not equal. IE: '''ds.show(false)''' or
+    *                   '''ds.toJSON.show(false)'''.
+    */
+  def assertDatasetEquals(expected: Dataset[Row], result: Dataset[Row],
+                         customShow: DataFrame => Unit = _.show()): Unit = {
+    assertDataFrameEquals(expected, result, customShow)
+  }
+
+  /**
+    * Compares if two [[Dataset]]s are approximately equal (alias for assertDataFrameApproximateEquals when dealing with Dataset[Row]).
+    * When comparing inexact fields uses tol & tolTimestamp.
+    *
+    * @param tol          max acceptable numeric tolerance, should be less than 1.
+    * @param tolTimestamp max acceptable timestamp tolerance.
+    * @param customShow   unit function to customize the '''show''' method
+    *                     when datasets are not equal.
+    */
+  def assertDatasetApproximateEquals(
+    expected: Dataset[Row], result: Dataset[Row],
+    tol: Double, tolTimestamp: Duration,
+    customShow: DataFrame => Unit): Unit = {
+    assertDataFrameApproximateEquals(expected, result, tol, tolTimestamp, customShow)
+  }
+
+  /**
+    * Compares if two strongly-typed [[Dataset]]s are equal.
+    * This method checks equality using the equals method of type U.
+    *
+    * @param expected the expected Dataset
+    * @param result the result Dataset to compare
+    * @param UCT implicit ClassTag for type U
+    */
+  def assertDatasetEquals[U](expected: Dataset[U], result: Dataset[U])
+                            (implicit UCT: scala.reflect.ClassTag[U]): Unit = {
+    try {
+      expected.rdd.cache
+      result.rdd.cache
+      assert("Length not Equal", expected.rdd.count, result.rdd.count)
+
+      val expectedIndexValue: RDD[(Long, U)] = zipWithIndex(expected.rdd)
+      val resultIndexValue: RDD[(Long, U)] = zipWithIndex(result.rdd)
+      val unequalRDD = expectedIndexValue.join(resultIndexValue).filter
+      { case (idx, (o1, o2)) => !o1.equals(o2) }
+
+      assertEmpty(unequalRDD.take(maxUnequalRowsToShow))
+    } finally {
+      expected.rdd.unpersist()
+      result.rdd.unpersist()
+    }
+  }
+
+  /**
+    * Compares if two strongly-typed [[Dataset]]s are approximately equal.
+    * When comparing inexact fields uses tol & tolTimestamp.
+    *
+    * @param tol          max acceptable tolerance for numeric (between(0, 1))
+    * @param tolTimestamp max acceptable timestamp tolerance.
+    * @param customShow   unit function to customize the '''show''' method
+    *                     when dataframes are not equal.
+    */
+  def assertDatasetApproximateEquals[U]
+    (expected: Dataset[U], result: Dataset[U], tol: Double,
+     tolTimestamp: Duration,
+     customShow: DataFrame => Unit)
+    (implicit UCT: scala.reflect.ClassTag[U]): Unit = {
+
+    assertDataFrameApproximateEquals(expected.toDF, result.toDF, tol,
+      tolTimestamp, customShow)
+  }
+
+  /**
     * Compares if two [[DataFrame]]s are equal without caring about order of rows, by
     * finding elements in one DataFrame that is not in the other. The resulting
     * DataFrame should be empty inferring the two DataFrames have the same elements.
