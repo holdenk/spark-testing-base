@@ -385,22 +385,24 @@ Columns aren't equal
   def assertDataFrameDataEquals(expected: DataFrame, result: DataFrame): Unit = {
     val expectedCol = "assertDataFrameNoOrderEquals_expected"
     val actualCol = "assertDataFrameNoOrderEquals_actual"
+    val expectedPostMap = convertMapToArrayStruct(expected)
+    val resultPostMap = convertMapToArrayStruct(result)
     try {
       expected.cache()
       result.cache()
       assert("Column size not Equal", expected.columns.size, result.columns.size)
       assert("Length not Equal", expected.count(), result.count())
 
-      val columns = expected.columns.map(s => col(s))
-      val expectedElementsCount = expected
+      val columns = expectedPostMap.columns.map(s => col(s))
+      val expectedElementsCount = expectedPostMap
         .groupBy(columns: _*)
         .agg(count(lit(1)).as(expectedCol))
-      val resultElementsCount = result
+      val resultElementsCount = resultPostMap
         .groupBy(columns: _*)
         .agg(count(lit(1)).as(actualCol))
 
-      val joinExprs = expected.columns
-        .map(s => expected.col(s) <=> result.col(s)).reduce(_.and(_))
+      val joinExprs = expectedPostMap.columns
+        .map(s => expectedPostMap.col(s) <=> resultPostMap.col(s)).reduce(_.and(_))
       val diff = expectedElementsCount
         .join(resultElementsCount, joinExprs, "full_outer")
         .filter(not(col(expectedCol) <=> col(actualCol)))
@@ -412,6 +414,61 @@ Columns aren't equal
     }
   }
 
+  /**
+    * Converts map-typed columns into array-of-struct columns so that [[DataFrame]]s
+    * containing maps can be compared reliably in tests.
+    *
+    * Spark does not define a stable ordering for values of map type, which means that
+    * operations used in test assertions (such as set-like comparisons that ignore
+    * row order) cannot directly rely on map columns being orderable. This helper
+    * normalizes map columns into an orderable representation before comparison.
+    *
+    * For each map column, this method produces an array of structs created by
+    * zipping the map keys and values via `arrays_zip(map_keys(col), map_values(col))`.
+    * In the resulting struct, field `"0"` holds the key and field `"1"` holds the
+    * corresponding value. Non-map columns are preserved as-is.
+    *
+    * The transformation is applied recursively to nested structures: maps inside
+    * structs, arrays of structs containing maps, and other combinations are all
+    * rewritten so that every map encountered in the schema is converted to an
+    * array of structs in this way.
+    *
+    * The method is marked `private[testing]` because it is an internal utility of
+    * the testing framework, intended to support DataFrame equality checks rather
+    * than to be part of the public API.
+    */
+  private[testing] def convertMapToArrayStruct(df: DataFrame): DataFrame = {
+    def buildExpr(dataType: DataType, colName: String): String = dataType match {
+      case MapType(_, _, _) =>
+        s"arrays_zip(map_keys($colName), map_values($colName)) AS $colName"
+      case StructType(fields) =>
+        val inner = fields.map { f =>
+          s"'${f.name}', ${buildExpr(f.dataType, s"$colName.${f.name}").replaceAll(" AS .*", "")}"
+        }.mkString(", ")
+        s"named_struct($inner) AS $colName"
+      case ArrayType(elementType, _) =>
+        elementType match {
+          case MapType(_, _, _) =>
+            val mapExpr =
+              s"arrays_zip(map_keys(x), map_values(x))"
+            s"flatten(transform($colName, x -> $mapExpr)) AS $colName"
+          case StructType(fields) =>
+            val structExpr =
+              fields.map(f =>
+                s"'${f.name}', ${buildExpr(f.dataType, s"x.${f.name}").replaceAll(" AS .*", "")}"
+              ).mkString(", ")
+            s"transform($colName, x -> named_struct($structExpr)) AS $colName"
+          case _ =>
+            val inner = buildExpr(elementType, "x").replaceAll(" AS .*", "")
+            s"transform($colName, x -> $inner) AS $colName"
+        }
+      case _ =>
+        s"$colName"
+    }
+
+    val exprs = df.schema.fields.map(f => buildExpr(f.dataType, f.name))
+    df.selectExpr(exprs: _*)
+  }
 
   /**
    * Compares if two [[DataFrame]]s are equal without caring about order of rows, by
