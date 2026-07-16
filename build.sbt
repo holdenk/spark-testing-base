@@ -28,7 +28,7 @@ ThisBuild / libraryDependencySchemes ++= Seq(
 
 // Disabled for now because we are not upgrading & it doesn't play nice with Scala 2.12 & 2.13 at the same time.
 //scalafixDependencies in ThisBuild +=
-//  "com.holdenkarau" %% "spark-scalafix-rules" % "0.1.1-2.4.8"
+//  "com.holdenkarau" %% "spark-scalafix-rules" % "0.1.1-3.5.9"
 
 lazy val core = (project in file("core"))
   .dependsOn(connectClientShaded)
@@ -165,7 +165,7 @@ lazy val connectClientShaded = (project in file("connect-client-shaded"))
   .settings(
     // Only wire assembly as packageBin for Spark 3.5+ (uses System property
     // since this must be resolved at build load time, not setting evaluation)
-    if (System.getProperty("sparkVersion", "2.4.8") >= "3.5.0") {
+    if (System.getProperty("sparkVersion", "3.5.9") >= "3.5.0") {
       Seq(
         exportJars := true,
         Compile / packageBin := assembly.value
@@ -182,7 +182,7 @@ val commonSettings = Seq(
   publishMavenStyle := true,
   libraryDependencySchemes += "com.github.luben" %% "zstd-jni" % "early-semver", // "early-semver",
   evictionErrorLevel := Level.Info,
-  sparkVersion := System.getProperty("sparkVersion", "2.4.8"),
+  sparkVersion := System.getProperty("sparkVersion", "3.5.9"),
   sparkTestingVersion := "3.0.0",
   isSnapshot := sparkTestingVersion.value.contains("SNAPSHOT"),
   version := sparkVersion.value + "_" + sparkTestingVersion.value,
