@@ -13,7 +13,7 @@ on:
 jobs:
   # Build: build spark-testing-base and run the tests for specified modules.
   build:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-26.04
     strategy:
       fail-fast: false
       matrix:
