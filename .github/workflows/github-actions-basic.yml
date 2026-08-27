@@ -46,7 +46,11 @@ jobs:
       with:
         java-version: ${{ matrix.java-version }}
         distribution: ${{ matrix.distribution }}
-        cache: sbt
+        # Deliberately NOT using `cache: sbt` here. Our dependency set is a
+        # function of -DsparkVersion, which lives in the matrix rather than in
+        # any file on disk, so setup-java's file-hash-only key collapses all
+        # matrix entries onto one cache. The explicit cache step below keys on
+        # matrix.spark and covers the same directories.
     - name: Add sbt
       uses: sbt/setup-sbt@v1
     - name: Cache maven modules
@@ -55,12 +59,15 @@ jobs:
       env:
         cache-name: cache-maven
       with:
-        # maven cache files are stored in `~/.m2` & `~/.ivy2` on Linux/macOS
+        # maven cache files are stored in `~/.m2` & `~/.ivy2` on Linux/macOS.
+        # The lock / ivydata exclusions match what setup-java's sbt cache did.
         path: |
           ~/.m2
           ~/.ivy2/cache
           ~/.sbt
           ~/.cache/coursier
-        key: ${{ runner.os }}-${{ matrix.java-version }}-${{ matrix.spark }}-build-${{ env.cache-name }}-${{ hashFiles('build.sbt') }}
+          !~/.sbt/*.lock
+          !~/**/ivydata-*.properties
+        key: ${{ runner.os }}-${{ matrix.java-version }}-${{ matrix.spark }}-build-${{ env.cache-name }}-${{ hashFiles('build.sbt', 'project/build.properties', 'project/plugins.sbt') }}
     - name: Run tests
       run: SPARK_TESTING=yes ./build/sbt clean +compile +test -DsparkVersion=$SPARK_VERSION
