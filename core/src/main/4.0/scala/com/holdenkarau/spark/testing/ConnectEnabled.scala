@@ -26,7 +26,7 @@ import org.apache.spark.sql._
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.connect.EvilConnectService
 import org.apache.spark.sql.connect.service.SparkConnectService
-import org.scalatest.{BeforeAndAfterAll, Suite}
+import org.scalatest.Suite
 
 /**
  * :: Experimental ::
@@ -64,8 +64,7 @@ import org.scalatest.{BeforeAndAfterAll, Suite}
  * `.rdd`, `sc`, `sqlContext`, the DStream suite bases, the ScalaCheck
  * generators, and the codegen-mode test helpers.
  */
-trait ConnectEnabled extends BeforeAndAfterAll with DatasetSuiteBaseLike {
-  self: Suite with SparkContextProvider =>
+trait ConnectEnabled extends DatasetSuiteBase { self: Suite =>
 
   @transient private var _connectSession: SparkSession = _
   @transient private var _previousSession: SparkSession = _
@@ -139,6 +138,42 @@ trait ConnectEnabled extends BeforeAndAfterAll with DatasetSuiteBaseLike {
       _previousSession = null
     }
   }
+
+  /**
+   * Connect sessions have no `sessionState`, so route configuration through
+   * RuntimeConfig instead. Note this configures the *server's* session, and
+   * that static SQL configs are rejected outright over Connect rather than
+   * quietly ignored.
+   */
+  override protected def withSQLConf(pairs: (String, String)*)(f: => Unit): Unit = {
+    val runtimeConf = spark.conf
+    val (keys, values) = pairs.unzip
+    val currentValues = keys.map(runtimeConf.getOption)
+    keys.zip(values).foreach { case (k, v) => runtimeConf.set(k, v) }
+    try f finally {
+      keys.zip(currentValues).foreach {
+        case (key, Some(value)) => runtimeConf.set(key, value)
+        case (key, None) => runtimeConf.unset(key)
+      }
+    }
+  }
+
+  /**
+   * There is no SQLContext over Connect, and the inherited one is worse than
+   * missing: SparkSessionProvider.sqlContext ignores the session it is handed
+   * and returns `SparkSession.builder.getOrCreate().sqlContext`, i.e. the
+   * classic driver-side session. Left alone it would quietly route
+   * `import sqlContext.implicits._` around Connect entirely, and the suite
+   * would pass while testing nothing. Fail loudly instead.
+   *
+   * `impSqlContext` delegates here, so it is covered too.
+   */
+  @transient override lazy val sqlContext: SQLContext =
+    throw new UnsupportedOperationException(
+      "sqlContext is not available when running through Spark Connect. The " +
+      "inherited one resolves to the classic driver-side session, which would " +
+      "silently bypass Connect. Use `spark` instead -- " +
+      "`import spark.implicits._` works the same way.")
 
   /**
    * `fail` is ambiguous inside this trait: TestSuiteLike declares one and the

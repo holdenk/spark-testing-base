@@ -214,7 +214,7 @@ trait DataFrameSuiteBaseLike extends SparkContextProvider
 
   def sqlBeforeAllTestCases(): Unit = {
     if ((SparkSessionProvider._sparkSession ne null) &&
-      !SparkSessionProvider._sparkSession.sparkContext.isStopped) {
+      SparkSessionProvider.isUsable(SparkSessionProvider._sparkSession)) {
       // Use existing session if its around and running.
     } else {
 
@@ -663,4 +663,15 @@ object SparkSessionProvider {
   @transient var _sparkSession: SparkSession = _
   def sqlContext: SQLContext = EvilSessionTools.extractSQLContext(_sparkSession)
   def sparkSession = _sparkSession
+
+  /**
+   * Whether a session left behind in the provider can still be used.
+   *
+   * For a classic session this is just `!sparkContext.isStopped`. A Spark
+   * Connect session has no SparkContext at all and throws when asked for one,
+   * so treat "cannot tell" as "not usable": the next suite then builds itself
+   * a fresh classic session instead of dying on someone else's leftovers.
+   */
+  private[testing] def isUsable(session: SparkSession): Boolean =
+    scala.util.Try(!session.sparkContext.isStopped).getOrElse(false)
 }

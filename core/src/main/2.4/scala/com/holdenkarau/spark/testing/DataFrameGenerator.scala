@@ -4,10 +4,52 @@ import java.math.{RoundingMode}
 import java.sql.{Date, Timestamp}
 
 import org.apache.spark.sql.types._
-import org.apache.spark.sql.{DataFrame, Row, SQLContext}
+import org.apache.spark.sql.{DataFrame, Row, SparkSession, SQLContext}
 import org.scalacheck.{Arbitrary, Gen}
 
 object DataFrameGenerator {
+
+  /**
+   * Creates a DataFrame Generator for the given Schema.
+   *
+   * Note: the generators build their data as RDDs, so they do not work over
+   * Spark Connect. Under `ConnectEnabled` there is no usable SparkSession to
+   * pass here.
+   *
+   * @param spark         Spark Session.
+   * @param schema        The required Schema.
+   * @param minPartitions minimum number of partitions. No default: Scala only
+   *                      allows one overloaded alternative to define defaults,
+   *                      and the SQLContext version already does.
+   * @return Arbitrary DataFrames generator of the required schema.
+   */
+  def arbitraryDataFrame(
+    spark: SparkSession, schema: StructType, minPartitions: Int):
+      Arbitrary[DataFrame] = {
+    arbitraryDataFrameWithCustomFields(spark, schema, minPartitions)()
+  }
+
+  /**
+   * Creates a DataFrame Generator for the given Schema, and the given custom
+   * generators. See the SQLContext overload for the details of
+   * `userGenerators`.
+   *
+   * Note: the generators build their data as RDDs, so they do not work over
+   * Spark Connect.
+   *
+   * @param spark          Spark Session.
+   * @param schema         The required Schema.
+   * @param minPartitions  minimum number of partitions.
+   * @param userGenerators custom user generators in the form of:
+   *                       (column index, generator function).
+   * @return Arbitrary DataFrames generator of the required schema.
+   */
+  def arbitraryDataFrameWithCustomFields(
+    spark: SparkSession, schema: StructType, minPartitions: Int)
+    (userGenerators: ColumnGeneratorBase*): Arbitrary[DataFrame] = {
+    arbitraryDataFrameWithCustomFields(
+      spark.sqlContext, schema, minPartitions)(userGenerators: _*)
+  }
 
   /**
    * Creates a DataFrame Generator for the given Schema.

@@ -46,6 +46,21 @@ class SampleSparkConnectTest extends ScalaDataFrameSuiteBase
     intercept[Exception] {
       spark.sparkContext
     }
+    // sqlContext would otherwise hand back the classic driver-side session and
+    // silently route around Connect.
+    val e = intercept[UnsupportedOperationException] {
+      sqlContext
+    }
+    assert(e.getMessage.contains("Spark Connect"))
+  }
+
+  test("withSQLConf works over Connect") {
+    val key = "spark.sql.shuffle.partitions"
+    val before = spark.conf.get(key)
+    withSQLConf(key -> "7") {
+      assert(spark.conf.get(key) === "7")
+    }
+    assert(spark.conf.get(key) === before)
   }
 
   test("create and query a DataFrame through Connect") {

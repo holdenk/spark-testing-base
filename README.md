@@ -81,6 +81,79 @@ If you are testing codegen it's important to have SPARK_TESTING set to yes, as w
 
 `SPARK_TESTING=yes ./build/sbt clean +compile +test -DsparkVersion=$SPARK_VERSION`
 
+## Spark Connect
+
+You can run your DataFrame and Dataset assertions over the Spark Connect
+protocol, so the tests exercise the same client/server path your production job
+will. Mix `ConnectEnabled` into any suite that already extends
+`DataFrameSuiteBase`, `ScalaDataFrameSuiteBase` or `DatasetSuiteBase`:
+
+```scala
+class MyTest extends ScalaDataFrameSuiteBase with ConnectEnabled {
+  test("works through Connect") {
+    import spark.implicits._
+    val df = Seq(("Alice", 30), ("Bob", 25)).toDF("name", "age")
+    assertDataFrameEquals(df, df)   // goes over gRPC
+  }
+}
+```
+
+`spark` really is the Connect session, so the assertions you already use go over
+the wire without any other change. A Connect gRPC server is started inside the
+test JVM on an ephemeral port, on top of the local `SparkContext` the suite
+creates anyway, and torn down afterwards.
+
+### Requires Spark 4.0+
+
+On Spark 4.0 and newer, `org.apache.spark.sql.SparkSession` is an abstract class
+in `spark-sql-api` that both the classic and the Connect session extend, so a
+Connect session can stand in for a classic one. On Spark 3.5, `spark-sql` and
+`spark-connect-client-jvm` each define their own concrete class under that name
+and cannot share a classloader, so `ConnectEnabled` is not available there.
+
+### Extra dependencies
+
+The Connect jars are `provided`, so users who do not test over Connect do not
+inherit gRPC, protobuf and Arrow. If you use `ConnectEnabled`, add them
+yourself:
+
+```scala
+libraryDependencies ++= Seq(
+  "org.apache.spark" %% "spark-connect"            % sparkVersion % Test,
+  "org.apache.spark" %% "spark-connect-client-jvm" % sparkVersion % Test
+)
+```
+
+### Pointing at an already-running Connect server
+
+Set either of these and the suite connects to that server instead of starting
+one of its own:
+
+```
+-Dspark.testing.connect.remote=sc://my-host:15002
+SPARK_REMOTE=sc://my-host:15002
+```
+
+### What does not work over Connect
+
+Spark Connect has no RDD API and no driver-side internals, so these are
+unavailable in a `ConnectEnabled` suite:
+
+* `.rdd` on a DataFrame or Dataset, and `sc` / `spark.sparkContext`.
+* `sqlContext` and `impSqlContext`. These throw with an explanatory message
+  rather than silently handing back the classic driver-side session, which
+  would route your test around Connect while still passing.
+* `StreamingSuiteBase`, `StreamingActionBase`, `TestInputStream` and everything
+  else built on DStreams.
+* `DataFrameGenerator`, `DatasetGenerator` and `RDDGenerator` -- they build
+  their data as RDDs. The `SparkSession`-based overloads are no different in
+  this respect; they exist because `SQLContext` is the deprecated API.
+* `testCombined`, `testCodegenOnly` and `testNonCodegen` -- codegen modes are a
+  server-side catalyst concern that a Connect client cannot set.
+
+`withSQLConf` does work, via `RuntimeConfig`, but it configures the server's
+session and static SQL configs are rejected rather than quietly ignored.
+
 ## Where is this from?
 
 Some of this code is a stripped down version of the test suite bases that are in Apache Spark but are not accessible. Other parts are also inspired by sscheck (scalacheck generators for Spark).
