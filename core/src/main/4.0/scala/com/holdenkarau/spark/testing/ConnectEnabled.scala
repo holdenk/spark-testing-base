@@ -176,99 +176,17 @@ trait ConnectEnabled extends DatasetSuiteBase { self: Suite =>
       "`import spark.implicits._` works the same way.")
 
   /**
-   * `fail` is ambiguous inside this trait: TestSuiteLike declares one and the
-   * ScalaTest `Suite` self-type brings in Assertions.fail. Pick the library's
-   * own, so a suite fails the same way here as it does in the base classes.
-   */
-  private def failTest(message: String): Unit = (this: TestSuiteLike).fail(message)
-
-  /**
-   * Connect has no RDDs, so compare collected rows instead of joining the
-   * DataFrames' underlying RDDs by index. assertDataFrameEquals delegates here,
-   * and assertDataFrameDataEquals is already pure DataFrame operations.
+   * Connect has no RDDs, so use the shared collect-based comparison rather
+   * than the RDD join DataFrameSuiteBaseLike layers on top of it.
+   * assertDataFrameEquals delegates here, and assertDataFrameDataEquals is
+   * already pure DataFrame operations in the shared trait.
    */
   override def assertDataFrameApproximateEquals(
       expected: DataFrame, result: DataFrame,
       tol: Double, tolTimestamp: Duration,
-      customShow: DataFrame => Unit = _.show()): Unit = {
-    try {
-      expected.cache()
-      result.cache()
-      assertSchemasEqual(expected.schema, result.schema)
-
-      val expectedRows = expected.collect()
-      val resultRows = result.collect()
-
-      assert("Length not Equal", expectedRows.length.toLong, resultRows.length.toLong)
-
-      val unequalRows = expectedRows.zip(resultRows).zipWithIndex.filter {
-        case ((r1, r2), _) =>
-          !(r1.equals(r2) ||
-            DataFrameSuiteBase.approxEquals(r1, r2, tol, tolTimestamp))
-      }
-
-      if (unequalRows.nonEmpty) {
-        val sample = unequalRows.take(maxUnequalRowsToShow)
-        val message = sample.map { case ((r1, r2), idx) =>
-          s"Row $idx: expected=$r1, actual=$r2"
-        }.mkString("\n")
-        failTest(s"There are some unequal rows:\n$message")
-      }
-    } finally {
-      expected.unpersist()
-      result.unpersist()
-    }
-  }
-
-  /**
-   * Connect-safe unordered comparison.
-   *
-   * The inherited version full-outer-joins the two grouped DataFrames on
-   * identically named columns, so the joined schema carries each key column
-   * twice. Classic Spark tolerates that when collecting, but Connect ships
-   * results as Arrow and its deserializer looks fields up by name, so it fails
-   * with AMBIGUOUS_COLUMN_OR_FIELD before any comparison happens. Renaming the
-   * right-hand side keeps the key values in the failure output while making
-   * every field name unique.
-   */
-  override def assertDataFrameDataEquals(
-      expected: DataFrame, result: DataFrame): Unit = {
-    val expectedCol = "assertDataFrameNoOrderEquals_expected"
-    val actualCol = "assertDataFrameNoOrderEquals_actual"
-    val expectedPostMap = convertMapToArrayStruct(expected)
-    val resultPostMap = convertMapToArrayStruct(result)
-    try {
-      expected.cache()
-      result.cache()
-      assert("Column size not Equal", expected.columns.size, result.columns.size)
-      assert("Length not Equal", expected.count(), result.count())
-
-      val keyColumns = expectedPostMap.columns
-      val expectedElementsCount = expectedPostMap
-        .groupBy(keyColumns.map(col): _*)
-        .agg(count(lit(1)).as(expectedCol))
-      val resultElementsCount = resultPostMap
-        .groupBy(keyColumns.map(col): _*)
-        .agg(count(lit(1)).as(actualCol))
-
-      val resultNames = keyColumns.map(name => s"${name}__result")
-      val resultRenamed = resultElementsCount.toDF((resultNames :+ actualCol): _*)
-
-      val joinExprs = keyColumns.zip(resultNames).map {
-        case (expectedName, resultName) =>
-          expectedElementsCount.col(expectedName) <=> resultRenamed.col(resultName)
-      }.reduce(_.and(_))
-
-      val diff = expectedElementsCount
-        .join(resultRenamed, joinExprs, "full_outer")
-        .filter(not(col(expectedCol) <=> col(actualCol)))
-
-      assertEmpty(diff.take(maxUnequalRowsToShow))
-    } finally {
-      expected.unpersist()
-      result.unpersist()
-    }
-  }
+      customShow: DataFrame => Unit = _.show()): Unit =
+    assertDataFrameApproximateEqualsCollected(
+      expected, result, tol, tolTimestamp, customShow)
 
   /**
    * Connect-safe Dataset comparison. The inherited version joins

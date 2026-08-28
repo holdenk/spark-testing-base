@@ -103,13 +103,14 @@ the wire without any other change. A Connect gRPC server is started inside the
 test JVM on an ephemeral port, on top of the local `SparkContext` the suite
 creates anyway, and torn down afterwards.
 
-### Requires Spark 4.0+
+### `ConnectEnabled` requires Spark 4.0+
 
 On Spark 4.0 and newer, `org.apache.spark.sql.SparkSession` is an abstract class
 in `spark-sql-api` that both the classic and the Connect session extend, so a
 Connect session can stand in for a classic one. On Spark 3.5, `spark-sql` and
 `spark-connect-client-jvm` each define their own concrete class under that name
-and cannot share a classloader, so `ConnectEnabled` is not available there.
+and cannot share a classloader, so `ConnectEnabled` is not available there --
+see the next section for how to test Connect on 3.5.
 
 ### Extra dependencies
 
@@ -153,6 +154,48 @@ unavailable in a `ConnectEnabled` suite:
 
 `withSQLConf` does work, via `RuntimeConfig`, but it configures the server's
 session and static SQL configs are rejected rather than quietly ignored.
+
+## Spark Connect on Spark 3.5
+
+On 3.5 you cannot have the Connect client and `spark-sql` in one JVM, so testing
+Connect there means doing what a real Spark 3.5 Connect application does:
+compiling against `spark-connect-client-jvm` instead of `spark-sql`. The
+`spark-testing-base-connect` artifact is built that way, and gives you the same
+assertions:
+
+```scala
+"com.holdenkarau" %% "spark-testing-base-connect" % "3.5.6_3.0.0" % "test"
+```
+
+```scala
+import com.holdenkarau.spark.testing.connect.ScalaConnectSuiteBase
+
+class MyConnectTest extends ScalaConnectSuiteBase {
+  test("runs over Connect") {
+    import spark.implicits._
+    val df = Seq(("Alice", 30), ("Bob", 25)).toDF("name", "age")
+    assertDataFrameEquals(df, df)
+  }
+}
+```
+
+`assertDataFrameEquals`, `assertDataFrameNoOrderEquals`,
+`assertDataFrameApproximateEquals`, `assertSmallDataFrameDataEquals`,
+`assertColumnEquality` and `assertSchemasEqual` are literally the same source as
+the classic suite bases use -- `connect-shared/` is compiled twice, once against
+`spark-sql` and once against the Connect client.
+
+There is no `SparkContext` in these suites, so the RDD-based assertions, the
+generators and the streaming suite bases are not there at all, rather than being
+present and throwing.
+
+The suite needs a Connect server. Point it at one you already have with
+`-Dspark.testing.connect.remote=sc://host:15002` or `SPARK_REMOTE`; otherwise it
+launches one in a child JVM. Launching requires
+`-Dspark.testing.connect.serverClasspath` to name a classpath holding `spark-sql`
+and `spark-connect` -- this project's own build sets that from the
+`connect-server` sub-project, and your build would need to do something similar
+if you want the auto-launch rather than an external server.
 
 ## Where is this from?
 
