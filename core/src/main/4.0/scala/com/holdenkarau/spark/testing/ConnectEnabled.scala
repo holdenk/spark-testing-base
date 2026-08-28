@@ -1,0 +1,277 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package com.holdenkarau.spark.testing
+
+import java.time.Duration
+
+import scala.reflect.ClassTag
+
+import org.apache.spark.SparkConf
+import org.apache.spark.sql._
+import org.apache.spark.sql.functions._
+import org.apache.spark.sql.connect.EvilConnectService
+import org.apache.spark.sql.connect.service.SparkConnectService
+import org.scalatest.{BeforeAndAfterAll, Suite}
+
+/**
+ * :: Experimental ::
+ * Mixin that routes an existing DataFrameSuiteBase test through Spark Connect.
+ *
+ * Add `with ConnectEnabled` to any suite extending DataFrameSuiteBase (or
+ * ScalaDataFrameSuiteBase, or DatasetSuiteBase) and the `spark` session your
+ * tests use becomes a Connect client session, so every DataFrame and SQL
+ * operation goes over the Connect protocol:
+ *
+ * {{{
+ * class MyTest extends ScalaDataFrameSuiteBase with ConnectEnabled {
+ *   test("works through Connect") {
+ *     val df = spark.read.parquet(...)
+ *     assertDataFrameEquals(df, expected) // goes through Connect!
+ *   }
+ * }
+ * }}}
+ *
+ * By default a Connect gRPC server is started inside the test JVM, on top of
+ * the local SparkContext the suite already creates. To run against a server
+ * that is already up instead, set the `spark.testing.connect.remote` system
+ * property or the `SPARK_REMOTE` environment variable to its `sc://` URL --
+ * note that the suite still creates a local SparkContext in that case, because
+ * DataFrameSuiteBase is built on one.
+ *
+ * '''This requires Spark 4.0 or newer.''' On 4.0+ `org.apache.spark.sql.SparkSession`
+ * is an abstract class in spark-sql-api that both the classic and the Connect
+ * session extend, so a Connect session can stand in for a classic one. On Spark
+ * 3.5 spark-sql and spark-connect-client-jvm each define their own concrete
+ * class under that name and cannot share a classloader; testing 3.5 Connect
+ * needs a client-only classpath instead.
+ *
+ * Anything that reaches past the DataFrame API will not work over Connect:
+ * `.rdd`, `sc`, `sqlContext`, the DStream suite bases, the ScalaCheck
+ * generators, and the codegen-mode test helpers.
+ */
+trait ConnectEnabled extends BeforeAndAfterAll with DatasetSuiteBaseLike {
+  self: Suite with SparkContextProvider =>
+
+  @transient private var _connectSession: SparkSession = _
+  @transient private var _previousSession: SparkSession = _
+  private var _startedServer: Boolean = false
+
+  /** Whether the primary `spark` session is currently routed through Connect. */
+  def isConnectSession: Boolean = _connectSession != null
+
+  /**
+   * The `sc://` URL of an already-running Connect server to use instead of
+   * starting one in this JVM. Override to point tests at a real cluster.
+   */
+  protected def connectRemote: Option[String] = ConnectEnabled.externalRemote
+
+  /**
+   * Bind the in-JVM Connect server on an ephemeral port. We ask for port 0 and
+   * read the port Spark actually bound back out of SparkConnectService, rather
+   * than picking a free port ourselves and racing whoever grabs it next.
+   */
+  abstract override def conf: SparkConf =
+    super.conf.set("spark.connect.grpc.binding.port", "0")
+
+  override def beforeAll(): Unit = {
+    super.beforeAll()
+
+    val remote = connectRemote.getOrElse {
+      SparkConnectService.start(sc)
+      _startedServer = true
+      s"sc://localhost:${EvilConnectService.localPort}"
+    }
+
+    // `spark` is a lazy val reading SparkSessionProvider._sparkSession, so the
+    // swap has to happen here: after super.beforeAll() has built the classic
+    // session, and before any test body forces `spark`.
+    _previousSession = SparkSessionProvider._sparkSession
+    // .connect() is load bearing. `remote(url)` only records the URL; which
+    // companion the builder uses is still DEFAULT, which resolves to classic
+    // whenever a classic session is already active -- and one always is here,
+    // because super.beforeAll() just made it. You get a classic session back
+    // and a "spark.connect.remote configuration is not supported in Classic
+    // mode" warning buried in the logs. .connect() pins the companion.
+    //
+    // create() rather than getOrCreate() because the Connect companion caches
+    // sessions by connection string and we bind an ephemeral port, so a cached
+    // session from an earlier suite would point at a dead server.
+    _connectSession = SparkSession.builder().connect().remote(remote).create()
+    SparkSessionProvider._sparkSession = _connectSession
+  }
+
+  override def afterAll(): Unit = {
+    try {
+      // Deliberately NOT closing the Connect session here. DataFrameSuiteBase's
+      // afterAll already calls spark.stop() on it, and Spark's Connect client is
+      // not idempotent about that: a second close re-sends ReleaseSession over
+      // the channel the first one shut down, and the retry policy then sits
+      // there for ~10 minutes before giving up. One close, done by the base
+      // class, while the server is still listening.
+      super.afterAll()
+    } finally {
+      if (_startedServer) {
+        _startedServer = false
+        SparkConnectService.stop()
+      }
+      // Only put the classic session back if we are still the ones in the slot;
+      // DataFrameSuiteBase.afterAll nulls it out itself unless the suite reuses
+      // its context.
+      if (SparkSessionProvider._sparkSession eq _connectSession) {
+        SparkSessionProvider._sparkSession = _previousSession
+      }
+      _connectSession = null
+      _previousSession = null
+    }
+  }
+
+  /**
+   * `fail` is ambiguous inside this trait: TestSuiteLike declares one and the
+   * ScalaTest `Suite` self-type brings in Assertions.fail. Pick the library's
+   * own, so a suite fails the same way here as it does in the base classes.
+   */
+  private def failTest(message: String): Unit = (this: TestSuiteLike).fail(message)
+
+  /**
+   * Connect has no RDDs, so compare collected rows instead of joining the
+   * DataFrames' underlying RDDs by index. assertDataFrameEquals delegates here,
+   * and assertDataFrameDataEquals is already pure DataFrame operations.
+   */
+  override def assertDataFrameApproximateEquals(
+      expected: DataFrame, result: DataFrame,
+      tol: Double, tolTimestamp: Duration,
+      customShow: DataFrame => Unit = _.show()): Unit = {
+    try {
+      expected.cache()
+      result.cache()
+      assertSchemasEqual(expected.schema, result.schema)
+
+      val expectedRows = expected.collect()
+      val resultRows = result.collect()
+
+      assert("Length not Equal", expectedRows.length.toLong, resultRows.length.toLong)
+
+      val unequalRows = expectedRows.zip(resultRows).zipWithIndex.filter {
+        case ((r1, r2), _) =>
+          !(r1.equals(r2) ||
+            DataFrameSuiteBase.approxEquals(r1, r2, tol, tolTimestamp))
+      }
+
+      if (unequalRows.nonEmpty) {
+        val sample = unequalRows.take(maxUnequalRowsToShow)
+        val message = sample.map { case ((r1, r2), idx) =>
+          s"Row $idx: expected=$r1, actual=$r2"
+        }.mkString("\n")
+        failTest(s"There are some unequal rows:\n$message")
+      }
+    } finally {
+      expected.unpersist()
+      result.unpersist()
+    }
+  }
+
+  /**
+   * Connect-safe unordered comparison.
+   *
+   * The inherited version full-outer-joins the two grouped DataFrames on
+   * identically named columns, so the joined schema carries each key column
+   * twice. Classic Spark tolerates that when collecting, but Connect ships
+   * results as Arrow and its deserializer looks fields up by name, so it fails
+   * with AMBIGUOUS_COLUMN_OR_FIELD before any comparison happens. Renaming the
+   * right-hand side keeps the key values in the failure output while making
+   * every field name unique.
+   */
+  override def assertDataFrameDataEquals(
+      expected: DataFrame, result: DataFrame): Unit = {
+    val expectedCol = "assertDataFrameNoOrderEquals_expected"
+    val actualCol = "assertDataFrameNoOrderEquals_actual"
+    val expectedPostMap = convertMapToArrayStruct(expected)
+    val resultPostMap = convertMapToArrayStruct(result)
+    try {
+      expected.cache()
+      result.cache()
+      assert("Column size not Equal", expected.columns.size, result.columns.size)
+      assert("Length not Equal", expected.count(), result.count())
+
+      val keyColumns = expectedPostMap.columns
+      val expectedElementsCount = expectedPostMap
+        .groupBy(keyColumns.map(col): _*)
+        .agg(count(lit(1)).as(expectedCol))
+      val resultElementsCount = resultPostMap
+        .groupBy(keyColumns.map(col): _*)
+        .agg(count(lit(1)).as(actualCol))
+
+      val resultNames = keyColumns.map(name => s"${name}__result")
+      val resultRenamed = resultElementsCount.toDF((resultNames :+ actualCol): _*)
+
+      val joinExprs = keyColumns.zip(resultNames).map {
+        case (expectedName, resultName) =>
+          expectedElementsCount.col(expectedName) <=> resultRenamed.col(resultName)
+      }.reduce(_.and(_))
+
+      val diff = expectedElementsCount
+        .join(resultRenamed, joinExprs, "full_outer")
+        .filter(not(col(expectedCol) <=> col(actualCol)))
+
+      assertEmpty(diff.take(maxUnequalRowsToShow))
+    } finally {
+      expected.unpersist()
+      result.unpersist()
+    }
+  }
+
+  /**
+   * Connect-safe Dataset comparison. The inherited version joins
+   * `expected.rdd` with `result.rdd`, which does not exist over Connect.
+   */
+  override def assertDatasetEquals[U](expected: Dataset[U], result: Dataset[U])
+      (implicit UCT: ClassTag[U]): Unit = {
+    try {
+      expected.cache()
+      result.cache()
+
+      val expectedRows = expected.collect()
+      val resultRows = result.collect()
+
+      assert("Length not Equal", expectedRows.length.toLong, resultRows.length.toLong)
+
+      val unequal = expectedRows.zip(resultRows).zipWithIndex.filter {
+        case ((o1, o2), _) => !o1.equals(o2)
+      }
+      assertEmpty(unequal.take(maxUnequalRowsToShow))
+    } finally {
+      expected.unpersist()
+      result.unpersist()
+    }
+  }
+}
+
+object ConnectEnabled {
+  /** System property naming an already-running Connect server. */
+  val RemoteProperty = "spark.testing.connect.remote"
+
+  /** Environment variable naming an already-running Connect server. */
+  val RemoteEnvVar = "SPARK_REMOTE"
+
+  /** The externally configured Connect server URL, if any. */
+  def externalRemote: Option[String] =
+    sys.props.get(RemoteProperty)
+      .orElse(sys.env.get(RemoteEnvVar))
+      .map(_.trim)
+      .filter(_.nonEmpty)
+}

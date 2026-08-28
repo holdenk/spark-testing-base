@@ -55,8 +55,7 @@ trait StructuredStreamingBaseLike extends SparkContextProvider
     mode: String,
     queryFunction: Dataset[T] => Dataset[R]) = {
     import spark.implicits._
-    implicit val sqlContext = spark.sqlContext
-    val inputStream = MemoryStream[T]
+    val inputStream = MemoryStreamCompat.create[T](spark)
     val transformed = queryFunction(inputStream.toDS())
     val queryName = s"${this.getClass.getSimpleName}TestSimpleStreamEndState${count}"
     count = count + 1

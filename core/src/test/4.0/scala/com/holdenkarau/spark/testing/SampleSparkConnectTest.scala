@@ -17,47 +17,34 @@
 
 package com.holdenkarau.spark.testing
 
-import com.holdenkarau.spark.testing.connect.ConnectBridge
-
 /**
  * Demonstrates that adding `with ConnectEnabled` to an existing
- * ScalaDataFrameSuiteBase test makes everything go through Spark Connect.
- * Same assertion methods, same `spark` session -- just routed through Connect.
- *
- * On Spark 4.0+, the primary `spark` session is replaced with a Connect
- * client session so all operations go through the Connect protocol.
- * On Spark 3.5.x, the Connect gRPC server runs and the shaded
- * `ConnectBridge` validates gRPC routing end-to-end. The primary `spark`
- * session stays classic on 3.5 due to spark-sql / spark-connect-client-jvm
- * classpath conflicts; use `isConnectSession` to gate Connect-only tests.
+ * ScalaDataFrameSuiteBase test makes everything go through Spark Connect --
+ * same assertion methods, same `spark` session, just routed over gRPC.
  */
 class SampleSparkConnectTest extends ScalaDataFrameSuiteBase
     with ConnectEnabled {
 
-  test("Connect bridge returns same results as classic session") {
-    import spark.implicits._
-    Seq(("Alice", 30), ("Bob", 25)).toDF("name", "age")
-      .createOrReplaceTempView("connect_test_people")
-    // Execute via classic session
-    val classicRows = spark.sql(
-      "SELECT name FROM connect_test_people WHERE age > 26")
-      .collect().map(_.getString(0)).toSet
-    // Execute the same query via the shaded Connect bridge
-    val connectRows = ConnectBridge.executeSql(
-      "SELECT name FROM connect_test_people WHERE age > 26")
-      .map(_(0).asInstanceOf[String]).toSet
-    assert(classicRows === connectRows,
-      "Connect bridge should return the same results as classic session")
+  // Proof that the session the assertions use really is the Connect one. If
+  // this ever silently falls back to a classic session, the rest of this suite
+  // would still pass while testing nothing, so keep it first.
+  test("the suite's session is the Connect session") {
+    assert(isConnectSession)
+    assert(spark eq SparkSessionProvider._sparkSession)
+    assert(spark.getClass.getName.contains(".connect."),
+      s"expected a Connect SparkSession, got ${spark.getClass.getName}")
   }
 
-  test("verify Connect session - .rdd should fail on 4.0+") {
-    assume(isConnectSession, "Not a Connect session (requires Spark 4.0+)")
+  test("classic escape hatches are unavailable over Connect") {
     import spark.implicits._
     val df = Seq(1, 2, 3).toDF("value")
-    // .rdd is not available over Connect -- if this doesn't throw,
-    // we're not actually going through Connect
+    // .rdd does not exist over Connect -- if this doesn't throw we aren't
+    // actually going through Connect.
     intercept[Exception] {
       df.rdd.count()
+    }
+    intercept[Exception] {
+      spark.sparkContext
     }
   }
 
@@ -141,6 +128,16 @@ class SampleSparkConnectTest extends ScalaDataFrameSuiteBase
     }
     intercept[org.scalatest.exceptions.TestFailedException] {
       assertDataFrameNoOrderEquals(df1, df2)
+    }
+  }
+
+  test("datasets should compare over Connect") {
+    import spark.implicits._
+    val ds1 = Seq(1, 2, 3).toDS
+    val ds2 = Seq(1, 2, 99).toDS
+    assertDatasetEquals(ds1, ds1)
+    intercept[org.scalatest.exceptions.TestFailedException] {
+      assertDatasetEquals(ds1, ds2)
     }
   }
 }
