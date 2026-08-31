@@ -125,25 +125,31 @@ trait ConnectEnabled extends DatasetSuiteBase { self: Suite =>
       // class, while the server is still listening.
       super.afterAll()
     } finally {
-      // ...except when the suite reuses its context. Then
-      // DataFrameSuiteBase.afterAll skips spark.stop() altogether and this is
-      // the only close there is; without it the client's gRPC channel and its
-      // retry threads leak for the life of the test JVM.
-      if (reuseContextIfPossible && _connectSession != null) {
-        _connectSession.close()
+      try {
+        // ...except when the suite reuses its context. Then
+        // DataFrameSuiteBase.afterAll skips spark.stop() altogether and this is
+        // the only close there is; without it the client's gRPC channel and its
+        // retry threads leak for the life of the test JVM.
+        if (reuseContextIfPossible && _connectSession != null) {
+          _connectSession.close()
+        }
+      } finally {
+        // In its own finally: if that close throws we would otherwise leave the
+        // server running and, worse, leave a dead Connect session in the global
+        // SparkSessionProvider for whatever suite runs next.
+        if (_startedServer) {
+          _startedServer = false
+          SparkConnectService.stop()
+        }
+        // Only put the classic session back if we are still the ones in the
+        // slot; DataFrameSuiteBase.afterAll nulls it out itself unless the
+        // suite reuses its context.
+        if (SparkSessionProvider._sparkSession eq _connectSession) {
+          SparkSessionProvider._sparkSession = _previousSession
+        }
+        _connectSession = null
+        _previousSession = null
       }
-      if (_startedServer) {
-        _startedServer = false
-        SparkConnectService.stop()
-      }
-      // Only put the classic session back if we are still the ones in the slot;
-      // DataFrameSuiteBase.afterAll nulls it out itself unless the suite reuses
-      // its context.
-      if (SparkSessionProvider._sparkSession eq _connectSession) {
-        SparkSessionProvider._sparkSession = _previousSession
-      }
-      _connectSession = null
-      _previousSession = null
     }
   }
 
