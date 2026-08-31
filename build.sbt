@@ -1,5 +1,5 @@
 lazy val root = (project in file("."))
-  .aggregate(core, kafka_0_8, connectClientShaded)
+  .aggregate(core, kafka_0_8, connectServer, connectClient)
   .settings(noPublishSettings, commonSettings)
 
 //tag::sparkVersion[]
@@ -7,9 +7,23 @@ val sparkVersion = settingKey[String]("Spark version")
 //end::sparkVersion[]
 val sparkTestingVersion = settingKey[String]("Spark testing base version without Spark version part")
 
+// The running JVM's major version: 8 for "1.8", 17 for "17".
+def javaMajorVersion: Int = {
+  val raw = sys.props.getOrElse("java.specification.version", "")
+  val text = if (raw.startsWith("1.")) raw.substring(2) else raw
+  text.takeWhile(_.isDigit) match {
+    case "" => 0
+    case digits => digits.toInt
+  }
+}
+
 def specialOptions = {
-  // We only need these extra props for JRE>17
-  if (sys.props("java.specification.version") > "1.17") {
+  // We only need these extra props for JRE>=17.
+  //
+  // Compare the parsed major version, not the raw string: "1.8" sorts after
+  // "1.17" lexicographically, so the old string comparison was true for every
+  // Java version and the else branch was dead.
+  if (javaMajorVersion >= 17) {
     Seq(
       "base/java.lang", "base/java.lang.invoke", "base/java.lang.reflect", "base/java.io", "base/java.net", "base/java.nio",
       "base/java.util", "base/java.util.concurrent", "base/java.util.concurrent.atomic",
@@ -31,7 +45,6 @@ ThisBuild / libraryDependencySchemes ++= Seq(
 //  "com.holdenkarau" %% "spark-scalafix-rules" % "0.1.1-2.4.8"
 
 lazy val core = (project in file("core"))
-  .dependsOn(connectClientShaded)
   .settings(
     name := "spark-testing-base",
     commonSettings,
@@ -67,17 +80,25 @@ lazy val core = (project in file("core"))
             "org.apache.xbean" % "xbean-asm6-shaded" % "4.10",
           )
         }} ++ {
-        // Spark Connect server for 3.5+ (starts gRPC service).
-        // Client dep only for 4.0+ where the unified SparkSession API
-        // avoids classpath conflicts with spark-sql.
+        // Spark Connect: the gRPC server (3.5+) plus, on 4.0+, the client.
+        // Only 4.0+ gets the client -- there org.apache.spark.sql.SparkSession
+        // is an abstract class in spark-sql-api that both the classic and the
+        // Connect session extend, so the two jars can share a classloader. On
+        // 3.5 both spark-sql and spark-connect-client-jvm define their own
+        // concrete SparkSession under that name and cannot coexist; testing
+        // 3.5 Connect needs a client-only classpath instead.
+        //
+        // Provided, because only suites that mix in ConnectEnabled need them
+        // and between them they pull in gRPC, protobuf and Arrow. See the
+        // Spark Connect section of the README for what users add themselves.
         if (sparkVersion.value >= "4.0.0") {
           Seq(
-            "org.apache.spark" %% "spark-connect"            % sparkVersion.value,
-            "org.apache.spark" %% "spark-connect-client-jvm" % sparkVersion.value
+            "org.apache.spark" %% "spark-connect"            % sparkVersion.value % Provided,
+            "org.apache.spark" %% "spark-connect-client-jvm" % sparkVersion.value % Provided
           )
         } else if (sparkVersion.value >= "3.5.0") {
           Seq(
-            "org.apache.spark" %% "spark-connect"            % sparkVersion.value
+            "org.apache.spark" %% "spark-connect"            % sparkVersion.value % Provided
           )
         } else {
           Seq()
@@ -124,55 +145,84 @@ lazy val kafka_0_8 = {
     )
 }
 
-// Shaded Spark Connect client sub-project.
-// Relocates org.apache.spark.sql.** from spark-connect-client-jvm so it can
-// coexist with spark-sql on the same classpath. This is needed for Spark 3.5
-// where both JARs define org.apache.spark.sql.SparkSession.
-lazy val connectClientShaded = (project in file("connect-client-shaded"))
+// Spark Connect, for the versions where the client cannot share a classloader
+// with spark-sql (3.5.x). `connectClient` compiles the shared assertion source
+// against spark-connect-client-jvm ONLY -- no spark-sql, no spark-core -- which
+// is how a real Spark 3.5 Connect application is built. `connectServer` holds
+// the other half: a standalone server the client suites launch in a child JVM.
+//
+// On 4.0+ this is unnecessary: spark-sql-api gives classic and Connect sessions
+// a common supertype, so `ConnectEnabled` in core does it all in one JVM.
+def connectLaneEnabled(v: String): Boolean = v >= "3.5.0" && v < "4.0.0"
+
+lazy val connectServer = (project in file("connect-server"))
   .settings(
-    name := "spark-testing-connect-shaded",
+    name := "spark-testing-connect-server",
     commonSettings,
     noPublishSettings,
-    assembly / assemblyShadeRules := Seq(
-      ShadeRule.rename("org.apache.spark.sql.**" ->
-        "com.holdenkarau.spark.testing.connect.shaded.@1").inAll
-    ),
-    assembly / assemblyMergeStrategy := {
-      case PathList("META-INF", _*) => MergeStrategy.discard
-      case _ => MergeStrategy.first
-    },
-    assembly / assemblyOption := (assembly / assemblyOption).value
-      .withIncludeScala(false),
-    libraryDependencies ++= {
-      if (sparkVersion.value >= "3.5.0") {
-        Seq(
-          "org.apache.spark" %% "spark-connect-client-jvm" % sparkVersion.value
-        )
-      } else {
-        Seq()
-      }
-    },
-    // Skip this sub-project entirely for Spark < 3.5
     Compile / unmanagedSourceDirectories := {
-      if (sparkVersion.value >= "3.5.0")
-        (Compile / unmanagedSourceDirectories).value
-      else Seq.empty
+      if (connectLaneEnabled(sparkVersion.value)) {
+        Seq(
+          (Compile / sourceDirectory).value / "scala",
+          (ThisBuild / baseDirectory).value /
+            "connect-server-shared" / "src" / "main" / "scala")
+      } else Seq.empty
     },
-    skip in compile := sparkVersion.value < "3.5.0",
+    libraryDependencies ++= {
+      if (connectLaneEnabled(sparkVersion.value)) {
+        Seq(
+          "org.apache.spark" %% "spark-sql"     % sparkVersion.value,
+          "org.apache.spark" %% "spark-connect" % sparkVersion.value
+        )
+      } else Seq()
+    },
     skip in test := true,
     skip in publish := true
   )
+
+lazy val connectClient = (project in file("connect"))
   .settings(
-    // Only wire assembly as packageBin for Spark 3.5+ (uses System property
-    // since this must be resolved at build load time, not setting evaluation)
-    if (System.getProperty("sparkVersion", "2.4.8") >= "3.5.0") {
-      Seq(
-        exportJars := true,
-        Compile / packageBin := assembly.value
-      )
-    } else {
-      Seq.empty
-    }
+    name := "spark-testing-base-connect",
+    commonSettings,
+    publishSettings,
+    Compile / unmanagedSourceDirectories := {
+      if (connectLaneEnabled(sparkVersion.value)) {
+        Seq(
+          (Compile / sourceDirectory).value / "scala",
+          (ThisBuild / baseDirectory).value /
+            "connect-shared" / "src" / "main" / "scala")
+      } else Seq.empty
+    },
+    Test / unmanagedSourceDirectories := {
+      if (connectLaneEnabled(sparkVersion.value))
+        Seq((Test / sourceDirectory).value / "scala")
+      else Seq.empty
+    },
+    libraryDependencies ++= {
+      if (connectLaneEnabled(sparkVersion.value)) {
+        // Deliberately NOT spark-sql / spark-core / spark-catalyst / spark-hive:
+        // the whole point is that org.apache.spark.sql.* resolves to the
+        // Connect client here.
+        Seq(
+          "org.apache.spark" %% "spark-connect-client-jvm" % sparkVersion.value,
+          "org.json4s" %% "json4s-jackson" % "3.7.0-M11"
+        ) ++ commonDependencies
+      } else Seq()
+    },
+    // Tell the suites how to launch a server: the child JVM gets connectServer's
+    // runtime classpath, which is passed as a setting so those jars never land
+    // on this project's own classpath.
+    Test / javaOptions ++= {
+      if (connectLaneEnabled(sparkVersion.value)) {
+        Seq("-Dspark.testing.connect.serverClasspath=" +
+          (connectServer / Runtime / fullClasspath).value
+            .map(_.data.getAbsolutePath)
+            .mkString(java.io.File.pathSeparator))
+      } else Seq.empty
+    },
+    skip in compile := !connectLaneEnabled(sparkVersion.value),
+    skip in test := !connectLaneEnabled(sparkVersion.value),
+    skip in publish := !connectLaneEnabled(sparkVersion.value)
   )
 
 val commonSettings = Seq(
@@ -198,7 +248,12 @@ val commonSettings = Seq(
   //tag::dynamicScalaVersion[]
   crossScalaVersions := {
     if (sparkVersion.value >= "4.0.0") {
-      Seq() // We don't cross compile for the 4.X branch (until Scala 3 support comes).
+      // A single entry, NOT Seq(). sbt's `+` iterates crossScalaVersions, so an
+      // empty list silently turns `+compile`, `+test` and `+publishSigned` into
+      // no-ops -- which is why the Spark 4.x CI legs finished in 19 seconds
+      // without compiling anything, and why no 4.x artifact was published for
+      // the 3.0.1 release. We still don't cross-build 4.X (no Scala 3 yet).
+      Seq(scalaVersion.value)
     } else if (sparkVersion.value >= "3.2.0") {
       Seq("2.12.15", "2.13.16")
     } else if (sparkVersion.value >= "3.0.0") {
@@ -239,30 +294,66 @@ val commonSettings = Seq(
 
 )
 
+// Assertion source compiled against BOTH classic spark-sql and the Spark
+// Connect client. It touches nothing but the DataFrame API, so the same files
+// build in `core` and in the Connect-only sub-project.
+val connectSharedSources =
+  (ThisBuild / baseDirectory)(_ / "connect-shared" / "src" / "main" / "scala")
+
+// Server-side Connect helpers that reach into Spark's own packages. Shared by
+// `core` (for the in-JVM ConnectEnabled on 4.0+) and by the standalone
+// `connectServer` used by the 3.5 Connect lane.
+val connectServerSharedSources =
+  (ThisBuild / baseDirectory)(
+    _ / "connect-server-shared" / "src" / "main" / "scala")
+
 // Allow kafka (and other) utils to have version specific files
 //tag::dynamicCodeSelection[]
 val coreSources = unmanagedSourceDirectories in Compile  := {
-  if (sparkVersion.value >= "4.0.0") Seq(
+  // "4.1" / "pre-4.1" exist because Spark 4.1 moved MemoryStream into
+  // org.apache.spark.sql.execution.streaming.runtime; see MemoryStreamCompat.
+  if (sparkVersion.value >= "4.1.0") Seq(
+    (sourceDirectory in Compile)(_ / "4.1/scala"),
     (sourceDirectory in Compile)(_ / "4.0/scala"),
+    connectServerSharedSources,
     (sourceDirectory in Compile)(_ / "3.5/scala"),
     (sourceDirectory in Compile)(_ / "3.0/scala"),
     (sourceDirectory in Compile)(_ / "2.4/scala"),
-    (sourceDirectory in Compile)(_ / "2.4/java")
+    (sourceDirectory in Compile)(_ / "2.4/java"),
+    connectSharedSources
+  ).join.value
+  else if (sparkVersion.value >= "4.0.0") Seq(
+    (sourceDirectory in Compile)(_ / "pre-4.1/scala"),
+    (sourceDirectory in Compile)(_ / "4.0/scala"),
+    connectServerSharedSources,
+    (sourceDirectory in Compile)(_ / "3.5/scala"),
+    (sourceDirectory in Compile)(_ / "3.0/scala"),
+    (sourceDirectory in Compile)(_ / "2.4/scala"),
+    (sourceDirectory in Compile)(_ / "2.4/java"),
+    connectSharedSources
   ).join.value
   else if (sparkVersion.value >= "3.5.0" && scalaVersion.value >= "2.12.0") Seq(
+    (sourceDirectory in Compile)(_ / "pre-4.1/scala"),
     (sourceDirectory in Compile)(_ / "3.5/scala"),
     (sourceDirectory in Compile)(_ / "3.0/scala"),
     (sourceDirectory in Compile)(_ / "2.4/scala"),
-    (sourceDirectory in Compile)(_ / "2.4/java")
+    (sourceDirectory in Compile)(_ / "2.4/java"),
+    connectSharedSources
   ).join.value
 //end::dynamicCodeSelection[]
   else if (sparkVersion.value >= "3.0.0" && scalaVersion.value >= "2.12.0") Seq(
+    (sourceDirectory in Compile)(_ / "pre-4.1/scala"),
     (sourceDirectory in Compile)(_ / "3.0/scala"),
     (sourceDirectory in Compile)(_ / "2.4/scala"),
-    (sourceDirectory in Compile)(_ / "2.4/java")
+    (sourceDirectory in Compile)(_ / "2.4/java"),
+    connectSharedSources
   ).join.value
   else // Oldest we support is 2.4.8
-    Seq((sourceDirectory in Compile)(_ / "2.4/scala"), (sourceDirectory in Compile)(_ / "2.4/java")
+    Seq(
+      (sourceDirectory in Compile)(_ / "pre-4.1/scala"),
+      (sourceDirectory in Compile)(_ / "2.4/scala"),
+      (sourceDirectory in Compile)(_ / "2.4/java"),
+    connectSharedSources
   ).join.value
 }
 
