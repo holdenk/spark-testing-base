@@ -7,9 +7,23 @@ val sparkVersion = settingKey[String]("Spark version")
 //end::sparkVersion[]
 val sparkTestingVersion = settingKey[String]("Spark testing base version without Spark version part")
 
+// The running JVM's major version: 8 for "1.8", 17 for "17".
+def javaMajorVersion: Int = {
+  val raw = sys.props.getOrElse("java.specification.version", "")
+  val text = if (raw.startsWith("1.")) raw.substring(2) else raw
+  text.takeWhile(_.isDigit) match {
+    case "" => 0
+    case digits => digits.toInt
+  }
+}
+
 def specialOptions = {
-  // We only need these extra props for JRE>17
-  if (sys.props("java.specification.version") > "1.17") {
+  // We only need these extra props for JRE>=17.
+  //
+  // Compare the parsed major version, not the raw string: "1.8" sorts after
+  // "1.17" lexicographically, so the old string comparison was true for every
+  // Java version and the else branch was dead.
+  if (javaMajorVersion >= 17) {
     Seq(
       "base/java.lang", "base/java.lang.invoke", "base/java.lang.reflect", "base/java.io", "base/java.net", "base/java.nio",
       "base/java.util", "base/java.util.concurrent", "base/java.util.concurrent.atomic",

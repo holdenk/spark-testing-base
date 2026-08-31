@@ -25,12 +25,18 @@ package com.holdenkarau.spark.testing.connect
 class SampleConnectSuiteTest extends ScalaConnectSuiteBase {
 
   test("this really is a Connect-only classpath") {
-    // spark-sql is not a dependency of this project, so its classic session
-    // must not be loadable. If it ever becomes loadable the lane has been
-    // compromised and these tests would no longer prove anything.
-    val classic = "org.apache.spark.sql.classic.SparkSession"
+    // spark-sql is not a dependency of this project, so a class that only
+    // spark-sql ships must not be loadable. If it ever becomes loadable the
+    // lane has been compromised and these tests would no longer prove anything.
+    //
+    // QueryExecution specifically: it is in spark-sql 3.5 and absent from
+    // spark-connect-client-jvm 3.5. org.apache.spark.sql.classic.SparkSession
+    // would be the obvious probe but that package only exists in Spark 4, so
+    // on 3.5 it is absent from both jars and the assertion would hold whether
+    // or not spark-sql had leaked in.
+    val sqlOnly = "org.apache.spark.sql.execution.QueryExecution"
     intercept[ClassNotFoundException] {
-      Class.forName(classic, false, getClass.getClassLoader)
+      Class.forName(sqlOnly, false, getClass.getClassLoader)
     }
     assert(connectRemote.startsWith("sc://"))
   }

@@ -120,12 +120,26 @@ object ConnectServerHarness {
       s"${StartupTimeoutMillis / 1000} seconds.")
   }
 
+  /** The running JVM's major version: 8 for "1.8", 17 for "17". */
+  private def javaMajorVersion: Int = {
+    val raw = System.getProperty("java.specification.version", "")
+    val text = if (raw.startsWith("1.")) raw.substring(2) else raw
+    text.takeWhile(_.isDigit) match {
+      case "" => 0
+      case digits => digits.toInt
+    }
+  }
+
   /**
    * The same --add-opens flags the sbt build passes to its own forked test
    * JVMs; Spark needs them on JDK 17+.
+   *
+   * Compare the parsed major version, not the raw string: "1.8" sorts after
+   * "1.17" lexicographically, so a string comparison is true for every Java
+   * version and would hand --add-opens to a Java 8 JVM, which rejects it.
    */
   private def addOpens: Seq[String] = {
-    if (System.getProperty("java.specification.version") > "1.17") {
+    if (javaMajorVersion >= 17) {
       Seq(
         "base/java.lang", "base/java.lang.invoke", "base/java.lang.reflect",
         "base/java.io", "base/java.net", "base/java.nio",

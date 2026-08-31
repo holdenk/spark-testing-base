@@ -130,7 +130,7 @@ libraryDependencies ++= Seq(
 Set either of these and the suite connects to that server instead of starting
 one of its own:
 
-```
+```text
 -Dspark.testing.connect.remote=sc://my-host:15002
 SPARK_REMOTE=sc://my-host:15002
 ```

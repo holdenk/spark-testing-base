@@ -116,7 +116,8 @@ trait ConnectEnabled extends DatasetSuiteBase { self: Suite =>
 
   override def afterAll(): Unit = {
     try {
-      // Deliberately NOT closing the Connect session here. DataFrameSuiteBase's
+      // Deliberately NOT closing the Connect session here in the common case.
+      // DataFrameSuiteBase's
       // afterAll already calls spark.stop() on it, and Spark's Connect client is
       // not idempotent about that: a second close re-sends ReleaseSession over
       // the channel the first one shut down, and the retry policy then sits
@@ -124,6 +125,13 @@ trait ConnectEnabled extends DatasetSuiteBase { self: Suite =>
       // class, while the server is still listening.
       super.afterAll()
     } finally {
+      // ...except when the suite reuses its context. Then
+      // DataFrameSuiteBase.afterAll skips spark.stop() altogether and this is
+      // the only close there is; without it the client's gRPC channel and its
+      // retry threads leak for the life of the test JVM.
+      if (reuseContextIfPossible && _connectSession != null) {
+        _connectSession.close()
+      }
       if (_startedServer) {
         _startedServer = false
         SparkConnectService.stop()

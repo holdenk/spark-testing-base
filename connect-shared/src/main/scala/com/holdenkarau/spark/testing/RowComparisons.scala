@@ -133,42 +133,84 @@ object RowComparisons {
               }
 
             case head :: _ if head.isInstanceOf[Row] =>
-              o1.asInstanceOf[Seq[Row]].zip(o2.asInstanceOf[Seq[Row]]).foreach {
+              val s1 = o1.asInstanceOf[Seq[Row]]
+              val s2 = o2.asInstanceOf[Seq[Row]]
+              // zip truncates to the shorter side, so without this a
+              // shared prefix would compare equal.
+              if (s1.length != s2.length) {
+                return false
+              }
+              s1.zip(s2).foreach {
                 case (row1, row2) if !approxEquals(row1, row2, tol, tolTimestamp) =>
                   return false
                 case _ =>
               }
 
             case head :: _ if head.isInstanceOf[Timestamp] =>
-              o1.asInstanceOf[Seq[Timestamp]].zip(o2.asInstanceOf[Seq[Timestamp]]).foreach {
+              val s1 = o1.asInstanceOf[Seq[Timestamp]]
+              val s2 = o2.asInstanceOf[Seq[Timestamp]]
+              // zip truncates to the shorter side, so without this a
+              // shared prefix would compare equal.
+              if (s1.length != s2.length) {
+                return false
+              }
+              s1.zip(s2).foreach {
                 case (t1, t2) if !compareTimestamp(t1, t2, tolTimestamp) =>
                   return false
                 case _ =>
               }
 
             case head :: _ if head.isInstanceOf[Double] =>
-              o1.asInstanceOf[Seq[Double]].zip(o2.asInstanceOf[Seq[Double]]).foreach {
+              val s1 = o1.asInstanceOf[Seq[Double]]
+              val s2 = o2.asInstanceOf[Seq[Double]]
+              // zip truncates to the shorter side, so without this a
+              // shared prefix would compare equal.
+              if (s1.length != s2.length) {
+                return false
+              }
+              s1.zip(s2).foreach {
                 case (d1, d2) if !compareDouble(d1, d2, tol) =>
                   return false
                 case _ =>
               }
 
             case head :: _ if head.isInstanceOf[Float] =>
-              o1.asInstanceOf[Seq[Float]].zip(o2.asInstanceOf[Seq[Float]]).foreach {
+              val s1 = o1.asInstanceOf[Seq[Float]]
+              val s2 = o2.asInstanceOf[Seq[Float]]
+              // zip truncates to the shorter side, so without this a
+              // shared prefix would compare equal.
+              if (s1.length != s2.length) {
+                return false
+              }
+              s1.zip(s2).foreach {
                 case (f1, f2) if !compareFloat(f1, f2, tol) =>
                   return false
                 case _ =>
               }
 
             case head :: _ if head.isInstanceOf[java.math.BigDecimal] =>
-              o1.asInstanceOf[Seq[java.math.BigDecimal]].zip(o2.asInstanceOf[Seq[java.math.BigDecimal]]).foreach {
+              val s1 = o1.asInstanceOf[Seq[java.math.BigDecimal]]
+              val s2 = o2.asInstanceOf[Seq[java.math.BigDecimal]]
+              // zip truncates to the shorter side, so without this a
+              // shared prefix would compare equal.
+              if (s1.length != s2.length) {
+                return false
+              }
+              s1.zip(s2).foreach {
                 case (d1, d2) if !compareJavaBigDecimal(d1, d2, tol) =>
                   return false
                 case _ =>
               }
 
             case head :: _ if head.isInstanceOf[scala.math.BigDecimal] =>
-              o1.asInstanceOf[Seq[scala.math.BigDecimal]].zip(o2.asInstanceOf[Seq[scala.math.BigDecimal]]).foreach {
+              val s1 = o1.asInstanceOf[Seq[scala.math.BigDecimal]]
+              val s2 = o2.asInstanceOf[Seq[scala.math.BigDecimal]]
+              // zip truncates to the shorter side, so without this a
+              // shared prefix would compare equal.
+              if (s1.length != s2.length) {
+                return false
+              }
+              s1.zip(s2).foreach {
                 case (d1, d2) if !compareScalaBigDecimal(d1, d2, tol) =>
                   return false
                 case _ =>

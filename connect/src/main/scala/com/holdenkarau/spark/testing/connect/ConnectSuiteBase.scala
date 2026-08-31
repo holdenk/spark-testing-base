@@ -82,14 +82,22 @@ trait ConnectSuiteBase extends BeforeAndAfterAll
 
   override def afterAll(): Unit = {
     try {
-      if (_spark != null) {
-        // Close the field, not the lazy val: touching `spark` here would force
-        // it in suites where no test ever did.
-        _spark.close()
+      try {
+        if (_spark != null) {
+          // Close the field, not the lazy val: touching `spark` here would
+          // force it in suites where no test ever did.
+          _spark.close()
+        }
+      } finally {
         _spark = null
+        // In its own finally: if closing the session throws, the child JVM
+        // would otherwise outlive the suite.
+        try {
+          _harness.foreach(_.stop())
+        } finally {
+          _harness = None
+        }
       }
-      _harness.foreach(_.stop())
-      _harness = None
     } finally {
       super.afterAll()
     }

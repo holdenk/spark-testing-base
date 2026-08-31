@@ -19,6 +19,8 @@ package com.holdenkarau.spark.testing
 
 import java.time.Duration
 
+import scala.collection.JavaConverters._
+
 import org.apache.spark.sql.{DataFrame, Row, SparkSession}
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.types._
@@ -91,7 +93,11 @@ trait DataFrameAssertionsLike extends TestSuiteLike {
     colName1: String,
     colName2: String
   ): Unit = {
-    val elements = df.select(colName1, colName2).filter(col(colName1) =!= col(colName2)).collect()
+    // `=!=` yields NULL when either side is NULL and filter drops the row, so
+    // (NULL, 1) would compare equal. `<=>` is the null-safe comparison.
+    val elements = df.select(colName1, colName2)
+      .filter(not(col(colName1) <=> col(colName2)))
+      .collect()
     val colName1Elements = elements.map(_(0))
     val colName2Elements = elements.map(_(1))
     val mismatchMessage = s"""
@@ -164,7 +170,14 @@ Columns aren't equal
       // Connect ships results as Arrow, whose deserializer looks fields up by
       // name and fails with AMBIGUOUS_COLUMN_OR_FIELD. Renaming keeps the key
       // values visible in the failure output either way.
-      val resultNames = keyColumns.map(name => s"${name}__result")
+      // Widen the suffix until the renamed columns cannot collide with an
+      // existing one -- a frame carrying both `foo` and `foo__result` would
+      // otherwise reintroduce the very ambiguity this rename exists to avoid.
+      val existing = keyColumns.toSet
+      val suffix = Iterator.iterate("__result")(_ + "_")
+        .find(s => keyColumns.forall(name => !existing.contains(name + s)))
+        .get
+      val resultNames = keyColumns.map(name => name + suffix)
       val resultRenamed = resultElementsCount.toDF((resultNames :+ actualCol): _*)
 
       val joinExprs = keyColumns.zip(resultNames).map {
@@ -296,6 +309,17 @@ Columns aren't equal
 
       if (unequalRows.nonEmpty) {
         val sample = unequalRows.take(maxUnequalRowsToShow)
+        val unequalSchema = StructType(
+          StructField("source_dataframe", StringType) ::
+            expected.schema.fields.toList)
+        // Row.fromSeq rather than the classic path's GenericRowWithSchema:
+        // catalyst is not on the classpath when this file is compiled against
+        // the Spark Connect client.
+        val taggedRows = sample.flatMap { case ((r1, r2), _) =>
+          Seq(Row.fromSeq("expected" +: r1.toSeq),
+            Row.fromSeq("result" +: r2.toSeq))
+        }.toList.asJava
+        customShow(spark.createDataFrame(taggedRows, unequalSchema))
         val message = sample.map { case ((r1, r2), idx) =>
           s"Row $idx: expected=$r1, actual=$r2"
         }.mkString("\n")
