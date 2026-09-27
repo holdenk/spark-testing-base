@@ -101,9 +101,9 @@ class MyTest extends ScalaDataFrameSuiteBase with ConnectEnabled {
 `spark` really is the Connect session, so the assertions you already use go over
 the wire without any other change. A Connect gRPC server is started inside the
 test JVM on an ephemeral port, on top of the local `SparkContext` the suite
-creates anyway, and torn down afterwards. It listens on loopback only, since a
-Connect server has no authentication; set `spark.connect.grpc.binding.address`
-in your suite's `conf` if you really want it reachable from elsewhere.
+creates anyway, and torn down afterwards. It listens on loopback only, since it
+runs without authentication; set `spark.connect.grpc.binding.address` in your
+suite's `conf` if you really want it reachable from elsewhere.
 
 ### `ConnectEnabled` requires Spark 4.0+
 
@@ -167,7 +167,11 @@ assertions. It is versioned like `spark-testing-base` itself, and is first
 published in the release after 3.0.1:
 
 ```scala
-"com.holdenkarau" %% "spark-testing-base-connect" % s"3.5.6_$sparkTestingBaseVersion" % "test"
+// The spark-testing-base release you are using (3.0.1 predates this artifact).
+val sparkTestingBaseVersion = "..."
+
+libraryDependencies +=
+  "com.holdenkarau" %% "spark-testing-base-connect" % s"3.5.6_$sparkTestingBaseVersion" % "test"
 ```
 
 ```scala
@@ -201,9 +205,9 @@ Without any of those the suite tries to launch a server in a child JVM. That is
 how this project tests itself, but it is not something you can use from your own
 build yet: it needs `-Dspark.testing.connect.serverClasspath` to name a classpath
 holding `spark-sql`, `spark-connect` *and* this project's `connect-server`
-sub-project, which is not published. Note too that Spark 3.5 has no setting to
-bind a Connect server to loopback, so a server started this way listens on every
-interface with no authentication.
+sub-project, which is not published. Spark 3.5 has no setting to bind a Connect
+server to loopback, so a server started this way listens on every interface; it
+refuses every call that does not come from localhost.
 
 ## Where is this from?
 

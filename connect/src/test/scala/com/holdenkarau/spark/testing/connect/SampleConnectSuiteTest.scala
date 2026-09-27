@@ -17,6 +17,15 @@
 
 package com.holdenkarau.spark.testing.connect
 
+import java.io.IOException
+import java.net.{Inet4Address, NetworkInterface, Proxy, ProxySelector,
+  SocketAddress, URI}
+
+import scala.collection.JavaConverters._
+import scala.util.Try
+
+import org.apache.spark.sql.SparkSession
+
 /**
  * The Spark 3.5 Connect lane: no spark-sql on this classpath at all, so
  * `spark` can only be a Connect session and every assertion below necessarily
@@ -39,6 +48,52 @@ class SampleConnectSuiteTest extends ScalaConnectSuiteBase {
       Class.forName(sqlOnly, false, getClass.getClassLoader)
     }
     assert(connectUrl.startsWith("sc://"))
+  }
+
+  test("the launched server turns away clients that are not on loopback") {
+    // Spark 3.5 binds every interface, so LoopbackOnlyInterceptor is all that
+    // keeps the server private. Reach it through a non-loopback address of
+    // this machine: the connection then comes from that address too, and must
+    // be refused.
+    assume(connectRemote.isEmpty, "the suite is using an external server")
+    val external = NetworkInterface.getNetworkInterfaces.asScala
+      .filter(i => i.isUp && !i.isLoopback)
+      .flatMap(_.getInetAddresses.asScala)
+      .collectFirst {
+        case a: Inet4Address if !a.isLoopbackAddress && !a.isLinkLocalAddress =>
+          a.getHostAddress
+      }
+    assume(external.isDefined, "no non-loopback IPv4 address to connect from")
+
+    // gRPC honours the JVM's ProxySelector, so a JVM-wide HTTPS proxy
+    // (https.proxyHost) would carry this connection instead and it would
+    // never reach the server from our own address. Go direct.
+    val previousProxySelector = ProxySelector.getDefault
+    ProxySelector.setDefault(new ProxySelector {
+      override def select(uri: URI): java.util.List[Proxy] =
+        java.util.Collections.singletonList(Proxy.NO_PROXY)
+      override def connectFailed(
+          uri: URI, sa: SocketAddress, e: IOException): Unit = ()
+    })
+    try {
+      val port = connectUrl.substring(connectUrl.lastIndexOf(':') + 1)
+      val outsider =
+        SparkSession.builder().remote(s"sc://${external.get}:$port").create()
+      try {
+        val e = intercept[Exception] {
+          outsider.sql("SELECT 1").collect()
+        }
+        assert(e.getMessage.contains("PERMISSION_DENIED"), e.getMessage)
+        assert(e.getMessage.contains("only accepts connections from localhost"),
+          e.getMessage)
+      } finally {
+        Try(outsider.close())
+      }
+    } finally {
+      ProxySelector.setDefault(previousProxySelector)
+    }
+    // ...while the suite's own loopback session is unaffected.
+    assert(spark.sql("SELECT 1").collect().head.getInt(0) === 1)
   }
 
   test("create and query a DataFrame over Connect") {

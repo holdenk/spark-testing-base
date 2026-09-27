@@ -85,8 +85,8 @@ trait ConnectEnabled extends DatasetSuiteBase { self: Suite =>
    * than picking a free port ourselves and racing whoever grabs it next.
    *
    * Bind it to loopback, too. Left unset Spark listens on every interface, and
-   * a Connect server has no authentication -- anyone who can reach the port can
-   * run queries, and upload and execute code, as the user running the tests.
+   * this server runs without authentication -- anyone who can reach the port
+   * can run queries, and upload and execute code, as the user running tests.
    * `setIfMissing` so a suite that really wants it reachable can say so.
    */
   abstract override def conf: SparkConf =

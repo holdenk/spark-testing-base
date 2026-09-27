@@ -86,7 +86,20 @@ trait ConnectSuiteBase extends BeforeAndAfterAll
       _harness = Some(harness)
       harness.remote
     }
-    _spark = SparkSession.builder().remote(_url).getOrCreate()
+    try {
+      _spark = SparkSession.builder().remote(_url).getOrCreate()
+    } catch {
+      // ScalaTest still runs afterAll when beforeAll throws an Exception, but
+      // not for other Throwables (a LinkageError from a broken client
+      // classpath, say), so stop the server here rather than rely on it.
+      case t: Throwable =>
+        try {
+          _harness.foreach(_.stop())
+        } finally {
+          _harness = None
+        }
+        throw t
+    }
   }
 
   override def afterAll(): Unit = {

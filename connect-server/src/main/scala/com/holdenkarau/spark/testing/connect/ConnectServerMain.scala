@@ -43,8 +43,8 @@ import org.apache.spark.sql.connect.service.SparkConnectService
  * The process then runs until the parent stops it, or until the parent exits.
  *
  * Spark 3.5 has no `spark.connect.grpc.binding.address`, so the server listens
- * on every interface. It has no authentication either: run it on a trusted
- * network, or point the suites at a server you control instead.
+ * on every interface, and it does no authentication. [[LoopbackOnlyInterceptor]]
+ * therefore refuses every call that does not come from localhost.
  */
 object ConnectServerMain {
 
@@ -60,6 +60,9 @@ object ConnectServerMain {
       .set("spark.driver.host", "localhost")
       // Bind an ephemeral port; we report back the one we actually got.
       .set("spark.connect.grpc.binding.port", "0")
+      // It binds every interface regardless, so turn away anyone but us.
+      .set("spark.connect.grpc.interceptor.classes",
+        classOf[LoopbackOnlyInterceptor].getName)
 
     val session = SparkSession.builder().config(conf).getOrCreate()
     SparkConnectService.start(session.sparkContext)
