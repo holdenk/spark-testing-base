@@ -18,24 +18,17 @@
 package com.holdenkarau.spark.testing
 
 import java.io.File
-import java.sql.Timestamp
 import java.time.Duration
 
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql._
 import org.apache.spark.sql.catalyst.expressions._
-import org.apache.spark.sql.functions._
 import org.apache.spark.sql.types._
 import org.apache.spark.sql.internal.SQLConf
-import org.json4s._
-import org.json4s.jackson.Serialization
-import org.json4s.jackson.JsonMethods._
 import org.scalactic.source
 import org.scalatest.Suite
 import org.scalatest.Tag
 import org.scalatest.funsuite.AnyFunSuite
-
-import scala.math.abs
 
 /**
  * Base trait for testing Spark DataFrames in Scala.

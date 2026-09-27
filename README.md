@@ -101,7 +101,9 @@ class MyTest extends ScalaDataFrameSuiteBase with ConnectEnabled {
 `spark` really is the Connect session, so the assertions you already use go over
 the wire without any other change. A Connect gRPC server is started inside the
 test JVM on an ephemeral port, on top of the local `SparkContext` the suite
-creates anyway, and torn down afterwards.
+creates anyway, and torn down afterwards. It listens on loopback only, since a
+Connect server has no authentication; set `spark.connect.grpc.binding.address`
+in your suite's `conf` if you really want it reachable from elsewhere.
 
 ### `ConnectEnabled` requires Spark 4.0+
 
@@ -161,10 +163,11 @@ On 3.5 you cannot have the Connect client and `spark-sql` in one JVM, so testing
 Connect there means doing what a real Spark 3.5 Connect application does:
 compiling against `spark-connect-client-jvm` instead of `spark-sql`. The
 `spark-testing-base-connect` artifact is built that way, and gives you the same
-assertions:
+assertions. It is versioned like `spark-testing-base` itself, and is first
+published in the release after 3.0.1:
 
 ```scala
-"com.holdenkarau" %% "spark-testing-base-connect" % "3.5.6_3.0.0" % "test"
+"com.holdenkarau" %% "spark-testing-base-connect" % s"3.5.6_$sparkTestingBaseVersion" % "test"
 ```
 
 ```scala
@@ -189,13 +192,18 @@ There is no `SparkContext` in these suites, so the RDD-based assertions, the
 generators and the streaming suite bases are not there at all, rather than being
 present and throwing.
 
-The suite needs a Connect server. Point it at one you already have with
-`-Dspark.testing.connect.remote=sc://host:15002` or `SPARK_REMOTE`; otherwise it
-launches one in a child JVM. Launching requires
-`-Dspark.testing.connect.serverClasspath` to name a classpath holding `spark-sql`
-and `spark-connect` -- this project's own build sets that from the
-`connect-server` sub-project, and your build would need to do something similar
-if you want the auto-launch rather than an external server.
+The suite needs a Connect server. Point it at one you already have -- for
+example one started with Spark's `sbin/start-connect-server.sh` -- with
+`-Dspark.testing.connect.remote=sc://host:15002`, `SPARK_REMOTE`, or by
+overriding `connectRemote` in the suite.
+
+Without any of those the suite tries to launch a server in a child JVM. That is
+how this project tests itself, but it is not something you can use from your own
+build yet: it needs `-Dspark.testing.connect.serverClasspath` to name a classpath
+holding `spark-sql`, `spark-connect` *and* this project's `connect-server`
+sub-project, which is not published. Note too that Spark 3.5 has no setting to
+bind a Connect server to loopback, so a server started this way listens on every
+interface with no authentication.
 
 ## Where is this from?
 

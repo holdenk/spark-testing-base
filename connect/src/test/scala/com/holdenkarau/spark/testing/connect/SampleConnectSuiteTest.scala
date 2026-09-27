@@ -38,7 +38,7 @@ class SampleConnectSuiteTest extends ScalaConnectSuiteBase {
     intercept[ClassNotFoundException] {
       Class.forName(sqlOnly, false, getClass.getClassLoader)
     }
-    assert(connectRemote.startsWith("sc://"))
+    assert(connectUrl.startsWith("sc://"))
   }
 
   test("create and query a DataFrame over Connect") {

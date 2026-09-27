@@ -83,9 +83,16 @@ trait ConnectEnabled extends DatasetSuiteBase { self: Suite =>
    * Bind the in-JVM Connect server on an ephemeral port. We ask for port 0 and
    * read the port Spark actually bound back out of SparkConnectService, rather
    * than picking a free port ourselves and racing whoever grabs it next.
+   *
+   * Bind it to loopback, too. Left unset Spark listens on every interface, and
+   * a Connect server has no authentication -- anyone who can reach the port can
+   * run queries, and upload and execute code, as the user running the tests.
+   * `setIfMissing` so a suite that really wants it reachable can say so.
    */
   abstract override def conf: SparkConf =
-    super.conf.set("spark.connect.grpc.binding.port", "0")
+    super.conf
+      .set("spark.connect.grpc.binding.port", "0")
+      .setIfMissing("spark.connect.grpc.binding.address", "localhost")
 
   override def beforeAll(): Unit = {
     super.beforeAll()

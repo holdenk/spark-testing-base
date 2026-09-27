@@ -19,7 +19,7 @@ package com.holdenkarau.spark.testing.connect
 
 import java.io.File
 import java.nio.charset.StandardCharsets
-import java.nio.file.{Files, Paths}
+import java.nio.file.Files
 
 import org.apache.spark.SparkConf
 import org.apache.spark.sql.SparkSession
@@ -40,7 +40,11 @@ import org.apache.spark.sql.connect.service.SparkConnectService
  * parent process learns where to connect. Writing to a temp file and renaming
  * keeps the parent from ever reading a half-written port.
  *
- * The process then parks until it is killed.
+ * The process then runs until the parent stops it, or until the parent exits.
+ *
+ * Spark 3.5 has no `spark.connect.grpc.binding.address`, so the server listens
+ * on every interface. It has no authentication either: run it on a trusted
+ * network, or point the suites at a server you control instead.
  */
 object ConnectServerMain {
 
@@ -66,7 +70,16 @@ object ConnectServerMain {
     Files.move(tmp.toPath, portFile.toPath,
       java.nio.file.StandardCopyOption.ATOMIC_MOVE)
 
-    // Nothing else to do; the parent kills us when the suite is finished.
-    Thread.currentThread().join()
+    // Normally the parent stops us when the suite is finished. But if the
+    // parent dies first -- killed test JVM, cancelled sbt run -- nobody is left
+    // to do that. The parent never writes to our stdin, so EOF there means it
+    // is gone, and we go too rather than holding the port indefinitely.
+    // System.exit in a finally: Spark's non-daemon threads would keep the JVM
+    // alive past the end of main, including if the read itself throws.
+    try {
+      while (System.in.read() != -1) {}
+    } finally {
+      System.exit(0)
+    }
   }
 }

@@ -80,13 +80,13 @@ lazy val core = (project in file("core"))
             "org.apache.xbean" % "xbean-asm6-shaded" % "4.10",
           )
         }} ++ {
-        // Spark Connect: the gRPC server (3.5+) plus, on 4.0+, the client.
-        // Only 4.0+ gets the client -- there org.apache.spark.sql.SparkSession
-        // is an abstract class in spark-sql-api that both the classic and the
-        // Connect session extend, so the two jars can share a classloader. On
-        // 3.5 both spark-sql and spark-connect-client-jvm define their own
-        // concrete SparkSession under that name and cannot coexist; testing
-        // 3.5 Connect needs a client-only classpath instead.
+        // Spark Connect server and client, for ConnectEnabled. 4.0+ only --
+        // there org.apache.spark.sql.SparkSession is an abstract class in
+        // spark-sql-api that both the classic and the Connect session extend,
+        // so the two jars can share a classloader. On 3.5 both spark-sql and
+        // spark-connect-client-jvm define their own concrete SparkSession
+        // under that name and cannot coexist, so core has no Connect code
+        // there; the `connectClient` / `connectServer` projects below cover it.
         //
         // Provided, because only suites that mix in ConnectEnabled need them
         // and between them they pull in gRPC, protobuf and Arrow. See the
@@ -95,10 +95,6 @@ lazy val core = (project in file("core"))
           Seq(
             "org.apache.spark" %% "spark-connect"            % sparkVersion.value % Provided,
             "org.apache.spark" %% "spark-connect-client-jvm" % sparkVersion.value % Provided
-          )
-        } else if (sparkVersion.value >= "3.5.0") {
-          Seq(
-            "org.apache.spark" %% "spark-connect"            % sparkVersion.value % Provided
           )
         } else {
           Seq()

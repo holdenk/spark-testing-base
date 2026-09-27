@@ -41,10 +41,11 @@ import com.holdenkarau.spark.testing.{DataFrameAssertionsLike, TestSuite}
  * }
  * }}}
  *
- * By default the suite launches a server for itself (see
- * [[ConnectServerHarness]]). Point it at an existing one with the
+ * Point it at a running server by overriding `connectRemote`, or with the
  * `spark.testing.connect.remote` system property or the `SPARK_REMOTE`
- * environment variable.
+ * environment variable. Otherwise the suite tries to launch one itself (see
+ * [[ConnectServerHarness]]), which needs a server classpath that currently only
+ * this project's own build provides.
  *
  * The assertions come from `DataFrameAssertionsLike`, the same source the
  * classic `DataFrameSuiteBase` uses -- it is compiled twice, once against
@@ -65,19 +66,27 @@ trait ConnectSuiteBase extends BeforeAndAfterAll
     _spark
   }
 
-  /** The `sc://` URL this suite talks to. */
-  protected def connectRemote: String = _remote
+  /**
+   * The `sc://` URL of an already-running Connect server to use instead of
+   * launching one. Override to point the suite at a server of your own; same
+   * meaning as `ConnectEnabled.connectRemote` in the main artifact.
+   */
+  protected def connectRemote: Option[String] =
+    ConnectServerHarness.configuredRemote
 
-  @transient private var _remote: String = _
+  /** The `sc://` URL this suite is actually talking to, once started. */
+  protected def connectUrl: String = _url
+
+  @transient private var _url: String = _
 
   override def beforeAll(): Unit = {
     super.beforeAll()
-    _remote = ConnectServerHarness.configuredRemote.getOrElse {
+    _url = connectRemote.getOrElse {
       val harness = ConnectServerHarness.start()
       _harness = Some(harness)
       harness.remote
     }
-    _spark = SparkSession.builder().remote(_remote).getOrCreate()
+    _spark = SparkSession.builder().remote(_url).getOrCreate()
   }
 
   override def afterAll(): Unit = {

@@ -73,8 +73,10 @@ object ConnectServerHarness {
     val classpath = sys.props.getOrElse(ServerClasspathProperty,
       throw new IllegalStateException(
         s"$ServerClasspathProperty is not set, so there is no way to launch a " +
-        "Spark Connect server. Either run these tests through sbt, which sets " +
-        s"it, or point them at a running server with -D$RemoteProperty=sc://host:port."))
+        "Spark Connect server. Point the suite at a running server with " +
+        s"-D$RemoteProperty=sc://host:port or $RemoteEnvVar instead. (Only " +
+        "spark-testing-base's own build sets the classpath; the server's main " +
+        "class is not published.)"))
 
     val portFile = File.createTempFile("spark-connect-port", ".txt")
     // The server writes the file itself; it must not exist when it starts.
@@ -91,9 +93,20 @@ object ConnectServerHarness {
     val builder = new ProcessBuilder(command)
     builder.redirectErrorStream(true)
     builder.redirectOutput(ProcessBuilder.Redirect.INHERIT)
+    // stdin is left as a pipe on purpose: ConnectServerMain exits when it
+    // reads EOF there, i.e. when this JVM goes away without calling stop().
     val process = builder.start()
 
-    val port = awaitPort(process, portFile)
+    // Until the harness exists nobody else can stop the child, so any failure
+    // here -- timeout, early exit, interrupt, garbage in the port file -- has
+    // to take it down before propagating.
+    val port = try {
+      awaitPort(process, portFile)
+    } catch {
+      case t: Throwable =>
+        process.destroyForcibly()
+        throw t
+    }
     new ConnectServerHarness(process, s"sc://localhost:$port")
   }
 
@@ -114,7 +127,6 @@ object ConnectServerHarness {
       }
       Thread.sleep(200)
     }
-    process.destroyForcibly()
     throw new IllegalStateException(
       s"Spark Connect server did not report a port within " +
       s"${StartupTimeoutMillis / 1000} seconds.")
