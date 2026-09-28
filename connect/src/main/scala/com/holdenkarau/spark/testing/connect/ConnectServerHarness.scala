@@ -18,6 +18,7 @@
 package com.holdenkarau.spark.testing.connect
 
 import java.io.File
+import java.lang.management.ManagementFactory
 import java.nio.charset.StandardCharsets
 import java.nio.file.Files
 import java.util.concurrent.TimeUnit
@@ -132,36 +133,13 @@ object ConnectServerHarness {
       s"${StartupTimeoutMillis / 1000} seconds.")
   }
 
-  /** The running JVM's major version: 8 for "1.8", 17 for "17". */
-  private def javaMajorVersion: Int = {
-    val raw = System.getProperty("java.specification.version", "")
-    val text = if (raw.startsWith("1.")) raw.substring(2) else raw
-    text.takeWhile(_.isDigit) match {
-      case "" => 0
-      case digits => digits.toInt
-    }
-  }
-
   /**
-   * The same --add-opens flags the sbt build passes to its own forked test
-   * JVMs; Spark needs them on JDK 17+.
-   *
-   * Compare the parsed major version, not the raw string: "1.8" sorts after
-   * "1.17" lexicographically, so a string comparison is true for every Java
-   * version and would hand --add-opens to a Java 8 JVM, which rejects it.
+   * The --add-opens flags this JVM was started with, so the server gets the
+   * same ones. sbt passes them to its forked test JVMs on JDK 17+ because
+   * Spark needs them, and the server is Spark too.
    */
-  private def addOpens: Seq[String] = {
-    if (javaMajorVersion >= 17) {
-      Seq(
-        "base/java.lang", "base/java.lang.invoke", "base/java.lang.reflect",
-        "base/java.io", "base/java.net", "base/java.nio",
-        "base/java.util", "base/java.util.concurrent",
-        "base/java.util.concurrent.atomic",
-        "base/sun.nio.ch", "base/sun.nio.cs", "base/sun.security.action",
-        "base/sun.util.calendar", "security.jgss/sun.security.krb5"
-      ).map("--add-opens=java." + _ + "=ALL-UNNAMED")
-    } else {
-      Seq.empty
-    }
-  }
+  private def addOpens: Seq[String] =
+    ManagementFactory.getRuntimeMXBean.getInputArguments.asScala
+      .filter(_.startsWith("--add-opens="))
+      .toList
 }

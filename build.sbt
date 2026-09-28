@@ -312,7 +312,6 @@ val coreSources = unmanagedSourceDirectories in Compile  := {
     (sourceDirectory in Compile)(_ / "4.1/scala"),
     (sourceDirectory in Compile)(_ / "4.0/scala"),
     connectServerSharedSources,
-    (sourceDirectory in Compile)(_ / "3.5/scala"),
     (sourceDirectory in Compile)(_ / "3.0/scala"),
     (sourceDirectory in Compile)(_ / "2.4/scala"),
     (sourceDirectory in Compile)(_ / "2.4/java"),
@@ -322,7 +321,6 @@ val coreSources = unmanagedSourceDirectories in Compile  := {
     (sourceDirectory in Compile)(_ / "pre-4.1/scala"),
     (sourceDirectory in Compile)(_ / "4.0/scala"),
     connectServerSharedSources,
-    (sourceDirectory in Compile)(_ / "3.5/scala"),
     (sourceDirectory in Compile)(_ / "3.0/scala"),
     (sourceDirectory in Compile)(_ / "2.4/scala"),
     (sourceDirectory in Compile)(_ / "2.4/java"),
@@ -330,7 +328,6 @@ val coreSources = unmanagedSourceDirectories in Compile  := {
   ).join.value
   else if (sparkVersion.value >= "3.5.0" && scalaVersion.value >= "2.12.0") Seq(
     (sourceDirectory in Compile)(_ / "pre-4.1/scala"),
-    (sourceDirectory in Compile)(_ / "3.5/scala"),
     (sourceDirectory in Compile)(_ / "3.0/scala"),
     (sourceDirectory in Compile)(_ / "2.4/scala"),
     (sourceDirectory in Compile)(_ / "2.4/java"),
@@ -356,14 +353,12 @@ val coreSources = unmanagedSourceDirectories in Compile  := {
 val coreTestSources = unmanagedSourceDirectories in Test  := {
   if (sparkVersion.value >= "4.0.0" && scalaVersion.value >= "2.12.0") Seq(
     (sourceDirectory in Test)(_ / "4.0/scala"),
-    (sourceDirectory in Test)(_ / "3.5/scala"),
     (sourceDirectory in Test)(_ / "3.0/scala"),
     (sourceDirectory in Test)(_ / "3.0/java"),
     (sourceDirectory in Test)(_ / "2.4/scala"),
     (sourceDirectory in Test)(_ / "2.4/java")
   ).join.value
   else if (sparkVersion.value >= "3.5.0" && scalaVersion.value >= "2.12.0") Seq(
-    (sourceDirectory in Test)(_ / "3.5/scala"),
     (sourceDirectory in Test)(_ / "pre-4.0/scala"),
     (sourceDirectory in Test)(_ / "3.0/scala"),
     (sourceDirectory in Test)(_ / "3.0/java"),

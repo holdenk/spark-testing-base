@@ -79,6 +79,15 @@ trait ConnectSuiteBase extends BeforeAndAfterAll
 
   @transient private var _url: String = _
 
+  /** Stop the server this suite launched, if it launched one. */
+  private def stopServer(): Unit = {
+    try {
+      _harness.foreach(_.stop())
+    } finally {
+      _harness = None
+    }
+  }
+
   override def beforeAll(): Unit = {
     super.beforeAll()
     _url = connectRemote.getOrElse {
@@ -93,11 +102,7 @@ trait ConnectSuiteBase extends BeforeAndAfterAll
       // not for other Throwables (a LinkageError from a broken client
       // classpath, say), so stop the server here rather than rely on it.
       case t: Throwable =>
-        try {
-          _harness.foreach(_.stop())
-        } finally {
-          _harness = None
-        }
+        stopServer()
         throw t
     }
   }
@@ -112,13 +117,9 @@ trait ConnectSuiteBase extends BeforeAndAfterAll
         }
       } finally {
         _spark = null
-        // In its own finally: if closing the session throws, the child JVM
-        // would otherwise outlive the suite.
-        try {
-          _harness.foreach(_.stop())
-        } finally {
-          _harness = None
-        }
+        // Even when closing the session threw; otherwise the child JVM
+        // outlives the suite.
+        stopServer()
       }
     } finally {
       super.afterAll()

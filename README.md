@@ -149,8 +149,7 @@ unavailable in a `ConnectEnabled` suite:
 * `StreamingSuiteBase`, `StreamingActionBase`, `TestInputStream` and everything
   else built on DStreams.
 * `DataFrameGenerator`, `DatasetGenerator` and `RDDGenerator` -- they build
-  their data as RDDs. The `SparkSession`-based overloads are no different in
-  this respect; they exist because `SQLContext` is the deprecated API.
+  their data as RDDs.
 * `testCombined`, `testCodegenOnly` and `testNonCodegen` -- codegen modes are a
   server-side catalyst concern that a Connect client cannot set.
 
