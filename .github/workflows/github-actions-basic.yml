@@ -45,6 +45,9 @@ jobs:
           - spark: "4.1.0"
             java-version: "17"
             distribution: "temurin"
+          - spark: "4.1.1"
+            java-version: "17"
+            distribution: "temurin"
     env:
       SPARK_VERSION: ${{ matrix.spark }}
     steps:
