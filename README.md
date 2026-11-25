@@ -37,6 +37,34 @@ The Python package of spark-testing-base is available via:
 * PyPI: https://pypi.org/project/spark-testing-base/, e.g. `pip install spark-testing-base`
 * Conda: https://anaconda.org/conda-forge/spark-testing-base, e.g. `conda install -c conda-forge spark-testing-base`
 
+## Comparing DataFrames
+
+`DataFrameSuiteBase` (Scala/Java) and `SQLTestCase` (Python) provide DataFrame equality assertions
+with optional tolerances and options similar to PySpark's `assertDataFrameEqual`:
+
+```scala
+class MyTest extends AnyFunSuite with DataFrameSuiteBase {
+  test("results match") {
+    assertDataFrameEquals(expected, result)          // exact, rows in order
+    assertDataFrameNoOrderEquals(expected, result)   // exact, any row order
+    assertDataFrameEquals(expected, result, DataFrameEqualityOptions(
+      tol = 1e-8, rtol = 1e-5, checkRowOrder = false, ignoreNullable = true))
+  }
+}
+```
+
+```python
+class MyTest(SQLTestCase):
+    def test_results_match(self):
+        self.assertDataFrameEqual(expected, result, rtol=1e-5, atol=1e-8,
+                                  checkRowOrder=False, ignoreNullable=True)
+```
+
+Two finite floating point (or decimal) values are equal when
+`|expected - actual| <= tol + rtol * |expected|`. NaN is only equal to NaN and an infinity is only
+equal to an infinity of the same sign, whatever the tolerances. Tolerances apply inside structs,
+arrays and maps too.
+
 ## Minimum Memory Requirements and OOMs
 
 The default SBT testing java options are too small to support running many of the tests due to the need to launch Spark in local mode. To increase the amount of memory in a build.sbt file you can add:

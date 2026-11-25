@@ -79,3 +79,33 @@ jobs:
         key: ${{ runner.os }}-${{ matrix.java-version }}-${{ matrix.spark }}-build-${{ env.cache-name }}-${{ hashFiles('build.sbt') }}
     - name: Run tests
       run: SPARK_TESTING=yes ./build/sbt clean +compile +test -DsparkVersion=$SPARK_VERSION
+  # Python: run the sparktestingbase tests against a pip installed pyspark.
+  python:
+    runs-on: ubuntu-22.04
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - pyspark: "3.5.6"
+            python-version: "3.11"
+            java-version: "17"
+          - pyspark: "4.1.1"
+            python-version: "3.12"
+            java-version: "17"
+    steps:
+    - name: Checkout spark-testing-base
+      uses: actions/checkout@v4.1.1
+    - uses: actions/setup-java@v4
+      with:
+        java-version: ${{ matrix.java-version }}
+        distribution: temurin
+    - uses: actions/setup-python@v5
+      with:
+        python-version: ${{ matrix.python-version }}
+    - name: Install dependencies
+      run: pip install "pyspark==${{ matrix.pyspark }}" findspark pytest
+    - name: Run tests
+      working-directory: python
+      run: |
+        export SPARK_HOME=$(python -c "import pyspark, os; print(os.path.dirname(pyspark.__file__))")
+        python -m pytest sparktestingbase/test/comparison_test.py sparktestingbase/test/simple_sql_test.py -v

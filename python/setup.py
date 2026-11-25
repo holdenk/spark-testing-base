@@ -2,7 +2,7 @@ from setuptools import setup
 
 setup(
     name='spark-testing-base',
-    version='0.11.1',
+    version='0.12.0',
     author='Holden Karau',
     author_email='holden@pigscanfly.ca',
     packages=['sparktestingbase', 'sparktestingbase.test'],

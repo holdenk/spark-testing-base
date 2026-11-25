@@ -87,6 +87,37 @@ public class SampleJavaDatasetTest extends JavaDatasetSuiteBase implements Seria
         assertDatasetApproximateEquals(dataset1, dataset2, 0.201);
     }
 
+    @Test
+    public void equalWithOptionsFromJava() {
+        OuterScopes.addOuterScope(this);
+
+        JavaTestPerson person1 = createPerson("Hanafy", 23, 80.0);
+        JavaTestPerson person2 = createPerson("Holden", 30, 90.0);
+        Dataset<JavaTestPerson> dataset1 = sqlContext().createDataset(
+            Arrays.asList(person1, person2), Encoders.bean(JavaTestPerson.class));
+        Dataset<JavaTestPerson> dataset2 = sqlContext().createDataset(
+            Arrays.asList(createPerson("Holden", 30, 90.05), createPerson("Hanafy", 23, 80.05)),
+            Encoders.bean(JavaTestPerson.class));
+
+        assertDatasetEquals(dataset1, dataset2,
+            DataFrameEqualityOptions.defaults().withTol(0.1).withCheckRowOrder(false));
+    }
+
+    @Test (expected = AssertionError.class)
+    public void notEqualWithNaNFromJava() {
+        OuterScopes.addOuterScope(this);
+
+        Dataset<JavaTestPerson> dataset1 = sqlContext().createDataset(
+            Arrays.asList(createPerson("Hanafy", 23, Double.NaN)),
+            Encoders.bean(JavaTestPerson.class));
+        Dataset<JavaTestPerson> dataset2 = sqlContext().createDataset(
+            Arrays.asList(createPerson("Hanafy", 23, 80.0)),
+            Encoders.bean(JavaTestPerson.class));
+
+        assertDataFrameEquals(dataset1.toDF(), dataset2.toDF(),
+            DataFrameEqualityOptions.defaults().withTol(1000.0));
+    }
+
     @Test (expected = AssertionError.class)
     public void approximateEqualLowTolerance() {
         OuterScopes.addOuterScope(this);

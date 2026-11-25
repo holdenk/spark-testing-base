@@ -18,7 +18,6 @@
 package com.holdenkarau.spark.testing
 
 import java.net.ServerSocket
-import java.time.Duration
 
 import org.apache.spark.{SparkConf, SparkContext}
 import org.apache.spark.sql._
@@ -143,34 +142,28 @@ trait ConnectEnabled extends BeforeAndAfterAll with DataFrameSuiteBaseLike {
     }
   }
 
-  // Override the only RDD-based assertion with a collect-based version.
-  // assertDataFrameDataEquals is already pure DF ops in the base class.
-  override def assertDataFrameApproximateEquals(
+  // Override the only RDD-based comparison with a collect-based version.
+  // Everything else in the DataFrame assertions is pure DataFrame ops, so
+  // Connect gets the same semantics and failure messages as classic Spark.
+  override protected def compareRowsInOrder(
       expected: DataFrame, result: DataFrame,
-      tol: Double, tolTimestamp: Duration,
-      customShow: DataFrame => Unit = _.show()): Unit = {
+      options: DataFrameEqualityOptions,
+      maxRows: Int): RowComparison.OrderedComparison = {
     try {
       expected.cache()
       result.cache()
-      assertSchemasEqual(expected.schema, result.schema)
-
       val expectedRows = expected.collect()
       val resultRows = result.collect()
-
-      assert("Length not Equal", expectedRows.length.toLong, resultRows.length.toLong)
-
-      val unequalRows = expectedRows.zip(resultRows).zipWithIndex.filter {
-        case ((r1, r2), _) =>
-          !(r1.equals(r2) ||
-            DataFrameSuiteBase.approxEquals(r1, r2, tol, tolTimestamp))
-      }
-
-      if (unequalRows.nonEmpty) {
-        val sample = unequalRows.take(maxUnequalRowsToShow)
-        val message = sample.map { case ((r1, r2), idx) =>
-          s"Row $idx: expected=$r1, actual=$r2"
-        }.mkString("\n")
-        fail(s"There are some unequal rows:\n$message")
+      if (expectedRows.length != resultRows.length) {
+        RowComparison.OrderedComparison(
+          expectedRows.length.toLong, resultRows.length.toLong, 0, Seq.empty)
+      } else {
+        val unequal = expectedRows.iterator.zip(resultRows.iterator).zipWithIndex
+          .collect { case ((r1, r2), idx)
+            if !RowComparison.compareRows(r1, r2, options) => (idx.toLong, r1, r2)
+          }.toVector
+        RowComparison.OrderedComparison(expectedRows.length.toLong,
+          resultRows.length.toLong, unequal.size.toLong, unequal.take(maxRows))
       }
     } finally {
       expected.unpersist()

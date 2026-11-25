@@ -151,4 +151,31 @@ class SampleSparkConnectTest extends ScalaDataFrameSuiteBase
       assertDataFrameNoOrderEquals(df1, df2)
     }
   }
+
+  test("NaN and infinities through Connect (SPARK-59514)") {
+    import spark.implicits._
+    val nan = Seq(Double.NaN).toDF("v")
+    val one = Seq(1.0).toDF("v")
+    intercept[org.scalatest.exceptions.TestFailedException] {
+      assertDataFrameEquals(nan, one, DataFrameEqualityOptions(tol = 10.0))
+    }
+    intercept[org.scalatest.exceptions.TestFailedException] {
+      assertDataFrameEquals(Seq(Double.PositiveInfinity).toDF("v"),
+        Seq(Double.NegativeInfinity).toDF("v"), DataFrameEqualityOptions(rtol = 1.0))
+    }
+    assertDataFrameEquals(nan, Seq(Double.NaN).toDF("v"))
+  }
+
+  test("array tolerance and unordered tolerance through Connect") {
+    import spark.implicits._
+    val expected = Seq((1, Seq(1.0, 2.0)), (2, Seq(3.0))).toDF("id", "values")
+    val close = Seq((2, Seq(3.05)), (1, Seq(1.05, 2.05))).toDF("id", "values")
+    assertDataFrameEquals(expected, close,
+      DataFrameEqualityOptions(tol = 0.1, checkRowOrder = false))
+    val message = intercept[org.scalatest.exceptions.TestFailedException] {
+      assertDataFrameEquals(expected, close,
+        DataFrameEqualityOptions(tol = 0.01, checkRowOrder = false))
+    }.getMessage
+    assert(message.contains("2 of 2 rows differ"))
+  }
 }

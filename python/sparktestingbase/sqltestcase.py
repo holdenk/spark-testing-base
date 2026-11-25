@@ -19,6 +19,7 @@ from __future__ import absolute_import
 from .utils import add_pyspark_path_if_needed, quiet_py4j
 from .pathmagic import *
 from .testcase import SparkTestingBaseReuse
+from . import comparison
 
 import os
 import sys
@@ -55,43 +56,97 @@ class SQLTestCase(SparkTestingBaseReuse):
         self.session = SparkSession.builder.config(map=self.getConf()).getOrCreate()
         self.sqlCtx = SQLContext(self.sc, sparkSession=self.session)
 
-    def assertDataFrameEqual(self, expected, result, tol=0):
-        """Assert that two DataFrames contain the same data.
-        When comparing inexact fields uses tol.
+    def assertSchemaEqual(self, expected, result, ignoreNullable=False,
+                          ignoreColumnOrder=False, ignoreColumnName=False):
+        """Assert that two schemas (StructTypes) are equal.
+
+        :param ignoreNullable: ignore nullability, including nested
+            containsNull / valueContainsNull.
+        :param ignoreColumnOrder: compare top level fields sorted by name.
+        :param ignoreColumnName: compare top level fields by position.
         """
-        assert expected.schema == result.schema
-        try:
-            expectedRDD = expected.rdd.cache()
-            resultRDD = result.rdd.cache()
-            assert expectedRDD.count() == resultRDD.count()
+        expected_fields = comparison.normalize_schema(
+            expected, ignoreNullable, ignoreColumnOrder, ignoreColumnName)
+        result_fields = comparison.normalize_schema(
+            result, ignoreNullable, ignoreColumnOrder, ignoreColumnName)
+        if expected_fields != result_fields:
+            self.fail(comparison.describe_schema_differences(
+                expected_fields, result_fields))
 
-            def zipWithIndex(rdd):
-                """Zip with index (idx, data)"""
-                return rdd.zipWithIndex().map(lambda x: (x[1], x[0]))
+    @staticmethod
+    def _prepareForComparison(df, ignoreColumnOrder, ignoreColumnName,
+                              ignoreColumnType):
+        from pyspark.sql.functions import col, regexp_replace
+        from pyspark.sql.types import DecimalType, DoubleType, FloatType
+        quote = comparison.quote
+        if ignoreColumnOrder and not ignoreColumnName:
+            df = df.select(*[col(quote(c)) for c in sorted(df.columns)])
+        if ignoreColumnName:
+            df = df.toDF(*[str(i) for i in range(len(df.columns))])
+        if ignoreColumnType:
+            columns = []
+            for field in df.schema.fields:
+                as_string = col(quote(field.name)).cast("string")
+                if isinstance(field.dataType, (FloatType, DoubleType, DecimalType)):
+                    # Drop trailing zeros so 1 (int) and 1.0 (double) are equal.
+                    as_string = regexp_replace(as_string, r"\.0+$", "")
+                columns.append(as_string.alias(field.name))
+            df = df.select(*columns)
+        return df
 
-            def equal(x, y):
-                if (len(x) != len(y)):
-                    return False
-                elif (x == y):
-                    return True
-                else:
-                    for idx in range(len(x)):
-                        a = x[idx]
-                        b = y[idx]
-                        if isinstance(a, float):
-                            if (abs(a - b) > tol):
-                                return False
-                        else:
-                            if a != b:
-                                return False
-                return True
-            expectedIndexed = zipWithIndex(expectedRDD)
-            resultIndexed = zipWithIndex(resultRDD)
-            joinedRDD = expectedIndexed.join(resultIndexed)
-            unequalRDD = joinedRDD.filter(
-                lambda x: not equal(x[1][0], x[1][1]))
-            differentRows = unequalRDD.take(10)
-            assert [] == differentRows
-        finally:
-            expectedRDD.unpersist()
-            resultRDD.unpersist()
+    def assertDataFrameEqual(self, expected, result, tol=0, checkRowOrder=True,
+                             rtol=0.0, atol=None, ignoreNullable=False,
+                             ignoreColumnOrder=False, ignoreColumnName=False,
+                             ignoreColumnType=False, maxErrors=None,
+                             showOnlyDiff=False):
+        """Assert that two DataFrames contain the same data.
+
+        ``expected`` and ``result`` may be DataFrames or lists of Rows. The
+        schemas are only compared when both are DataFrames, and the column
+        options only apply to DataFrames.
+
+        :param tol: absolute tolerance for float and Decimal values (alias
+            for ``atol``, kept for backwards compatibility).
+        :param checkRowOrder: when False rows are compared ignoring order.
+        :param rtol: relative tolerance, relative to the expected value. Two
+            finite values are equal when
+            ``abs(expected - result) <= atol + rtol * abs(expected)``.
+            NaN is only equal to NaN, an infinity only to the same infinity.
+        :param atol: absolute tolerance, defaults to ``tol``.
+        :param ignoreNullable: ignore nullability when comparing schemas.
+        :param ignoreColumnOrder: match columns by name instead of position.
+        :param ignoreColumnName: match columns by position, ignoring names.
+        :param ignoreColumnType: compare the string form of every column.
+        :param maxErrors: maximum number of differing rows to report
+            (defaults to 10).
+        :param showOnlyDiff: only show the differing fields of each row.
+        """
+        if atol is None:
+            atol = tol
+        if maxErrors is None:
+            maxErrors = 10
+
+        if not isinstance(expected, list):
+            expected = self._prepareForComparison(
+                expected, ignoreColumnOrder, ignoreColumnName, ignoreColumnType)
+        if not isinstance(result, list):
+            result = self._prepareForComparison(
+                result, ignoreColumnOrder, ignoreColumnName, ignoreColumnType)
+        if not isinstance(expected, list) and not isinstance(result, list):
+            self.assertSchemaEqual(expected.schema, result.schema,
+                                   ignoreNullable=ignoreNullable)
+
+        expected_rows = expected if isinstance(expected, list) else expected.collect()
+        result_rows = result if isinstance(result, list) else result.collect()
+
+        if checkRowOrder and len(expected_rows) != len(result_rows):
+            self.fail("Length not Equal: expected %d rows, result has %d rows"
+                      % (len(expected_rows), len(result_rows)))
+
+        num_unequal, total, diffs = comparison.compare_row_lists(
+            expected_rows, result_rows, check_row_order=checkRowOrder,
+            rtol=rtol, atol=atol, max_errors=maxErrors)
+        if num_unequal:
+            self.fail("There are some unequal rows\n" + comparison.format_diff(
+                diffs, num_unequal, total, show_only_diff=showOnlyDiff,
+                rtol=rtol, atol=atol))

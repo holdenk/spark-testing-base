@@ -1,3 +1,23 @@
+# Unreleased
+- DataFrame equality: non-finite values are handled explicitly (ports SPARK-59514). NaN is only
+  equal to NaN and an infinity only to the same infinity, tolerances only apply to finite values.
+  - **Python behaviour change**: `SQLTestCase.assertDataFrameEqual` used to treat NaN as equal to
+    any number, so tests that were passing because of this will now fail.
+- Scala: arrays from real DataFrames (`WrappedArray` / `ArraySeq`) now get numeric and timestamp
+  tolerance. Previously only Scala `List`s did, so array columns were compared exactly.
+- Scala: maps, `java.time.Instant` and `java.time.LocalDateTime` values get tolerance. Rows and arrays
+  of different lengths are never equal. Mismatched value types fail the comparison rather than
+  throwing `ClassCastException`.
+- New `DataFrameEqualityOptions` for `assertDataFrameEquals` / `assertDatasetEquals`, modelled on
+  PySpark's `assertDataFrameEqual`: `rtol` (relative tolerance), `checkRowOrder`,
+  `ignoreNullable`, `ignoreColumnOrder`, `ignoreColumnName`, `ignoreColumnType`, `maxErrors` and
+  `showOnlyDiff`. The defaults keep the existing behaviour.
+- Python: `assertDataFrameEqual` gains the same options (`rtol`/`atol` alongside `tol`). It accepts
+  lists of `Row`s, works on Spark Connect (no `.rdd`), and raises an `AssertionError` with a
+  readable diff. There is also a new `assertSchemaEqual`.
+- Failure messages report how many rows differ, mark the differing fields, and (for unordered
+  comparisons) list the rows whose counts differ.
+- `assertColumnEquality` now catches rows where only one of the two columns is null.
 # 1.5.0
 - Enable `struct` approx equality (recursive calling)
 - Improve `java.math.BigDecimal` tolerance

@@ -40,6 +40,15 @@ trait DatasetSuiteBaseLike extends DataFrameSuiteBaseLike {
   }
 
   /**
+   * Compares if two Datasets are equal as DataFrames using the given options,
+   * see [[DataFrameEqualityOptions]].
+   */
+  def assertDatasetEquals[U](expected: Dataset[U], result: Dataset[U],
+                             options: DataFrameEqualityOptions): Unit = {
+    assertDataFrameEquals(expected.toDF, result.toDF, options)
+  }
+
+  /**
     * Compares if two Datasets are equal, Datasets should have the same type.
     * When comparing inexact fields uses tol.
     *

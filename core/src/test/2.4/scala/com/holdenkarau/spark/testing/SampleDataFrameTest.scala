@@ -537,6 +537,169 @@ class SampleDataFrameTest extends ScalaDataFrameSuiteBase {
     }
   }
 
+
+  private def failureMessage(f: => Unit): String =
+    intercept[org.scalatest.exceptions.TestFailedException](f).getMessage
+
+  private def doubleDf(values: java.lang.Double*): DataFrame =
+    createDF(values.map(v => Row(v)).toList, ("d", DoubleType))
+
+  test("NaN and infinities are only equal to themselves (SPARK-59514)") {
+    val NaN = Double.NaN
+    val Inf = Double.PositiveInfinity
+    val unequal = Seq((NaN, 1.0), (NaN, Inf), (1.0, Inf), (1.0, -Inf), (Inf, -Inf))
+    for ((a, b) <- unequal; (x, y) <- Seq((a, b), (b, a));
+         options <- Seq(DataFrameEqualityOptions(),
+                        DataFrameEqualityOptions(tol = 10.0, rtol = 0.5),
+                        DataFrameEqualityOptions(tol = 10.0, checkRowOrder = false))) {
+      intercept[org.scalatest.exceptions.TestFailedException] {
+        assertDataFrameEquals(doubleDf(x), doubleDf(y), options)
+      }
+    }
+    for (v <- Seq(NaN, Inf, -Inf)) {
+      assertDataFrameEquals(doubleDf(v), doubleDf(v))
+      assertDataFrameApproximateEquals(doubleDf(v), doubleDf(v), 0.1, Duration.ZERO)
+      assertDataFrameNoOrderEquals(doubleDf(v), doubleDf(v))
+    }
+  }
+
+  test("arrays from real DataFrames get tolerance (not just Lists)") {
+    import sqlContext.implicits._
+    val expected = Seq((1, Seq(1.0, 2.0))).toDF("id", "values")
+    val close = Seq((1, Seq(1.05, 2.05))).toDF("id", "values")
+    val far = Seq((1, Seq(1.5, 2.0))).toDF("id", "values")
+    val longer = Seq((1, Seq(1.0, 2.0, 3.0))).toDF("id", "values")
+    assertDataFrameApproximateEquals(expected, close, 0.1, Duration.ZERO)
+    intercept[org.scalatest.exceptions.TestFailedException] {
+      assertDataFrameApproximateEquals(expected, far, 0.1, Duration.ZERO)
+    }
+    intercept[org.scalatest.exceptions.TestFailedException] {
+      assertDataFrameApproximateEquals(expected, longer, 10.0, Duration.ZERO)
+    }
+    val withNaN = Seq((1, Seq(1.0, Double.NaN))).toDF("id", "values")
+    intercept[org.scalatest.exceptions.TestFailedException] {
+      assertDataFrameApproximateEquals(withNaN, close, 10.0, Duration.ZERO)
+    }
+    assertDataFrameApproximateEquals(withNaN, withNaN, 0.0, Duration.ZERO)
+  }
+
+  test("maps and nested structs get tolerance") {
+    import sqlContext.implicits._
+    val expected = Seq((Map("a" -> 1.0), (1.0, "x"))).toDF("m", "s")
+    val close = Seq((Map("a" -> 1.05), (1.05, "x"))).toDF("m", "s")
+    assertDataFrameEquals(expected, close, DataFrameEqualityOptions(tol = 0.1))
+    intercept[org.scalatest.exceptions.TestFailedException] {
+      assertDataFrameEquals(expected, close)
+    }
+  }
+
+  test("relative tolerance") {
+    val options = DataFrameEqualityOptions(rtol = 0.01)
+    assertDataFrameEquals(doubleDf(1000.0), doubleDf(1009.0), options)
+    intercept[org.scalatest.exceptions.TestFailedException] {
+      assertDataFrameEquals(doubleDf(1000.0), doubleDf(1011.0), options)
+    }
+  }
+
+  test("unordered comparison with and without tolerance") {
+    val expected = doubleDf(1.0, 2.0, Double.NaN, null)
+    val shuffled = doubleDf(null, Double.NaN, 2.0, 1.0)
+    val shuffledClose = doubleDf(null, Double.NaN, 2.01, 1.01)
+    intercept[org.scalatest.exceptions.TestFailedException] {
+      assertDataFrameEquals(expected, shuffled)
+    }
+    assertDataFrameEquals(expected, shuffled, DataFrameEqualityOptions(checkRowOrder = false))
+    assertDataFrameEquals(expected, shuffledClose,
+      DataFrameEqualityOptions(checkRowOrder = false, tol = 0.1))
+    intercept[org.scalatest.exceptions.TestFailedException] {
+      assertDataFrameEquals(expected, shuffledClose,
+        DataFrameEqualityOptions(checkRowOrder = false))
+    }
+  }
+
+  test("ignoreNullable ignores nested nullability") {
+    val schema = (nullable: Boolean) => StructType(Seq(
+      StructField("a", ArrayType(DoubleType, containsNull = nullable), nullable = nullable)))
+    val rows = sc.parallelize(List(Row(Seq(1.0))))
+    val nullable = sqlContext.createDataFrame(rows, schema(true))
+    val notNullable = sqlContext.createDataFrame(rows, schema(false))
+    val message = failureMessage(assertDataFrameEquals(nullable, notNullable))
+    assert(message.contains("Schemas differ"))
+    assertDataFrameEquals(nullable, notNullable, DataFrameEqualityOptions(ignoreNullable = true))
+  }
+
+  test("ignoreColumnOrder, ignoreColumnName and ignoreColumnType") {
+    val expected = rowDf("a.b" -> (IntegerType, 1), "c" -> (StringType, "x"))
+    val reordered = rowDf("c" -> (StringType, "x"), "a.b" -> (IntegerType, 1))
+    val renamed = rowDf("x" -> (IntegerType, 1), "y" -> (StringType, "x"))
+    val retyped = rowDf("a.b" -> (DoubleType, 1.0), "c" -> (StringType, "x"))
+    val cases = Seq(
+      reordered -> DataFrameEqualityOptions(ignoreColumnOrder = true),
+      renamed -> DataFrameEqualityOptions(ignoreColumnName = true),
+      retyped -> DataFrameEqualityOptions(ignoreColumnType = true))
+    for ((result, options) <- cases) {
+      intercept[org.scalatest.exceptions.TestFailedException] {
+        assertDataFrameEquals(expected, result)
+      }
+      assertDataFrameEquals(expected, result, options)
+      assertDataFrameEquals(expected, result, options.withCheckRowOrder(false))
+    }
+  }
+
+  test("failure message shows counts, differing rows and respects maxErrors") {
+    import sqlContext.implicits._
+    val expected = (1 to 20).map(i => (i, "same")).toDF("i", "s")
+    val result = (1 to 20).map(i => (i + 1, "same")).toDF("i", "s")
+    val message = failureMessage(assertDataFrameEquals(expected, result,
+      DataFrameEqualityOptions(maxErrors = Some(2)), (_: DataFrame) => ()))
+    assert(message.contains("There are some unequal rows"))
+    assert(message.contains("20 of 20 rows differ"))
+    assert(message.contains("showing the first 2"))
+    assert(message.contains("expected: [!1,same]"))
+    val onlyDiff = failureMessage(assertDataFrameEquals(expected, result,
+      DataFrameEqualityOptions(maxErrors = Some(1), showOnlyDiff = true)))
+    assert(onlyDiff.contains("! i: expected=1, actual=2"))
+    assert(!onlyDiff.contains("same"))
+    val lengths = failureMessage(assertDataFrameEquals(expected, expected.limit(3)))
+    assert(lengths.contains("expected 20 rows, result has 3 rows"))
+  }
+
+  test("unordered failure message lists the differing rows") {
+    import sqlContext.implicits._
+    val expected = Seq(("a", 1), ("b", 2), ("b", 2)).toDF("k", "v")
+    val result = Seq(("a", 1), ("b", 2), ("c", 3)).toDF("k", "v")
+    val message = failureMessage(assertDataFrameNoOrderEquals(expected, result))
+    assert(message.contains("[k=b, v=2]: expected 2 time(s), found 1 time(s)"))
+    assert(message.contains("[k=c, v=3]: expected 0 time(s), found 1 time(s)"))
+  }
+
+  test("customShow still receives the tagged rows") {
+    import sqlContext.implicits._
+    var shown: Option[Array[Row]] = None
+    intercept[org.scalatest.exceptions.TestFailedException] {
+      assertDataFrameEquals(Seq(1).toDF("v"), Seq(2).toDF("v"),
+        (df: DataFrame) => shown = Some(df.collect()))
+    }
+    assert(shown.get.toSeq === Seq(Row("expected", 1), Row("result", 2)))
+  }
+
+  test("assertColumnEquality catches nulls on only one side") {
+    val df = createDF(List(Row(1, 1), Row(null, null), Row(2, null)),
+      ("a", IntegerType), ("b", IntegerType))
+    intercept[ColumnMismatch] {
+      assertColumnEquality(df, "a", "b")
+    }
+    assertColumnEquality(df.filter("a is null or a = 1"), "a", "b")
+  }
+
+  test("dataset equality with options") {
+    import sqlContext.implicits._
+    val expected = Seq(1.0, 2.0).toDS
+    val result = Seq(2.01, 1.01).toDS
+    assertDatasetEquals(expected, result,
+      DataFrameEqualityOptions(checkRowOrder = false, tol = 0.1))
+  }
+
 }
 
 
