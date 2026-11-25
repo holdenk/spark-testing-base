@@ -1,10 +1,12 @@
 lazy val root = (project in file("."))
-  .aggregate(core, kafka_0_8, connectClientShaded)
+  .aggregate(core, connectClientShaded)
   .settings(noPublishSettings, commonSettings)
 
 //tag::sparkVersion[]
 val sparkVersion = settingKey[String]("Spark version")
 //end::sparkVersion[]
+// Used when no -DsparkVersion is given, the oldest Spark version we support.
+val defaultSparkVersion = "3.0.2"
 val sparkTestingVersion = settingKey[String]("Spark testing base version without Spark version part")
 
 def specialOptions = {
@@ -56,15 +58,10 @@ lazy val core = (project in file("core"))
             "io.netty" % "netty-tcnative-classes" % "2.0.66.Final",
             "com.github.luben" % "zstd-jni" % "1.5.5-4"
           )
-        } else if (sparkVersion.value > "3.0.0") {
+        } else {
           Seq(
             "io.netty" % "netty-all" % "4.1.77.Final",
             "io.netty" % "netty-tcnative-classes" % "2.0.52.Final"
-          )
-        } else {
-          // need a more recent version of xbean for Spark 2.4 so we support JDK11
-          Seq(
-            "org.apache.xbean" % "xbean-asm6-shaded" % "4.10",
           )
         }} ++ {
         // Spark Connect server for 3.5+ (starts gRPC service).
@@ -84,45 +81,6 @@ lazy val core = (project in file("core"))
         }}
 
   )
-
-lazy val kafka_0_8 = {
-  Project("kafka_0_8", file("kafka-0.8"))
-    .dependsOn(core)
-    .settings(
-      name := "spark-testing-kafka-0_8",
-      commonSettings,
-      kafkaPublishSettings,
-      unmanagedSourceDirectories in Compile := {
-        if (scalaVersion.value < "2.12.0")
-          (unmanagedSourceDirectories in Compile).value
-        else Seq.empty
-      },
-      unmanagedSourceDirectories in Test := {
-        if (scalaVersion.value < "2.12.0")
-          (unmanagedSourceDirectories in Test).value
-        else Seq.empty
-      },
-      skip in compile := {
-        scalaVersion.value >= "2.12.0"
-      },
-      skip in test := {
-        scalaVersion.value >= "2.12.0"
-      },
-      skip in publish := {
-        scalaVersion.value >= "2.12.0"
-      },
-      libraryDependencies ++= {
-        excludeJpountz(
-          if (scalaVersion.value >= "2.12.0") {
-            Seq()
-          } else {
-            Seq(
-              "org.apache.spark" %% "spark-streaming-kafka-0-8" % sparkVersion.value)
-          }
-        )
-      }
-    )
-}
 
 // Shaded Spark Connect client sub-project.
 // Relocates org.apache.spark.sql.** from spark-connect-client-jvm so it can
@@ -165,7 +123,7 @@ lazy val connectClientShaded = (project in file("connect-client-shaded"))
   .settings(
     // Only wire assembly as packageBin for Spark 3.5+ (uses System property
     // since this must be resolved at build load time, not setting evaluation)
-    if (System.getProperty("sparkVersion", "2.4.8") >= "3.5.0") {
+    if (System.getProperty("sparkVersion", defaultSparkVersion) >= "3.5.0") {
       Seq(
         exportJars := true,
         Compile / packageBin := assembly.value
@@ -182,7 +140,7 @@ val commonSettings = Seq(
   publishMavenStyle := true,
   libraryDependencySchemes += "com.github.luben" %% "zstd-jni" % "early-semver", // "early-semver",
   evictionErrorLevel := Level.Info,
-  sparkVersion := System.getProperty("sparkVersion", "2.4.8"),
+  sparkVersion := System.getProperty("sparkVersion", defaultSparkVersion),
   sparkTestingVersion := "3.0.0",
   isSnapshot := sparkTestingVersion.value.contains("SNAPSHOT"),
   version := sparkVersion.value + "_" + sparkTestingVersion.value,
@@ -201,8 +159,6 @@ val commonSettings = Seq(
       Seq() // We don't cross compile for the 4.X branch (until Scala 3 support comes).
     } else if (sparkVersion.value >= "3.2.0") {
       Seq("2.12.15", "2.13.16")
-    } else if (sparkVersion.value >= "3.0.0") {
-      Seq("2.12.15")
     } else {
       Seq("2.12.15")
     }
@@ -239,63 +195,26 @@ val commonSettings = Seq(
 
 )
 
-// Allow kafka (and other) utils to have version specific files
+// Sources shared by every Spark version live in the default src/{main,test}/{scala,java}
+// directories, version specific code is added on top of them.
 //tag::dynamicCodeSelection[]
-val coreSources = unmanagedSourceDirectories in Compile  := {
-  if (sparkVersion.value >= "4.0.0") Seq(
-    (sourceDirectory in Compile)(_ / "4.0/scala"),
-    (sourceDirectory in Compile)(_ / "3.5/scala"),
-    (sourceDirectory in Compile)(_ / "3.0/scala"),
-    (sourceDirectory in Compile)(_ / "2.4/scala"),
-    (sourceDirectory in Compile)(_ / "2.4/java")
-  ).join.value
-  else if (sparkVersion.value >= "3.5.0" && scalaVersion.value >= "2.12.0") Seq(
-    (sourceDirectory in Compile)(_ / "3.5/scala"),
-    (sourceDirectory in Compile)(_ / "3.0/scala"),
-    (sourceDirectory in Compile)(_ / "2.4/scala"),
-    (sourceDirectory in Compile)(_ / "2.4/java")
-  ).join.value
+val coreSources = Compile / unmanagedSourceDirectories ++= {
+  val base = (Compile / sourceDirectory).value
+  Seq(
+    (sparkVersion.value >= "4.0.0") -> "4.0/scala",
+    (sparkVersion.value >= "3.5.0") -> "3.5/scala"
+  ).collect { case (true, dir) => base / dir }
+}
 //end::dynamicCodeSelection[]
-  else if (sparkVersion.value >= "3.0.0" && scalaVersion.value >= "2.12.0") Seq(
-    (sourceDirectory in Compile)(_ / "3.0/scala"),
-    (sourceDirectory in Compile)(_ / "2.4/scala"),
-    (sourceDirectory in Compile)(_ / "2.4/java")
-  ).join.value
-  else // Oldest we support is 2.4.8
-    Seq((sourceDirectory in Compile)(_ / "2.4/scala"), (sourceDirectory in Compile)(_ / "2.4/java")
-  ).join.value
+
+val coreTestSources = Test / unmanagedSourceDirectories ++= {
+  val base = (Test / sourceDirectory).value
+  Seq(
+    (sparkVersion.value >= "4.0.0") -> "4.0/scala",
+    (sparkVersion.value >= "3.5.0") -> "3.5/scala",
+    (sparkVersion.value < "4.0.0") -> "pre-4.0/scala"
+  ).collect { case (true, dir) => base / dir }
 }
-
-val coreTestSources = unmanagedSourceDirectories in Test  := {
-  if (sparkVersion.value >= "4.0.0" && scalaVersion.value >= "2.12.0") Seq(
-    (sourceDirectory in Test)(_ / "4.0/scala"),
-    (sourceDirectory in Test)(_ / "3.5/scala"),
-    (sourceDirectory in Test)(_ / "3.0/scala"),
-    (sourceDirectory in Test)(_ / "3.0/java"),
-    (sourceDirectory in Test)(_ / "2.4/scala"),
-    (sourceDirectory in Test)(_ / "2.4/java")
-  ).join.value
-  else if (sparkVersion.value >= "3.5.0" && scalaVersion.value >= "2.12.0") Seq(
-    (sourceDirectory in Test)(_ / "3.5/scala"),
-    (sourceDirectory in Test)(_ / "pre-4.0/scala"),
-    (sourceDirectory in Test)(_ / "3.0/scala"),
-    (sourceDirectory in Test)(_ / "3.0/java"),
-    (sourceDirectory in Test)(_ / "2.4/scala"),
-    (sourceDirectory in Test)(_ / "2.4/java")
-  ).join.value
-  else if (sparkVersion.value >= "3.0.0" && scalaVersion.value >= "2.12.0") Seq(
-    (sourceDirectory in Test)(_ / "pre-4.0/scala"),
-    (sourceDirectory in Test)(_ / "3.0/scala"),
-    (sourceDirectory in Test)(_ / "3.0/java"),
-    (sourceDirectory in Test)(_ / "2.4/scala"),
-    (sourceDirectory in Test)(_ / "2.4/java")
-  ).join.value
-  else // Oldest we support is 2.4.8
-    Seq( (sourceDirectory in Test)(_ / "2.4/scala"), (sourceDirectory in Test)(_ / "2.4/java")
-  ).join.value
-}
-
-
 
 // additional libraries
 lazy val commonDependencies = Seq(
@@ -306,24 +225,6 @@ lazy val commonDependencies = Seq(
   "junit" % "junit" % "4.13.2",
   "org.eclipse.jetty" % "jetty-util" % "9.4.51.v20230217",
   "com.github.sbt" % "junit-interface" % "0.13.3" % "test->default")
-
-// Based on Hadoop Mini Cluster tests from Alpine's PluginSDK (Apache licensed)
-// javax.servlet signing issues can be tricky, we can just exclude the dep
-def excludeFromAll(items: Seq[ModuleID], group: String, artifact: String) =
-  items.map(_.exclude(group, artifact))
-
-def excludeJavaxServlet(items: Seq[ModuleID]) =
-  excludeFromAll(items, "javax.servlet", "servlet-api")
-
-def excludeJpountz(items: Seq[ModuleID]) =
-  excludeFromAll(items, "net.jpountz.lz4", "lz4")
-
-
-
-lazy val kafkaPublishSettings =
-  publishSettings ++ Seq(
-    skip in publish := scalaVersion.value >= "2.12.0"
-  )
 
 val centralSnapshots = "https://ossrh-staging-api.central.sonatype.com/service/local/staging/deploy/maven2/"
 

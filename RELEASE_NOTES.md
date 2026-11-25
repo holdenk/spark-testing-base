@@ -1,4 +1,8 @@
 # Unreleased
+- Drop Spark 2.4 support, the minimum supported version is now Spark 3.0. With no
+  `-DsparkVersion` the build now defaults to 3.0.2.
+- Remove the `spark-testing-kafka-0_8` module. It was only built for Scala 2.11 (Spark 2), so
+  it had not been published for any supported Spark version.
 - DataFrame equality: non-finite values are handled explicitly (ports SPARK-59514). NaN is only
   equal to NaN and an infinity only to the same infinity, tolerances only apply to finite values.
   - **Python behaviour change**: `SQLTestCase.assertDataFrameEqual` used to treat NaN as equal to
