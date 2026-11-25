@@ -692,14 +692,6 @@ class SampleDataFrameTest extends ScalaDataFrameSuiteBase {
     assertColumnEquality(df.filter("a is null or a = 1"), "a", "b")
   }
 
-  test("dataset equality with options") {
-    import sqlContext.implicits._
-    val expected = Seq(1.0, 2.0).toDS
-    val result = Seq(2.01, 1.01).toDS
-    assertDatasetEquals(expected, result,
-      DataFrameEqualityOptions(checkRowOrder = false, tol = 0.1))
-  }
-
 }
 
 

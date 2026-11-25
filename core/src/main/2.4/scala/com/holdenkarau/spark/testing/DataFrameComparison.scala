@@ -127,15 +127,24 @@ object RowComparison {
   }
 
   def compareDecimal(expected: java.math.BigDecimal, actual: java.math.BigDecimal,
-                     tol: Double, rtol: Double): Boolean = {
+                     tol: Double, rtol: Double): Boolean =
+    compareDecimal(expected, actual, tol, rtol, new java.math.BigDecimal(_: Double))
+
+  /**
+   * Java BigDecimals have always been compared against the exact binary value
+   * of the tolerance, Scala BigDecimals against its decimal representation
+   * (1e-6 is 0.000001, not 9.99999999999999954748e-7). Keep both behaviours.
+   */
+  private def compareDecimal(expected: java.math.BigDecimal, actual: java.math.BigDecimal,
+                             tol: Double, rtol: Double,
+                             toDecimal: Double => java.math.BigDecimal): Boolean = {
     if (expected.compareTo(actual) == 0) {
       true
     } else if (java.lang.Double.isNaN(tol) || java.lang.Double.isInfinite(tol) ||
                java.lang.Double.isNaN(rtol) || java.lang.Double.isInfinite(rtol)) {
       false
     } else {
-      val allowed = new java.math.BigDecimal(tol)
-        .add(new java.math.BigDecimal(rtol).multiply(expected.abs))
+      val allowed = toDecimal(tol).add(toDecimal(rtol).multiply(expected.abs))
       expected.subtract(actual).abs.compareTo(allowed) <= 0
     }
   }
@@ -157,7 +166,8 @@ object RowComparison {
     case (e: Float, a: Float) => compareDouble(e.toDouble, a.toDouble, tol, rtol)
     case (e: java.math.BigDecimal, a: java.math.BigDecimal) => compareDecimal(e, a, tol, rtol)
     case (e: scala.math.BigDecimal, a: scala.math.BigDecimal) =>
-      compareDecimal(e.bigDecimal, a.bigDecimal, tol, rtol)
+      compareDecimal(e.bigDecimal, a.bigDecimal, tol, rtol,
+        java.math.BigDecimal.valueOf(_: Double))
     case (e: Timestamp, a: Timestamp) =>
       withinDuration(Duration.between(e.toInstant, a.toInstant), tolTimestamp)
     case (e: Instant, a: Instant) => withinDuration(Duration.between(e, a), tolTimestamp)
@@ -332,8 +342,20 @@ object SchemaComparison {
     case _: MapType => false
     case StructType(fields) => fields.forall(f => isOrderable(f.dataType))
     case ArrayType(elementType, _) => isOrderable(elementType)
-    case udt: UserDefinedType[_] => isOrderable(udt.sqlType)
+    // UserDefinedType is private[spark] before 4.0, so it can not be matched
+    // on here. Spark sorts a UDT by its underlying sqlType; we leave UDT
+    // columns out of the sort key, which only makes pairing less precise.
+    case other if isUserDefined(other) => false
     case other => !Set("variant", "interval", "calendarinterval").contains(other.typeName)
+  }
+
+  private def isUserDefined(dataType: DataType): Boolean = {
+    var cls: Class[_] = dataType.getClass
+    while (cls != null) {
+      if (cls.getName == "org.apache.spark.sql.types.UserDefinedType") return true
+      cls = cls.getSuperclass
+    }
+    false
   }
 
   /** Quote a column name so names with dots, spaces or backticks resolve correctly. */
